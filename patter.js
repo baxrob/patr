@@ -3,7 +3,6 @@ $script('lib/jquery-1.7.1.min', function() {
         'lib/simple_class',
         'lib/swfobject',
         'lib/mozFlashAudioContext',
-        '../resources/jQuery-Knob/js/jquery.knob',
         'synth', 
         'seq', 
         'data',
