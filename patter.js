@@ -10,11 +10,11 @@ $script('lib/jquery-1.7.1.min', function() {
         'ix'
     ], 
     function() {
-        console.log('oi');
 
         var uri = new URI(':', ';', ['rate', 'length', 'seq']);
 
-        if (false && (window.AudioContext || window.webkitAudioContext)) {
+        if ((window.AudioContext || window.webkitAudioContext)) {
+            console.log('webkit adio api');
             var audioContext = new (window.AudioContext || webkitAudioContext)();
         } else {
             var audioContext = new mozFlashAudioContext();

@@ -4,7 +4,6 @@ var ToneRow = Class.extend({
     init: function(context, bufferSize) {
         this.context = context;
         this.sampleRate = this.context.sampleRate;
-        console.log(this.sampleRate);
         this.bufferSize = bufferSize;
 
         this.jsNode = this.context.createJavaScriptNode(
