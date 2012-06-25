@@ -74,7 +74,6 @@ var Patter = Class.extend({
     },
 
     shuffle: function() {
-        //console.log(this.stepSeq, this.options.stepCount, this.stepSeq.slice(0, this.options.stepCount));
         var newSeq = this.stepSeq.slice(0, this.options.stepCount)
         .sort(function(x) {
             return 0.5 - Math.random();
@@ -85,12 +84,12 @@ var Patter = Class.extend({
     },
 
     playSequence: function() {
-        // fixme: clicks on first note
+        // fixme?: clicks on first note ?
         //this.toneRow.playSequence();
         this.toneRow.run();
     },
     stop: function() {
-        // fixme: should clear blink, but not here
+        // fixme: should clear blink, but not here - in Face
         this.toneRow.stop();
     },
     unpause: function() {

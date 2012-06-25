@@ -4,9 +4,12 @@ var ToneRow = Class.extend({
     init: function(context, bufferSize) {
         this.context = context;
         this.sampleRate = this.context.sampleRate;
+        console.log(this.sampleRate);
         this.bufferSize = bufferSize;
 
-        this.jsNode = this.context.createJavaScriptNode(this.bufferSize, 0, 1);
+        this.jsNode = this.context.createJavaScriptNode(
+            this.bufferSize, 0, 2
+        );
         this.jsNode.onaudioprocess = this.onProcess.bind(this); 
 
         this.block = new ToneBlock(this.sampleRate, 1);
@@ -212,11 +215,12 @@ var ToneBlock = Class.extend({
     },
     // Hertz-based gain envelope
     bleat: function(hz) {
-        // todo: parameterize factors: 210, 2.4
-        function cosh(n) {
+        var divisor = 210,
+            multiplier = 2.4;
+        var cosh = function(n) {
             return (Math.exp(n) + Math.exp(-n)) / 2;
-        }
-        var gainVal = 1 / cosh(hz / 210) * 2.4 * this.baseGain;
+        };
+        var gainVal = 1 / cosh(hz / divisor) * multiplier * this.baseGain;
         return gainVal;
     }
 });

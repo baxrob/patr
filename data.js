@@ -1,3 +1,4 @@
+// Documentation is for the weak
 
 var URI = Class.extend({
     init: function(assignor, delimiter, params) {
@@ -8,6 +9,7 @@ var URI = Class.extend({
         this.updating = false;
 
         //todo: window.onhashchange = ...
+
     },
     parseHash: function() {
         this.hash = document.location.hash;
@@ -31,7 +33,6 @@ var URI = Class.extend({
         hashArray.map(function(x) {
             hashObj[x[0]] = x[1];
         });
-        //console.log(hashObj);
         return hashObj;
     },
     update: function(params) {

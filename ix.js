@@ -33,6 +33,10 @@ var Face = Class.extend({
 
     }, // init
 
+    welcomeModal: function() {
+    },
+
+    // Event handlers
     resizeHandler: function() {
         // fixme: appears to be 3px off.  why?
         this.$frame.css(
@@ -48,7 +52,7 @@ var Face = Class.extend({
 
         $('.blinker').css('background-color', 'transparent');
         
-        // fixme: cleanup, to func end
+        // fixme: cleanup this clusterf* - here to func end
         var $blinker = $('#blinker_' + step),
             blinker_height = this.elemHeight($blinker),
             frame_height = this.elemHeight(this.$frame),
@@ -77,11 +81,14 @@ var Face = Class.extend({
         $blinker.css('background-color', '#f99');
     },
     updateRate: function(evt) {
-        // fixme: pauseText param
+        // fixme: pause and reset to seq[0] without doubly-triggering
+        //        patt.tr.setUpdateHook
+
+        // todo: init/use pauseText param
         var playing = this.$playButton.text() === 'paus';
 
         // fixme: patt.stageUpdate - or just change patt.update 
-        this.patt.stop();
+        //this.patt.stop();
         this.patt.update({ bpm: evt.target.value });
         if (playing) {
             // todo: use callback to pause, or defer pause
@@ -464,6 +471,7 @@ var Face = Class.extend({
                 },
                 css: {
                     '-webkit-appearance': 'slider-vertical',
+                    position: 'relative',
                     width: '40px',
                     height: '100px'
                 },
