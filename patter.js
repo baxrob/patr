@@ -1,5 +1,6 @@
-$script('lib/jquery-1.7.1.min', function() {
+$script('lib/jquery-1.7.2.min', function() {
     $script([
+        'lib/jquery-ui-1.8.21.slider.min',
         'lib/simple_class',
         'lib/swfobject',
         'lib/mozFlashAudioContext',

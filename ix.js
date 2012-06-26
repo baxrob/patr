@@ -11,12 +11,13 @@ var Face = Class.extend({
         this.$root.append(this.$frame);
 
         this.$root.css({
+            'font-family': 'verdana',
             margin: 0,
             padding: 0,
             overflow: 'hidden'
         });
         
-        // todo: this.keyHandlers
+        // TODO: this.keyHandlers
         this.$root.keydown(function(evt) {
             switch (evt.keyCode) {
                 case 32:
@@ -34,11 +35,12 @@ var Face = Class.extend({
     }, // init
 
     welcomeModal: function() {
+        // TODO: 
     },
 
     // Event handlers
     resizeHandler: function() {
-        // fixme: appears to be 3px off.  why?
+        // FIXME: appears to be 3px off.  why?
         this.$frame.css(
             'height', 
             $(window).height() - this.elemHeight(this.$controls) 
@@ -52,7 +54,7 @@ var Face = Class.extend({
 
         $('.blinker').css('background-color', 'transparent');
         
-        // fixme: cleanup this clusterf* - here to func end
+        // FIXME: cleanup this clusterf* - here to func end
         var $blinker = $('#blinker_' + step),
             blinker_height = this.elemHeight($blinker),
             frame_height = this.elemHeight(this.$frame),
@@ -72,7 +74,7 @@ var Face = Class.extend({
             $blinker.position().top >
             this.$frame.height() + blinker_height
         ) {
-            // todo: blink scrollbar
+            // TODO: blink scrollbar
             // Re-position off-screen row to page top
             this.$frame.scrollTop(
                 this.$frame.scrollTop() + rows_per_screen * fdr_widget_height
@@ -81,17 +83,17 @@ var Face = Class.extend({
         $blinker.css('background-color', '#f99');
     },
     updateRate: function(evt) {
-        // fixme: pause and reset to seq[0] without doubly-triggering
+        // FIXME: pause and reset to seq[0] without doubly-triggering
         //        patt.tr.setUpdateHook
 
-        // todo: init/use pauseText param
+        // TODO: init/use pauseText param
         var playing = this.$playButton.text() === 'paus';
 
-        // fixme: patt.stageUpdate - or just change patt.update 
+        // FIXME: patt.stageUpdate - or just change patt.update 
         //this.patt.stop();
         this.patt.update({ bpm: evt.target.value });
         if (playing) {
-            // todo: use callback to pause, or defer pause
+            // TODO: use callback to pause, or defer pause
             setTimeout(function() {
                 this.patt.playSequence();
             }.bind(this), 100);
@@ -106,6 +108,7 @@ var Face = Class.extend({
         // If increasing length, pad with silent notes
         //    otherwise resize, leaving previous tail
         //    intact in uri
+        //FIXME: fails to cycle after seq expansion 
         while (diff > 0) {
             newSeq.push(0)
             diff--;
@@ -122,7 +125,7 @@ var Face = Class.extend({
     },
 
     clear: function() {
-        // fixme: update this.patt.sequence
+        // FIXME: update this.patt.sequence
         //        this.updateSequenceDisplay
         $('.fdr').each(function(idx, el) {
             $(el).val(0); 
@@ -130,19 +133,22 @@ var Face = Class.extend({
         });
     },
     regenerate: function() {
-        // fixme: 
+        // FIXME: 
         var newSeq = this.patt.generateStepSeq();
         this.patt.update({
             seq: newSeq 
         });
-        // todo: Face.updateSequenceDisplay
-        // fixme: calling triggerHandler is kludgy
+        // TODO: Face.updateSequenceDisplay
+        // FIXME: calling triggerHandler is kludgy
         $('.fdr').each(function(idx, el) {
             $(el).val(newSeq[idx]); 
             $(el).triggerHandler('mouseup');
         });
     },
     shuffle: function() {
+        // FIXME: (in synth?) clicks during large sequence change (~300)
+        //        same with regenerate.  update in local +- len/x steps
+        //        first then the rest?
         this.patt.shuffle();
         var newSeq = this.patt.stepSeq;
         $('.fdr').each(function(idx, el) {
@@ -169,10 +175,12 @@ var Face = Class.extend({
                 'border-bottom': '1px solid silver'
             }
         });
+
         this.$playButton = this.elem({
             tag: 'div',
             attr: {
-                id: 'play_btn'
+                id: 'play_btn',
+                title: 'play / pause'
             },
             css: {
                 'z-indez': '1000',
@@ -189,7 +197,7 @@ var Face = Class.extend({
             },
             text: 'go',
             on: {
-                // todo: shift+click or enter key: stop/restart
+                // TODO: shift+click or enter key: stop/restart
                 click: function() {
                     if ($(this).text() == 'go') {
                         //self.patt.playSequence();
@@ -202,7 +210,7 @@ var Face = Class.extend({
                     }
                 }
             }
-        });
+        }); // $playButton
 
         $controls
         .append(this.$playButton)
@@ -212,7 +220,7 @@ var Face = Class.extend({
                 attr: {
                     type: 'text',
                     id: 'bpm',
-                    title: 'bpm',
+                    title: 'beats per minute',
                     value: this.patt.options.bpm
                 },
                 css: {
@@ -248,7 +256,7 @@ var Face = Class.extend({
                 attr: {
                     type: 'text',
                     id: 'step_count',
-                    title: 'step_count',
+                    title: 'sequence length',
                     value: this.patt.options.stepCount
                 },
                 css: {
@@ -285,7 +293,7 @@ var Face = Class.extend({
                     type: 'checkbox',
                     id: 'reshuf',
                     title: 'reshuf',
-                    // fixme: read from url
+                    // FIXME: read from url
                     value: 'off'
                 },
                 css: {
@@ -339,7 +347,8 @@ var Face = Class.extend({
             this.elem({
                 tag: 'div',
                 attr: {
-                    id: 'shuff'
+                    id: 'shuff',
+                    title: 'shuffle sequence notes'
                 },
                 css: {
                     float: 'left',
@@ -364,7 +373,8 @@ var Face = Class.extend({
             this.elem({
                 tag: 'div',
                 attr: {
-                    id: 'clear'
+                    id: 'clear',
+                    title: 'set all steps to zero'
                 },
                 css: {
                     float: 'left',
@@ -389,7 +399,8 @@ var Face = Class.extend({
             this.elem({
                 tag: 'div',
                 attr: {
-                    id: 'regen'
+                    id: 'regen',
+                    title: 'generate a new random sequence'
                 },
                 css: {
                     float: 'left',
@@ -411,7 +422,30 @@ var Face = Class.extend({
                 }
 
             })
-        )
+        ) // $controls
+
+        // FIXME: this is a separate deal - $controls must be in DOM before
+        //        we can find its height -- else rethink css
+        // NOTE: a favorite thing about this questoinable css-generated-in-js
+        //       strategy: it's quite fluid to mind fixmes, which get way out
+        //       of hand in css
+        var $controlsHint = this.elem({
+            tag: 'div',
+            attr: {
+                id: 'ctl_bar_hint'
+            },
+            css: {
+                'font-size': '0.7em',
+                position: 'absolute',
+                'margin-top': '31px',//$controls.height(),
+                'margin-left': '-9px', // ???
+                height: '20px',
+                width: 'auto', // sum(controls.children.widths)
+                border: '1px solid silver'
+            }
+        }).text('[explanatory, as hover-text per control above: fade out after 10, 5, 3 secs, per user\'s visit count; then don\'t show, (but also add help button at control edge-right.)]');
+        $controls.append($controlsHint);
+
         return $controls;
     }, // buildControls
 
@@ -431,7 +465,7 @@ var Face = Class.extend({
         var $innerFrame = this.elem({
             tag: 'div',
             css: {
-                // todo: width should be viewport based
+                // TODO: width should be viewport based
                 //       fix for scroll-down behavior
                 width: '540px', // should be 12x fader width
                 margin: 'auto'
@@ -458,9 +492,10 @@ var Face = Class.extend({
             }
         }).append(
             this.elem({
-                tag: 'input',
+                //tag: 'input',
+                tag: 'div',
                 attr: {
-                    type: 'range',
+                    //type: 'range',
                     id: 'fdr_' + stepIdx,
                     'class': 'fdr',
                     min: this.patt.options.minNote,
@@ -479,6 +514,7 @@ var Face = Class.extend({
                     //mouseup: self.updateFader.bind(this)
                     mouseup: function() {
                         var note;
+                        // TODO: decode/encodeIdx($el)
                         var idx = this.id.split('_')[1];
                         var $blinker = $('#blinker_'+stepIdx);
                         if (this.value == 0) {
@@ -492,7 +528,51 @@ var Face = Class.extend({
                         self.patt.updateSequence();
                     }
                 }
-            })
+            }).slider({
+                orientation: "vertical",
+                range: "max",
+                min: this.patt.options.minNote,
+                max: this.patt.options.maxNote,
+                value: note,
+                slide: function( event, ui ) {
+                    $( "#amt_" + stepIdx ).text( ui.value );
+                },
+                stop: function(evt, el) {
+                    console.log(el, evt.target.value, $('#fdr_'+stepIdx));
+                        var note;
+                        // TODO: decode/encodeIdx($el)
+                        //       or .. use stepIdx? 
+                        //       no - definite passed scope is better
+                        var idx = evt.target.id.split('_')[1];
+                        var $blinker = $('#blinker_'+stepIdx);
+                        if (el.value == 0) {
+                            note = evt.target.title = 0;
+                            $blinker.css('border-color', 'transparent');
+                        } else {
+                            $blinker.css('border-color', '#d37');
+                            note = evt.target.title = evt.target.value 
+                                = el.value;
+                            console.log(note);
+                        }
+                        self.patt.stepSeq[idx] = note;
+                        self.patt.updateSequence();
+                    }
+                    // FIXME; no this? jQ internal clobbering?
+                    //        so .. make this consistent in Face callbacks
+                    .bind($('#fdr_'+stepIdx))
+
+            }).append(
+                this.elem({
+                    tag:'div',
+                    attr:{id:'amt_'+stepIdx}
+                }).css({
+                    'font-size': '0.7em',
+                    'text-align': 'center',
+                    width: '2em',
+                    height: '1.4em',
+                    'background-color': '#999'
+                }).text(note)
+            )
         ).append(
             this.elem({
                 tag: 'div',
@@ -529,7 +609,7 @@ var Face = Class.extend({
             + cssInt('margin-top') + cssInt('margin-bottom')
             + cssInt('border-top-width') + cssInt('border-bottom-width');
     },
-    // todo: merge attr/css args - and reflect above
+    // TODO: merge attr/css args - and reflect above
     elem: function(options) {
         var strOpts = ['tag', 'text'];
         var objOpts = ['attr', 'css', 'on'];

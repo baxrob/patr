@@ -52,6 +52,7 @@ var Patter = Class.extend({
         this.attackSeq = this.flatAttackSeq();
         this.formattedSeq = this.mergeSequences();
         this.toneRow.updateSequence(this.formattedSeq);
+        console.log(this.formattedSeq);
         if (! skipURIUpdate) {
             this.uri.update({
                 seq: this.stepSeq,
