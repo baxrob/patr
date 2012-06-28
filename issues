@@ -1,0 +1,42 @@
+data.js:        //todo: window.onhashchange = ...
+ix.js:        // FIXME:
+ix.js:        // TODO: this.keyHandlers
+ix.js:            // FIXME: please grok!!! :
+ix.js:        // TODO: move this somewhere sensible - css loader / parser class
+ix.js:        // TODO: 
+ix.js:        // FIXME: appears to be 3px off.  why?
+ix.js:        // TODO: move this to generated css file / .classes
+ix.js:        // FIXME: cleanup this clusterf* - here to func end
+ix.js:            // TODO: blink scrollbar
+ix.js:        // FIXME: pause and reset to seq[0] without doubly-triggering
+ix.js:        // TODO: init/use pauseText param
+ix.js:        // FIXME: patt.stageUpdate - or just change patt.update 
+ix.js:            // TODO: use callback to pause, or defer pause
+ix.js:        //FIXME: fails to cycle after seq expansion 
+ix.js:        // FIXME: update this.patt.sequence
+ix.js:        // FIXME: 
+ix.js:        // TODO: Face.updateSequenceDisplay
+ix.js:        // FIXME: calling triggerHandler is kludgy
+ix.js:        // FIXME: (in synth?) clicks during large sequence change (~300)
+ix.js:                // TODO: shift+click or enter key: stop/restart
+ix.js:                    // FIXME: read from url
+ix.js:        // FIXME: this is a separate deal - $controls must be in DOM before
+ix.js:        //       strategy: it's quite fluid to mind fixmes, which get way out
+ix.js:                // TODO: width should be viewport based
+ix.js:        // TODO: title/hover/tooltip indicating note % patt.octaveDivisions 
+ix.js:        // TODO: select + key in number + enter sets fader value
+ix.js:        // TODO: select + right / left key moves selected-state
+ix.js:                    // TODO: decode/encodeIdx($el)
+ix.js:                // FIXME; no this? jQ internal clobbering?
+ix.js:    // TODO: merge attr/css args - and reflect above
+lib/compile_flash_engine.sh:# TODO: test [ -d flex_path ] and warn about flex path
+mozFlashAudioContext.js:                // TODO:
+mozFlashAudioContext.js:        // fixme: moz loses setup audio obj on quick connect/disconnect?
+mozFlashAudioContext.js:        // TODO: use polyfill
+patter.html:<!-- TODO: move meta tags to ix.Face, and add others -->
+patter.html:/* TODO: move these to generated css in ix.Face module */
+patter.js:// FIXME: assign file labels, and use $script.ready - per dependencies
+patter.js:        // TODO: url 'engine' param: webkit, moz, flash
+seq.js:        // fixme: stage updates for next note-break
+seq.js:        // fixme?: clicks on first note ?
+seq.js:        // fixme: should clear blink, but not here - in Face
