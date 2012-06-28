@@ -3,7 +3,7 @@ $script('lib/jquery-1.7.2.min', function() {
         'lib/jquery-ui-1.8.21.slider.min',
         'lib/simple_class',
         'lib/swfobject',
-        'lib/mozFlashAudioContext',
+        'mozFlashAudioContext',
         'synth', 
         'seq', 
         'data',
@@ -32,7 +32,7 @@ $script('lib/jquery-1.7.2.min', function() {
         
         $(document).ready(function() {
             var face = window.face = new Face($('body'), patt);
-            face.welcomeModal();
+            face.welcomeDialog();
         });
     })
 });

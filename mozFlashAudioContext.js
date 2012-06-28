@@ -1,8 +1,21 @@
+// Flash debugging
+var startTime = (new Date()).getTime();
+var lastTime = 0;
+var logElapsed = function() {
+    var now = (new Date()).getTime();
+    console.log(now - lastTime, now - startTime);
+    lastTime = now;
+};
+var traceStart = function() {
+    $('#play_btn').triggerHandler('click');
+    logElapsed();
+};
 
 var mozFlashAudioContext = Class.extend({
     init: function() {
         this.sampleRate = 48000;
-        if (typeof Audio !== 'undefined') {
+        if (false && typeof Audio !== 'undefined') {
+        //if (typeof Audio !== 'undefined') {
             this.destination = new Audio();
             if (this.destination.mozSetup) {
                 this.mozSetup();
@@ -16,11 +29,14 @@ var mozFlashAudioContext = Class.extend({
     },
     mozSetup: function() {
         console.log('mozilla audio api');
+        this.backend = 'moz';
         this.destination.mozSetup(2, this.sampleRate);
         this.destination.writeAudio = this.destination.mozWriteAudio;
     },
     flashSetup: function() {
+        // From dynamicaudio.js
         console.log('flash fallback');
+        this.backend = 'flash';
         this.sampleRate = 44100;
         // From dynamicaudio.js
         this.flashWrapper = document.createElement('div');
@@ -38,10 +54,11 @@ var mozFlashAudioContext = Class.extend({
         document.body.appendChild(this.flashWrapper);
         
         window.appRoot || (appRoot = '');
-
+        foo = function() { return;  }.bind(this);
         swfobject.embedSWF(
             //this.swf,
-            appRoot + 'lib/dynamicaudio.swf',
+            //appRoot + 'lib/dynamicaudio.swf',
+            appRoot + 'lib/dynamicaudio.1.swf',
             this.flashElement.id,
             "8",
             "8",
@@ -52,14 +69,19 @@ var mozFlashAudioContext = Class.extend({
             null,
             function(e) {
                 console.log(e);
+                // TODO:
+                // if e.sucess && e.ref
+                // else error out
                 this.flashElement = e.ref;
                 this.destination = this.flashElement;
+
                 this.destination.writeAudio = function(samples) {
-                    // wtf!  dynamicaudio.as is shite
+                    //console.log(samples.length);
                     var out = new Array(samples.length);
                     for (var i = 0; i < samples.length; i++) {
-                        out[i] = Math.floor(samples[i] * 32768);
+                        out[i] = samples[i];
                     }
+
                     this.write(out.join(' '));
                 };
             }.bind(this)
@@ -67,16 +89,18 @@ var mozFlashAudioContext = Class.extend({
 
     },
     createJavaScriptNode: function(bufferSize, inputChannels, outputChannels) {
+        if (this.backend == 'flash') bufferSize *= 1;
         var node = new mozFlashJavaScriptNode(
             bufferSize, 
             inputChannels, 
             outputChannels
         );
+        node.backend = this.backend;
         node.sampleRate = this.sampleRate;
         node.context = this;
         return node;
     }
-});
+}); // mozFlashAudioContext
 
 var mozFlashJavaScriptNode = Class.extend({
     init: function(bufferSize, inputChannels, outputChannels) {
@@ -94,6 +118,7 @@ var mozFlashJavaScriptNode = Class.extend({
         var dummyEvt = {
             outputBuffer: this.outputBuffer
         };
+
         this.run(dummyEvt);
     },
     disconnect: function() {
@@ -101,21 +126,29 @@ var mozFlashJavaScriptNode = Class.extend({
     },
     run: function(evt) {
         var intervalMilliseconds = this.bufferSize / this.sampleRate * 1000;
+
         this.interval = setInterval(function() {
-            var written = 0;
             this.onaudioprocess(evt);
-            writeBuffer = this.interleaveStereoBuffers(
-                this.outputBuffer.buffers
+            
+            outputBuffer = this.interleaveStereoBuffers(
+                this.outputBuffer.channelBuffers
             );
+            
+            var written = 0;
             while (written < this.bufferSize * this.outputChannels) {
                 written += this.target.writeAudio(
-                    writeBuffer.subarray(written)
+                    //outputBuffer.subarray(written)
+                    outputBuffer.slice(written)
                 ); 
             }
         }.bind(this), intervalMilliseconds);
+
     },
     interleaveStereoBuffers: function(buffers) {
-        var interleavedBuffer = new Float32Array(buffers[0].length * 2);
+        // Note: IE < 10 doesn't have typed arrays
+        // TODO: use polyfill
+        //var interleavedBuffer = new Float32Array(buffers[0].length * 2);
+        var interleavedBuffer = new Array(buffers[0].length * 2);
         var targetIdx = 0;
         for (var readIdx in buffers[0]) {
             interleavedBuffer[targetIdx] = buffers[0][readIdx];
@@ -125,18 +158,19 @@ var mozFlashJavaScriptNode = Class.extend({
         }
         return interleavedBuffer;
     }
-});
+}); // mozFlashJavaScriptNode
 
 var mozFlashJavaScriptBuffer = Class.extend({
     init: function(bufferLength, sampleRate) {
         this.length = bufferLength;
         this.sampleRate = sampleRate;
         this.duration = this.length / this.sampleRate; 
-        this.buffers = [];
+        this.channelBuffers = [];
     },
     getChannelData: function(channel) {
-        this.buffers[channel] = new Float32Array(this.length);
-        return this.buffers[channel];
+        //this.channelBuffers[channel] = new Float32Array(this.length);
+        this.channelBuffers[channel] = new Array(this.length);
+        return this.channelBuffers[channel];
     }
     
 });

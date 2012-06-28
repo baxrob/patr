@@ -9,6 +9,8 @@ var Face = Class.extend({
 
         this.$frame = this.buildFrame(this.elemHeight(this.$controls));
         this.$root.append(this.$frame);
+        // FIXME:
+//        $('.blinker').css('visibility', 'hidden');
 
         this.$root.css({
             'font-family': 'verdana',
@@ -32,9 +34,24 @@ var Face = Class.extend({
         $(window).on('resize', this.resizeHandler.bind(this));
         $(document).on('beat', this.beatHandler.bind(this));
 
+        // TODO: move this somewhere sensible - css loader / parser class
+        $('head').append(
+            this.elem({
+                tag: 'link',
+                attr: {
+                    type: 'text/css',
+                    rel: 'stylesheet',
+                    media: 'all',
+                    href: (window.appRoot || '') 
+                        //+ 'lib/css/custom-theme/jquery-ui-1.8.21.custom.css'
+                        + 'lib/slider.css'
+                }
+            })
+        );
+
     }, // init
 
-    welcomeModal: function() {
+    welcomeDialog: function() {
         // TODO: 
     },
 
@@ -52,13 +69,29 @@ var Face = Class.extend({
         // Handle beat: step UI: indicate and scroll
         var step = evt.originalEvent.beat % this.patt.stepSeq.length;
 
-        $('.blinker').css('background-color', 'transparent');
+        // FIXME: kill blinkers, fix scroll height
+
+        $('.blinker').css({
+            'background-color': 'transparent',
+            'box-shadow': 'none'
+        });
+        
+        $('.ui-slider-handle').css({
+            'background': '#555',
+            'border-color': '#999',
+            'border-width': '1px',
+            'box-shadow': 'none'
+        });
+        $('.fdr').css({
+            'border-color': '#999',
+            'box-shadow': 'none'
+        });
         
         // FIXME: cleanup this clusterf* - here to func end
         var $blinker = $('#blinker_' + step),
             blinker_height = this.elemHeight($blinker),
             frame_height = this.elemHeight(this.$frame),
-            fdr_widget_height = this.elemHeight($('.fdr').parent());// + blinker_height;
+            fdr_widget_height = this.elemHeight($('.fdr').parent()),// + blinker_height;
 
             frame_height = this.$frame.height() + 
                 parseInt(this.$frame.css('padding-top'));
@@ -80,7 +113,20 @@ var Face = Class.extend({
                 this.$frame.scrollTop() + rows_per_screen * fdr_widget_height
             );
         }
-        $blinker.css('background-color', '#f99');
+        $blinker.css({
+            'background-color': '#b03',
+            'box-shadow': '0 0 1px 1px #999'
+        });
+        $('#fdr_' + step + ' .ui-slider-handle').css({
+            'background': '#a03',
+            'border-color': '#d37',
+            'border-width': '1px',
+            'box-shadow': '0 0 1px 1px #999'
+        });
+        $('#fdr_' + step).css({
+            //'border-color': '#b15',
+            'box-shadow': '0 0 1px 1px #999'
+        });
     },
     updateRate: function(evt) {
         // FIXME: pause and reset to seq[0] without doubly-triggering
@@ -127,9 +173,13 @@ var Face = Class.extend({
     clear: function() {
         // FIXME: update this.patt.sequence
         //        this.updateSequenceDisplay
+        this.patt.clear();
         $('.fdr').each(function(idx, el) {
             $(el).val(0); 
-            $(el).triggerHandler('mouseup');
+            $(el).slider('value', 0);
+            $(el).find('a').text(0); 
+            //$(el).triggerHandler('mouseup');
+            $(el).slider('option', 'stop')(null, el);
         });
     },
     regenerate: function() {
@@ -142,7 +192,11 @@ var Face = Class.extend({
         // FIXME: calling triggerHandler is kludgy
         $('.fdr').each(function(idx, el) {
             $(el).val(newSeq[idx]); 
-            $(el).triggerHandler('mouseup');
+            $(el).slider('value', newSeq[idx]);
+            $(el).find('a').text(newSeq[idx]); 
+            // Update blinker
+            //$(el).triggerHandler('stop');
+            $(el).slider('option', 'stop')(null, el);
         });
     },
     shuffle: function() {
@@ -153,7 +207,10 @@ var Face = Class.extend({
         var newSeq = this.patt.stepSeq;
         $('.fdr').each(function(idx, el) {
             $(el).val(newSeq[idx]); 
-            $(el).triggerHandler('mouseup');
+            $(el).slider('value', newSeq[idx]);
+            $(el).find('a').text(newSeq[idx]); 
+            //$(el).triggerHandler('mouseup');
+            $(el).slider('option', 'stop')(null, el);
         });
     },
 
@@ -180,7 +237,7 @@ var Face = Class.extend({
             tag: 'div',
             attr: {
                 id: 'play_btn',
-                title: 'play / pause'
+                title: 'play/pause\n(spacebar)'
             },
             css: {
                 'z-indez': '1000',
@@ -189,10 +246,12 @@ var Face = Class.extend({
                 'padding-left': '5px',
                 'padding-right': '5px',
                 'margin-top': '0px',
+                // Section end, extra margin
+                'margin-right': '15px',
                 'background-color': '#ddd',
                 height: '18px',
                 border: '1px solid silver',
-                'border-radius': '4px',
+                'border-radius': '2px',
                 float: 'left'
             },
             text: 'go',
@@ -216,23 +275,34 @@ var Face = Class.extend({
         .append(this.$playButton)
         .append(
             this.elem({
+                tag: 'label',
+                css: {
+                    'font-size': '12px',
+                    float: 'left',
+                    'padding-top': '2px',
+                    margin: 0,
+                    'margin-right': '4px'
+                }
+            }).text('rate:')
+        ).append(
+            this.elem({
                 tag: 'input',
                 attr: {
                     type: 'text',
                     id: 'bpm',
-                    title: 'beats per minute',
+                    title: 'bpm',
                     value: this.patt.options.bpm
                 },
                 css: {
                     'text-align': 'right',
                     float: 'left',
-                    width: '3em',
+                    width: '2.2em',
                     border: '1px solid silver',
-                    'border-radius': '4px',
+                    'border-radius': '2px',
                     'padding-left': '3px',
                     'padding-right': '3px',
                     margin: 0,
-                    'margin-left': '10px',
+                    'margin-right': '10px',
                     'margin-bottom': '10px'
                 },
                 on: {
@@ -252,23 +322,35 @@ var Face = Class.extend({
             })
         ).append(
             this.elem({
+                tag: 'label',
+                css: {
+                    'font-size': '12px',
+                    float: 'left',
+                    'padding-top': '2px',
+                    margin: 0,
+                    'margin-right': '4px'
+                }
+            }).text('len:')
+        ).append(
+            this.elem({
                 tag: 'input',
                 attr: {
                     type: 'text',
                     id: 'step_count',
-                    title: 'sequence length',
+                    title: 'steps',
                     value: this.patt.options.stepCount
                 },
                 css: {
                     'text-align': 'right',
                     float: 'left',
-                    width: '3em',
+                    width: '2.2em',
                     border: '1px solid silver',
-                    'border-radius': '4px',
+                    'border-radius': '2px',
                     'padding-left': '3px',
                     'padding-right': '3px',
                     margin: 0,
-                    'margin-left': '10px',
+                    // Section end, extra margin
+                    'margin-right': '18px',
                     'margin-bottom': '10px'
                 },
                 on: {
@@ -319,11 +401,11 @@ var Face = Class.extend({
                     float: 'left',
                     width: '1.5em',
                     border: '1px solid silver',
-                    'border-radius': '4px',
+                    'border-radius': '2px',
                     'padding-left': '3px',
                     'padding-right': '3px',
                     margin: 0,
-                    'margin-left': '10px',
+                    'margin-right': '10px',
                     'margin-bottom': '10px'
                 },
                 on: {
@@ -348,7 +430,7 @@ var Face = Class.extend({
                 tag: 'div',
                 attr: {
                     id: 'shuff',
-                    title: 'shuffle sequence notes'
+                    title: 'shuffle notes'
                 },
                 css: {
                     float: 'left',
@@ -358,10 +440,10 @@ var Face = Class.extend({
                     'padding-right': '5px',
                     'padding-top': '1px',
                     'margin-top': '0px',
-                    'margin-left': '10px',
+                    'margin-right': '10px',
                     'background-color': '#ddd',
                     height: '17px',
-                    'border-radius': '4px',
+                    'border-radius': '2px',
                     border: '1px solid silver'
                 },
                 text: 'shuff',
@@ -374,7 +456,7 @@ var Face = Class.extend({
                 tag: 'div',
                 attr: {
                     id: 'clear',
-                    title: 'set all steps to zero'
+                    title: 'zero all'
                 },
                 css: {
                     float: 'left',
@@ -384,10 +466,10 @@ var Face = Class.extend({
                     'padding-right': '5px',
                     'padding-top': '1px',
                     'margin-top': '0px',
-                    'margin-left': '10px',
+                    'margin-right': '10px',
                     'background-color': '#ddd',
                     height: '17px',
-                    'border-radius': '4px',
+                    'border-radius': '2px',
                     border: '1px solid silver'
                 },
                 text: 'clear',
@@ -400,7 +482,7 @@ var Face = Class.extend({
                 tag: 'div',
                 attr: {
                     id: 'regen',
-                    title: 'generate a new random sequence'
+                    title: 'new random sequence'
                 },
                 css: {
                     float: 'left',
@@ -410,10 +492,10 @@ var Face = Class.extend({
                     'padding-right': '5px',
                     'padding-top': '1px',
                     'margin-top': '0px',
-                    'margin-left': '10px',
+                    'margin-right': '10px',
                     'background-color': '#ddd',
                     height: '17px',
-                    'border-radius': '4px',
+                    'border-radius': '2px',
                     border: '1px solid silver'
                 },
                 text: 'regen',
@@ -444,7 +526,7 @@ var Face = Class.extend({
                 border: '1px solid silver'
             }
         }).text('[explanatory, as hover-text per control above: fade out after 10, 5, 3 secs, per user\'s visit count; then don\'t show, (but also add help button at control edge-right.)]');
-        $controls.append($controlsHint);
+        //$controls.append($controlsHint);
 
         return $controls;
     }, // buildControls
@@ -488,91 +570,54 @@ var Face = Class.extend({
         return this.elem({
             tag: 'div',
             css: {
-                float: 'left'
+                float: 'left',
+                width: '40px',
+                'padding-left': 0,
+                'font-size': '.6em'
             }
         }).append(
             this.elem({
-                //tag: 'input',
                 tag: 'div',
                 attr: {
-                    //type: 'range',
                     id: 'fdr_' + stepIdx,
-                    'class': 'fdr',
-                    min: this.patt.options.minNote,
-                    max: this.patt.options.maxNote,
-                    value: note,
-                    title: note,
-                    step: 1
+                    'class': 'fdr'
                 },
-                css: {
-                    '-webkit-appearance': 'slider-vertical',
-                    position: 'relative',
-                    width: '40px',
-                    height: '100px'
-                },
-                on: {
-                    //mouseup: self.updateFader.bind(this)
-                    mouseup: function() {
-                        var note;
-                        // TODO: decode/encodeIdx($el)
-                        var idx = this.id.split('_')[1];
-                        var $blinker = $('#blinker_'+stepIdx);
-                        if (this.value == 0) {
-                            note = this.title = 0;
-                            $blinker.css('border-color', 'transparent');
-                        } else {
-                            $blinker.css('border-color', '#d37');
-                            note = this.title = this.value;
-                        }
-                        self.patt.stepSeq[idx] = note;
-                        self.patt.updateSequence();
-                    }
-                }
             }).slider({
                 orientation: "vertical",
-                range: "max",
+                range: "min",
                 min: this.patt.options.minNote,
                 max: this.patt.options.maxNote,
                 value: note,
-                slide: function( event, ui ) {
-                    $( "#amt_" + stepIdx ).text( ui.value );
+                create: function(evt, ui) {
+                    $(evt.target).find('a').text(note);
+                },
+                slide: function(evt, ui) {
+                    $(ui.handle).text(ui.value);
                 },
                 stop: function(evt, el) {
-                    console.log(el, evt.target.value, $('#fdr_'+stepIdx));
-                        var note;
-                        // TODO: decode/encodeIdx($el)
-                        //       or .. use stepIdx? 
-                        //       no - definite passed scope is better
-                        var idx = evt.target.id.split('_')[1];
-                        var $blinker = $('#blinker_'+stepIdx);
-                        if (el.value == 0) {
-                            note = evt.target.title = 0;
-                            $blinker.css('border-color', 'transparent');
-                        } else {
-                            $blinker.css('border-color', '#d37');
-                            note = evt.target.title = evt.target.value 
-                                = el.value;
-                            console.log(note);
-                        }
-                        self.patt.stepSeq[idx] = note;
-                        self.patt.updateSequence();
+                    //console.log(el, evt.target, this, $('#fdr_'+stepIdx));
+                    var note;
+                    // TODO: decode/encodeIdx($el)
+                    //       or .. use stepIdx? 
+                    //       no - definite passed scope is better
+                    //var idx = evt.target.id.split('_')[1];
+                    var $blinker = $('#blinker_'+stepIdx);
+                    if (el.value == 0) {
+                        note = 0;
+                        $blinker.css('border-color', 'transparent');
+                    } else {
+                        $blinker.css('border-color', '#d37');
+                        note = el.value;
                     }
-                    // FIXME; no this? jQ internal clobbering?
-                    //        so .. make this consistent in Face callbacks
-                    .bind($('#fdr_'+stepIdx))
+                    self.patt.stepSeq[stepIdx] = note;
+                    self.patt.updateSequence();
+                }
+                // FIXME; no this? jQ internal clobbering?
+                //        so .. make this consistent in Face callbacks
+                //.bind(this) // ix object/class
+                //.bind($('#fdr_'+stepIdx).get(0)) // window (why?)
 
-            }).append(
-                this.elem({
-                    tag:'div',
-                    attr:{id:'amt_'+stepIdx}
-                }).css({
-                    'font-size': '0.7em',
-                    'text-align': 'center',
-                    width: '2em',
-                    height: '1.4em',
-                    'background-color': '#999'
-                }).text(note)
-            )
+            })
         ).append(
             this.elem({
                 tag: 'div',
@@ -594,6 +639,7 @@ var Face = Class.extend({
                 }
             })
         );
+
     },
 
     intValFromCSS: function($el, property) {

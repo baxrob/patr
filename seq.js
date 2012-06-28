@@ -52,7 +52,6 @@ var Patter = Class.extend({
         this.attackSeq = this.flatAttackSeq();
         this.formattedSeq = this.mergeSequences();
         this.toneRow.updateSequence(this.formattedSeq);
-        console.log(this.formattedSeq);
         if (! skipURIUpdate) {
             this.uri.update({
                 seq: this.stepSeq,
@@ -83,6 +82,14 @@ var Patter = Class.extend({
             seq: newSeq
         });
     },
+    clear: function() {
+        var newSeq = this.stepSeq.map(function(val, idx) {
+            return 0; 
+        });
+        this.update({
+            seq: newSeq
+        });
+    },
 
     playSequence: function() {
         // fixme?: clicks on first note ?
@@ -105,7 +112,7 @@ var Patter = Class.extend({
             max = this.options.maxNote,
             base = this.options.baseFreq,
             div = this.options.octaveDivisions;
-        for (var i = min; i < max - 1; i++) {
+        for (var i = min; i < max; i++) {
             this.freqTable.push(base * Math.pow(2, (i / div)));
         }
     },
