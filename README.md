@@ -20,7 +20,8 @@ Control Area (top):
 *
 *
 Faders / Sliders Area:
-* 
+* ...
+* select + up/down keys
 
 
 Tested Systems:

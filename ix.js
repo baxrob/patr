@@ -79,8 +79,7 @@ var Face = Class.extend({
         // Handle beat: step UI: indicate and scroll
         var step = evt.originalEvent.beat % this.patt.stepSeq.length;
 
-        // FIXME: kill blinkers, fix scroll height
-
+        // TODO: move this to generated css file / .classes
         $('.blinker').css({
             'background-color': 'transparent',
             'box-shadow': 'none'
@@ -576,7 +575,10 @@ var Face = Class.extend({
     buildFader: function(stepIdx) {
         var self = this;
         var note = this.patt.stepSeq[stepIdx];
-        //console.log(this.patt.options);
+
+        // TODO: title/hover/tooltip indicating note % patt.octaveDivisions 
+        // TODO: select + key in number + enter sets fader value
+        // TODO: select + right / left key moves selected-state
         return this.elem({
             tag: 'div',
             css: {
