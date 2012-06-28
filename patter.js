@@ -1,9 +1,13 @@
+// FIXME: assign file labels, and use $script.ready - per dependencies
+//        noted below
 $script('lib/jquery-1.7.2.min', function() {
     $script([
         'lib/jquery-ui-1.8.21.slider.min',
-        'lib/simple_class',
         'lib/swfobject',
         'mozFlashAudioContext',
+
+        'lib/simple_class', // modules below depend on this
+
         'synth', 
         'seq', 
         'data',
@@ -13,6 +17,8 @@ $script('lib/jquery-1.7.2.min', function() {
 
         var uri = new URI(':', ';', ['rate', 'length', 'seq']);
 
+        // TODO: url 'engine' param: webkit, moz, flash
+        //       also: never publish / bookmark this param ? (how?)
         if ((window.AudioContext || window.webkitAudioContext)) {
             console.log('webkit adio api');
             var audioContext = new (window.AudioContext || webkitAudioContext)();

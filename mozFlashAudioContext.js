@@ -52,13 +52,12 @@ var mozFlashAudioContext = Class.extend({
         this.flashWrapper.appendChild(this.flashElement);
 
         document.body.appendChild(this.flashWrapper);
-        
-        window.appRoot || (appRoot = '');
-        foo = function() { return;  }.bind(this);
+
+        var appRoot = window.appRoot || './';
+        var swfPath = appRoot + 'lib/flashEngine.swf';
+
         swfobject.embedSWF(
-            //this.swf,
-            //appRoot + 'lib/dynamicaudio.swf',
-            appRoot + 'lib/dynamicaudio.1.swf',
+            swfPath,
             this.flashElement.id,
             "8",
             "8",

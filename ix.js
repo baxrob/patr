@@ -21,11 +21,21 @@ var Face = Class.extend({
         
         // TODO: this.keyHandlers
         this.$root.keydown(function(evt) {
+            // FIXME: please grok!!! :
+            //        window.onkeypress - s evt.keycode is 115
+            //        window.onkeydown - s evt.keycode is 83
+            //        $(window).on('key...', ... - ?
+            //        chrome vs ffox vs ...
             switch (evt.keyCode) {
-                case 32:
+                case 32: // Spacebar
                     evt.preventDefault();
                     this.$playButton.triggerHandler('click');
                     break;
+                case 83: // 's'
+                    this.shuffle();
+                    break;
+                // c.lear, r.egen
+                // ? - p.ace +nnn, l.en +nnn
                 default:
                     break; 
             }
@@ -44,7 +54,7 @@ var Face = Class.extend({
                     media: 'all',
                     href: (window.appRoot || '') 
                         //+ 'lib/css/custom-theme/jquery-ui-1.8.21.custom.css'
-                        + 'lib/slider.css'
+                        + 'lib/ui-slider-custom.css'
                 }
             })
         );
@@ -430,7 +440,7 @@ var Face = Class.extend({
                 tag: 'div',
                 attr: {
                     id: 'shuff',
-                    title: 'shuffle notes'
+                    title: 'shuffle notes\n("S" key)'
                 },
                 css: {
                     float: 'left',
