@@ -1,5 +1,6 @@
 $script('lib/jquery-1.7.1.min', function() {
     $script([
+        'lib/chrome_only.js',
         'lib/simple_class',
         'lib/swfobject',
         'lib/mozFlashAudioContext',
