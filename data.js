@@ -6,9 +6,18 @@ var URI = Class.extend({
         this.delimiter = delimiter;
         this.params = params;
 
+        // FIXME: this is unsafe / clumsy - should use deferred
         this.updating = false;
 
-        //todo: window.onhashchange = ...
+        window.onhashchange = function(evt) {
+            // FIXME: back/fwd doesn't update seq length (eh, this is
+            //        seq.patt's problem)
+            if (this.onchangeHook && ! this.updating) {
+                this.updating = true;
+                this.onchangeHook();
+                this.updating = false;
+            }
+        }.bind(this);
 
     },
     parseHash: function() {

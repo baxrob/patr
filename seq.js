@@ -9,17 +9,60 @@ var Patter = Class.extend({
         this.silentNoteVal = 0;
         this.buildFreqTable();
 
-        this.initURI();
+        this.parseURI();
 
         this.updateSequence();
+
+        this.uri.onchangeHook = function() {
+            this.parseURI();
+            this.updateSequence();
+            this.updateDisplay();
+        }.bind(this);
     },
-    initURI: function() {
+    parseURI: function() {
         this.uri.parseHash();
         this.options.stepCount = this.uri.length || this.randomStepCount();
         this.options.bpm = this.uri.rate || this.randomBPM();
-        this.stepSeq = this.uri.seq ? this.uri.seq.split(',') : 
-            this.generateStepSeq(); 
+        this.stepSeq = this.uri.seq ? this.uri.seq.split(',')
+            : this.generateStepSeq(); 
     },
+    // TODO: rename to buildSequence ? constructAttackSequence
+    updateSequence: function(skipURIUpdate) {
+        this.hzSeq = this.hzFromStepSeq();
+        this.attackSeq = this.flatAttackSeq();
+        this.formattedSeq = this.mergeSequences();
+        this.toneRow.updateSequence(this.formattedSeq);
+        if (! skipURIUpdate) {
+            this.uri.update({
+                seq: this.stepSeq,
+                rate: this.options.bpm,
+                length: this.options.stepCount
+            });
+        }
+    },
+    update: function(params) {
+        // fixme: stage updates for next note-break
+        if (params.stepCount) { 
+            if (this.toneRow.seqIdx >= params.stepCount) {
+                this.toneRow.reset();
+            }
+            this.options.stepCount = params.stepCount;
+        }
+        params.bpm && (this.options.bpm = params.bpm);
+        params.seq && (this.stepSeq = params.seq);
+        this.updateSequence();
+    },
+    updateDisplay: function() {
+        // Called from uri.onchangeHook 
+        this.updateDisplayHook && this.updateDisplayHook({
+            controls: {
+                bpm: this.options.bpm,
+                stepCount: this.options.stepCount 
+            },
+            sequence: this.stepSeq
+        });
+    },
+
     randomBPM: function() {
         return parseInt(Math.random() * 500 + 150);
     },
@@ -47,31 +90,6 @@ var Patter = Class.extend({
         }
         return stepSeq;
     },
-    updateSequence: function(skipURIUpdate) {
-        this.hzSeq = this.hzFromStepSeq();
-        this.attackSeq = this.flatAttackSeq();
-        this.formattedSeq = this.mergeSequences();
-        this.toneRow.updateSequence(this.formattedSeq);
-        if (! skipURIUpdate) {
-            this.uri.update({
-                seq: this.stepSeq,
-                rate: this.options.bpm,
-                length: this.options.stepCount
-            });
-        }
-    },
-    update: function(params) {
-        // fixme: stage updates for next note-break
-        if (params.stepCount) { 
-            if (this.toneRow.seqIdx >= params.stepCount) {
-                this.toneRow.reset();
-            }
-            this.options.stepCount = params.stepCount;
-        }
-        params.bpm && (this.options.bpm = params.bpm);
-        params.seq && (this.stepSeq = params.seq);
-        this.updateSequence();
-    },
 
     shuffle: function() {
         var newSeq = this.stepSeq.slice(0, this.options.stepCount)
@@ -97,7 +115,6 @@ var Patter = Class.extend({
         this.toneRow.run();
     },
     stop: function() {
-        // fixme: should clear blink, but not here - in Face
         this.toneRow.stop();
     },
     unpause: function() {

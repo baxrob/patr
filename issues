@@ -1,43 +1,39 @@
-data.js:11:        //todo: window.onhashchange = ...
-grep_issues.sh:3:egrep -rin "fixme|todo" *|grep -v ^lib/flexsdk|grep -v ^Binary > issues
-ix.js:12:        // FIXME:
-ix.js:22:        // TODO: this.keyHandlers
-ix.js:24:            // FIXME: please grok!!! :
-ix.js:47:        // TODO: move this somewhere sensible - css loader / parser class
-ix.js:65:        // TODO: 
-ix.js:70:        // FIXME: appears to be 3px off.  why?
-ix.js:82:        // TODO: move this to generated css file / .classes
-ix.js:99:        // FIXME: cleanup this clusterf* - here to func end
-ix.js:119:            // TODO: blink scrollbar
-ix.js:141:        // FIXME: pause and reset to seq[0] without doubly-triggering
-ix.js:144:        // TODO: init/use pauseText param
-ix.js:147:        // FIXME: patt.stageUpdate - or just change patt.update 
-ix.js:151:            // TODO: use callback to pause, or defer pause
-ix.js:166:        //FIXME: fails to cycle after seq expansion 
-ix.js:183:        // FIXME: update this.patt.sequence
-ix.js:195:        // FIXME: 
-ix.js:200:        // TODO: Face.updateSequenceDisplay
-ix.js:201:        // FIXME: calling triggerHandler is kludgy
-ix.js:212:        // FIXME: (in synth?) clicks during large sequence change (~300)
-ix.js:268:                // TODO: shift+click or enter key: stop/restart
-ix.js:387:                    // FIXME: read from url
-ix.js:518:        // FIXME: this is a separate deal - $controls must be in DOM before
-ix.js:521:        //       strategy: it's quite fluid to mind fixmes, which get way out
-ix.js:559:                // TODO: width should be viewport based
-ix.js:579:        // TODO: title/hover/tooltip indicating note % patt.octaveDivisions 
-ix.js:580:        // TODO: select + key in number + enter sets fader value
-ix.js:581:        // TODO: select + right / left key moves selected-state
-ix.js:612:                    // TODO: decode/encodeIdx($el)
-ix.js:627:                // FIXME; no this? jQ internal clobbering?
-ix.js:670:    // TODO: merge attr/css args - and reflect above
+data.js:9:        // FIXME: this is unsafe / clumsy - should use deferred
+ix.js:31:        // TODO: this.keyHandlers
+ix.js:33:            // FIXME: please grok!!! :
+    ix.js:57:        // TODO: move this somewhere sensible - css loader / parser class
+ix.js:76:        // TODO: welome dialog: automation/hwto, compat note, fadeout, thrice
+ix.js:79:        // TODO: shared info blurb on hover, expand option
+ix.js:84:        // FIXME: appears to be 3px off.  why?
+    ix.js:96:        // TODO: move this to generated css file / .classes
+    ix.js:113:        // FIXME: cleanup this clusterf* - here to func end
+ix.js:133:            // TODO: blink scrollbar
+ix.js:158:        // FIXME: pause and reset to seq[0] without doubly-triggering
+ix.js:161:        // TODO: init/use pauseText param
+        ix.js:164:        // FIXME: patt.stageUpdate - or just change patt.update 
+        ix.js:168:            // TODO: use callback to pause, or defer pause
+ix.js:183:        //FIXME: fails to cycle after seq expansion 
+ix.js:200:        // FIXME: (in synth?) clicks during large sequence change (~300)
+            ix.js:214:        // FIXME: update this.patt.sequence
+ix.js:225:        // FIXME: ? 
+ix.js:300:                // TODO: shift+click or enter key: stop/restart
+ix.js:419:                    // FIXME: read from url
+ix.js:550:        // FIXME: this is a separate deal - $controls must be in DOM before
+ix.js:553:        //       strategy: it's quite fluid to mind fixmes, which get way out
+ix.js:591:                // TODO: width should be viewport based
+ix.js:611:        // TODO: title/hover/tooltip indicating note % patt.octaveDivisions 
+ix.js:612:        // TODO: select + key in number + enter sets fader value
+ix.js:613:        // TODO: select + right / left key moves selected-state
+ix.js:644:                    // TODO: decode/encodeIdx($el)
+ix.js:659:                // FIXME; no this? jQ internal clobbering?
+ix.js:702:    // TODO: merge attr/css args - and reflect above
 lib/compile_flash_engine.sh:3:# TODO: test [ -d flex_path ] and warn about flex path
 mozFlashAudioContext.js:71:                // TODO:
 mozFlashAudioContext.js:111:        // fixme: moz loses setup audio obj on quick connect/disconnect?
 mozFlashAudioContext.js:148:        // TODO: use polyfill
 patter.html:4:<!-- TODO: move meta tags to ix.Face, and add others -->
 patter.html:12:/* TODO: move these to generated css in ix.Face module */
-patter.js:1:// FIXME: assign file labels, and use $script.ready - per dependencies
-patter.js:20:        // TODO: url 'engine' param: webkit, moz, flash
-seq.js:64:        // fixme: stage updates for next note-break
-seq.js:95:        // fixme?: clicks on first note ?
-seq.js:100:        // fixme: should clear blink, but not here - in Face
+patter.js:16:        // TODO: url 'engine' param: webkit, moz, flash
+        seq.js:43:        // fixme: stage updates for next note-break
+seq.js:111:        // fixme?: clicks on first note ?
+seq.js:116:        // fixme: should clear blink, but not here - in Face

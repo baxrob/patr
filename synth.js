@@ -1,5 +1,4 @@
 
-// Row of tones
 var ToneRow = Class.extend({
     init: function(context, bufferSize) {
         this.context = context;
@@ -62,6 +61,7 @@ var ToneRow = Class.extend({
                 el[1] = 0;
                 return el;
             });
+            // FIXME:
             // Arbitrary 110 ms pause - otherwise we get a click
             setTimeout(function() {
                 this.jsNode.disconnect();
@@ -162,12 +162,6 @@ var ToneRow = Class.extend({
 });
 
 
-var Tone = Class.extend({
-    init: function() {
-    }
-});
-
-
 var ToneBlock = Class.extend({
     init: function(sampleRate, baseGain) {
         this.sampleRate = sampleRate;
@@ -212,10 +206,10 @@ var ToneBlock = Class.extend({
     noise: function() {
         return sampleVal = 1 - (Math.random() * 2);
     },
-    // Hertz-based gain envelope
+    // Frequency based gain envelope
     bleat: function(hz) {
-        var divisor = 210,
-            multiplier = 2.4;
+        var divisor = 220,      // "cutoff"
+            multiplier = 2.4;   // "max gain"
         var cosh = function(n) {
             return (Math.exp(n) + Math.exp(-n)) / 2;
         };

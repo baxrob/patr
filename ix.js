@@ -4,13 +4,21 @@ var Face = Class.extend({
         this.$root = $parentElem;
         this.patt = pattern;
 
+        this.patt.updateDisplayHook = function(data) {
+            this.updateControlDisplay(data.controls);
+            this.updateSequenceDisplay(data.sequence);
+        }.bind(this);
+
+        this.dataControlMap = {
+            bpm: 'bpm',
+            stepCount: 'step_count'
+        };
+
         $controls = this.$controls = this.buildControls();
         this.$root.append(this.$controls)
 
         this.$frame = this.buildFrame(this.elemHeight(this.$controls));
         this.$root.append(this.$frame);
-        // FIXME:
-//        $('.blinker').css('visibility', 'hidden');
 
         this.$root.css({
             'font-family': 'verdana',
@@ -19,6 +27,7 @@ var Face = Class.extend({
             overflow: 'hidden'
         });
         
+        //
         // TODO: this.keyHandlers
         this.$root.keydown(function(evt) {
             // FIXME: please grok!!! :
@@ -41,6 +50,7 @@ var Face = Class.extend({
             }
         }.bind(this));
 
+
         $(window).on('resize', this.resizeHandler.bind(this));
         $(document).on('beat', this.beatHandler.bind(this));
 
@@ -61,8 +71,12 @@ var Face = Class.extend({
 
     }, // init
 
+
     welcomeDialog: function() {
-        // TODO: 
+        // TODO: welome dialog: automation/hwto, compat note, fadeout, thrice
+    },
+    tooltip: function(el, action) {
+        // TODO: shared info blurb on hover, expand option
     },
 
     // Event handlers
@@ -137,11 +151,15 @@ var Face = Class.extend({
             'box-shadow': '0 0 1px 1px #999'
         });
     },
+
+
+    // Control actions
     updateRate: function(evt) {
         // FIXME: pause and reset to seq[0] without doubly-triggering
         //        patt.tr.setUpdateHook
 
         // TODO: init/use pauseText param
+        //       dataDisplayMap ? or, eg dataControlMap['run']=['go','paus']
         var playing = this.$playButton.text() === 'paus';
 
         // FIXME: patt.stageUpdate - or just change patt.update 
@@ -179,50 +197,50 @@ var Face = Class.extend({
         $(window).triggerHandler('resize');
     },
 
-    clear: function() {
-        // FIXME: update this.patt.sequence
-        //        this.updateSequenceDisplay
-        this.patt.clear();
-        $('.fdr').each(function(idx, el) {
-            $(el).val(0); 
-            $(el).slider('value', 0);
-            $(el).find('a').text(0); 
-            //$(el).triggerHandler('mouseup');
-            $(el).slider('option', 'stop')(null, el);
-        });
-    },
-    regenerate: function() {
-        // FIXME: 
-        var newSeq = this.patt.generateStepSeq();
-        this.patt.update({
-            seq: newSeq 
-        });
-        // TODO: Face.updateSequenceDisplay
-        // FIXME: calling triggerHandler is kludgy
-        $('.fdr').each(function(idx, el) {
-            $(el).val(newSeq[idx]); 
-            $(el).slider('value', newSeq[idx]);
-            $(el).find('a').text(newSeq[idx]); 
-            // Update blinker
-            //$(el).triggerHandler('stop');
-            $(el).slider('option', 'stop')(null, el);
-        });
-    },
     shuffle: function() {
         // FIXME: (in synth?) clicks during large sequence change (~300)
         //        same with regenerate.  update in local +- len/x steps
         //        first then the rest?
         this.patt.shuffle();
         var newSeq = this.patt.stepSeq;
-        $('.fdr').each(function(idx, el) {
-            $(el).val(newSeq[idx]); 
-            $(el).slider('value', newSeq[idx]);
-            $(el).find('a').text(newSeq[idx]); 
-            //$(el).triggerHandler('mouseup');
-            $(el).slider('option', 'stop')(null, el);
+        this.updateSequenceDisplay(newSeq);
+    },
+    clear: function() {
+        this.patt.clear();
+        var newSeq = this.patt.stepSeq;
+        this.updateSequenceDisplay(newSeq);
+    },
+    regenerate: function() {
+        var newSeq = this.patt.generateStepSeq();
+        this.patt.update({
+            seq: newSeq 
         });
+        this.updateSequenceDisplay(newSeq);
     },
 
+
+    // Display updates
+    updateControlDisplay: function(data) {
+        for (var key in data) {
+            $('#' + this.dataControlMap[key]).val(data[key]);
+        }
+    },
+    updateSequenceDisplay: function(sequence) {
+        $('.fdr').each(function(idx, el) {
+            $(el).slider('value', sequence[idx]);
+            $(el).find('a').text(sequence[idx]); 
+            this.updateBlinkerState(idx);
+        }.bind(this));
+    },
+    updateBlinkerState: function(idx) {
+        $('#blinker_' + idx).css(
+            'border-color',
+            $('#fdr_' + idx).slider('value') == 0 ? 'transparent' : '#d37'
+        );
+    },
+
+
+    // Construction
     buildControls: function() {
         var self = this;
         var $controls = this.elem({
@@ -607,27 +625,17 @@ var Face = Class.extend({
                     $(ui.handle).text(ui.value);
                 },
                 stop: function(evt, el) {
-                    //console.log(el, evt.target, this, $('#fdr_'+stepIdx));
-                    var note;
-                    // TODO: decode/encodeIdx($el)
-                    //       or .. use stepIdx? 
-                    //       no - definite passed scope is better
-                    //var idx = evt.target.id.split('_')[1];
-                    var $blinker = $('#blinker_'+stepIdx);
-                    if (el.value == 0) {
-                        note = 0;
-                        $blinker.css('border-color', 'transparent');
-                    } else {
-                        $blinker.css('border-color', '#d37');
-                        note = el.value;
-                    }
-                    self.patt.stepSeq[stepIdx] = note;
-                    self.patt.updateSequence();
-                }
-                // FIXME; no this? jQ internal clobbering?
-                //        so .. make this consistent in Face callbacks
-                //.bind(this) // ix object/class
-                //.bind($('#fdr_'+stepIdx).get(0)) // window (why?)
+                    // FIXME: step-val edits after seq-len extension - if 
+                    //        in new portion of extended range - don't 
+                    //        register with tr
+                    //        eh .. sometimes?
+
+                    console.log(this);
+                    var note = el.value;
+                    this.patt.stepSeq[stepIdx] = note;
+                    this.patt.updateSequence();
+                    this.updateBlinkerState(stepIdx);
+                }.bind(this)
 
             })
         ).append(
@@ -691,7 +699,6 @@ var Face = Class.extend({
             $el.on(evt, options.on[evt]);
         }
          
-        //console.log($el, options);
         return $el;
     }
 

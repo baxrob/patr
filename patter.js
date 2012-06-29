@@ -1,12 +1,8 @@
-// FIXME: assign file labels, and use $script.ready - per dependencies
-//        noted below
-$script('lib/jquery-1.7.2.min', function() {
+$script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
     $script([
         'lib/jquery-ui-1.8.21.slider.min',
         'lib/swfobject',
         'mozFlashAudioContext',
-
-        'lib/simple_class', // modules below depend on this
 
         'synth', 
         'seq', 
