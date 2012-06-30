@@ -9,9 +9,16 @@ var Face = Class.extend({
             this.updateSequenceDisplay(data.sequence);
         }.bind(this);
 
+        // Mapping of URI params to el id/labels 
         this.dataControlMap = {
-            bpm: 'bpm',
-            stepCount: 'step_count'
+            bpm: {
+                id: 'bpm',
+                label: 'pace'
+            },
+            stepCount: {
+                id: 'step_count',
+                label: 'len'
+            }
         };
 
         $controls = this.$controls = this.buildControls();
@@ -26,7 +33,12 @@ var Face = Class.extend({
             padding: 0,
             overflow: 'hidden'
         });
+
+        $(window).on('resize', this.resizeHandler.bind(this));
+        $(document).on('beat', this.beatHandler.bind(this));
         
+        this.initStyles();
+
         //
         // TODO: this.keyHandlers
         this.$root.keydown(function(evt) {
@@ -50,26 +62,74 @@ var Face = Class.extend({
             }
         }.bind(this));
 
-
-        $(window).on('resize', this.resizeHandler.bind(this));
-        $(document).on('beat', this.beatHandler.bind(this));
-
-        // TODO: move this somewhere sensible - css loader / parser class
-        $('head').append(
-            this.elem({
-                tag: 'link',
-                attr: {
-                    type: 'text/css',
-                    rel: 'stylesheet',
-                    media: 'all',
-                    href: (window.appRoot || '') 
-                        //+ 'lib/css/custom-theme/jquery-ui-1.8.21.custom.css'
-                        + 'lib/ui-slider-custom.css'
-                }
-            })
-        );
-
     }, // init
+
+
+    initStyles: function() {
+        this.$style = this.elem({
+            tag: 'style',
+            attr: { type: 'text/css' }
+        });
+
+        this.styleRules = {
+            '#frame::-webkit-scrollbar': {
+                width: '16px',
+                height: '16px'
+            },
+            '#frame::-webkit-scrollbar-thumb': {
+                background: '#aaa'
+            },
+            '#frame::-webkit-scrollbar-track': {
+                background: '#eee'
+            },
+            '.fdr.blinking': {
+                'box-shadow': '0 0 1px 1px #999'
+            },
+            '.fdr .ui-slider-handle.blinking': {
+                'background': '#a03',
+                'border-color': '#d37',
+                'border-width': '1px',
+                'box-shadow': '0 0 1px 1px #999'
+            },
+            '.blinker.blinking': {
+                'background-color': '#b03',
+                'box-shadow': '0 0 1px 1px #999'
+            }
+        };
+
+        for (var selector in this.styleRules) {
+            this.$style.append(
+                selector + '{'
+            );
+            var rules = this.styleRules[selector];
+            for (var rule in rules) {
+                this.$style.append(
+                    rule + ':' + rules[rule] + ';'
+                );
+            }
+            this.$style.append('}');
+        }
+
+        var externalStyles = ['lib/ui-slider-custom.css'];
+
+        externalStyles.map(function(filePath) {
+            $('head').append(
+                this.elem({
+                    tag: 'link',
+                    attr: {
+                        type: 'text/css',
+                        rel: 'stylesheet',
+                        media: 'all',
+                        href: (window.appRoot || '') + filePath
+                    }
+                })
+            );
+        }.bind(this));
+
+        // After externals, override
+        $('head').append(this.$style);
+
+    }, // initStyles
 
 
     welcomeDialog: function() {
@@ -93,29 +153,15 @@ var Face = Class.extend({
         // Handle beat: step UI: indicate and scroll
         var step = evt.originalEvent.beat % this.patt.stepSeq.length;
 
-        // TODO: move this to generated css file / .classes
-        $('.blinker').css({
-            'background-color': 'transparent',
-            'box-shadow': 'none'
-        });
-        
-        $('.ui-slider-handle').css({
-            'background': '#555',
-            'border-color': '#999',
-            'border-width': '1px',
-            'box-shadow': 'none'
-        });
-        $('.fdr').css({
-            'border-color': '#999',
-            'box-shadow': 'none'
+        ['fdr', 'ui-slider-handle', 'blinker'].map(function(className) {
+            $('.' + className).removeClass('blinking');
         });
         
         // FIXME: cleanup this clusterf* - here to func end
         var $blinker = $('#blinker_' + step),
             blinker_height = this.elemHeight($blinker),
             frame_height = this.elemHeight(this.$frame),
-            fdr_widget_height = this.elemHeight($('.fdr').parent()),// + blinker_height;
-
+            fdr_widget_height = this.elemHeight($('.fdr').parent()),
             frame_height = this.$frame.height() + 
                 parseInt(this.$frame.css('padding-top'));
 
@@ -130,26 +176,21 @@ var Face = Class.extend({
             $blinker.position().top >
             this.$frame.height() + blinker_height
         ) {
-            // TODO: blink scrollbar
             // Re-position off-screen row to page top
+            // TODO: blink scrollbar
             this.$frame.scrollTop(
                 this.$frame.scrollTop() + rows_per_screen * fdr_widget_height
             );
         }
-        $blinker.css({
-            'background-color': '#b03',
-            'box-shadow': '0 0 1px 1px #999'
-        });
-        $('#fdr_' + step + ' .ui-slider-handle').css({
-            'background': '#a03',
-            'border-color': '#d37',
-            'border-width': '1px',
-            'box-shadow': '0 0 1px 1px #999'
-        });
-        $('#fdr_' + step).css({
-            //'border-color': '#b15',
-            'box-shadow': '0 0 1px 1px #999'
-        });
+
+        [
+            $('#fdr_' + step), 
+            $('#fdr_' + step + ' .ui-slider-handle'), 
+            $blinker
+        ].map(function(el) {
+            $(el).addClass('blinking');
+        })
+        
     },
 
 
@@ -222,7 +263,7 @@ var Face = Class.extend({
     // Display updates
     updateControlDisplay: function(data) {
         for (var key in data) {
-            $('#' + this.dataControlMap[key]).val(data[key]);
+            $('#' + this.dataControlMap[key]['id']).val(data[key]);
         }
     },
     updateSequenceDisplay: function(sequence) {
@@ -275,9 +316,10 @@ var Face = Class.extend({
                 'margin-top': '0px',
                 // Section end, extra margin
                 'margin-right': '15px',
-                'background-color': '#ddd',
+                'background-color': '#555',
+                color: '#ddd',
                 height: '18px',
-                border: '1px solid silver',
+                border: '1px solid #999',
                 'border-radius': '2px',
                 float: 'left'
             },
@@ -310,7 +352,7 @@ var Face = Class.extend({
                     margin: 0,
                     'margin-right': '4px'
                 }
-            }).text('rate:')
+            }).text('pace:')
         ).append(
             this.elem({
                 tag: 'input',
@@ -324,7 +366,9 @@ var Face = Class.extend({
                     'text-align': 'right',
                     float: 'left',
                     width: '2.2em',
-                    border: '1px solid silver',
+                    'background-color': '#ddd',
+                    color: '#222',
+                    border: '1px solid #999',
                     'border-radius': '2px',
                     'padding-left': '3px',
                     'padding-right': '3px',
@@ -371,7 +415,9 @@ var Face = Class.extend({
                     'text-align': 'right',
                     float: 'left',
                     width: '2.2em',
-                    border: '1px solid silver',
+                    'background-color': '#ddd',
+                    color: '#222',
+                    border: '1px solid #999',
                     'border-radius': '2px',
                     'padding-left': '3px',
                     'padding-right': '3px',
@@ -427,7 +473,7 @@ var Face = Class.extend({
                     'text-align': 'right',
                     float: 'left',
                     width: '1.5em',
-                    border: '1px solid silver',
+                    border: '1px solid #999',
                     'border-radius': '2px',
                     'padding-left': '3px',
                     'padding-right': '3px',
@@ -468,10 +514,11 @@ var Face = Class.extend({
                     'padding-top': '1px',
                     'margin-top': '0px',
                     'margin-right': '10px',
-                    'background-color': '#ddd',
+                    'background-color': '#555',
+                    color: '#ddd',
                     height: '17px',
                     'border-radius': '2px',
-                    border: '1px solid silver'
+                    border: '1px solid #999'
                 },
                 text: 'shuff',
                 on: {
@@ -494,10 +541,11 @@ var Face = Class.extend({
                     'padding-top': '1px',
                     'margin-top': '0px',
                     'margin-right': '10px',
-                    'background-color': '#ddd',
+                    'background-color': '#555',
+                    color: '#ddd',
                     height: '17px',
                     'border-radius': '2px',
-                    border: '1px solid silver'
+                    border: '1px solid #999'
                 },
                 text: 'clear',
                 on: {
@@ -520,10 +568,11 @@ var Face = Class.extend({
                     'padding-top': '1px',
                     'margin-top': '0px',
                     'margin-right': '10px',
-                    'background-color': '#ddd',
+                    'background-color': '#555',
+                    color: '#ddd',
                     height: '17px',
                     'border-radius': '2px',
-                    border: '1px solid silver'
+                    border: '1px solid #999'
                 },
                 text: 'regen',
                 on: {
@@ -550,7 +599,7 @@ var Face = Class.extend({
                 'margin-left': '-9px', // ???
                 height: '20px',
                 width: 'auto', // sum(controls.children.widths)
-                border: '1px solid silver'
+                border: '1px solid #999'
             }
         }).text('[explanatory, as hover-text per control above: fade out after 10, 5, 3 secs, per user\'s visit count; then don\'t show, (but also add help button at control edge-right.)]');
         //$controls.append($controlsHint);
@@ -630,7 +679,6 @@ var Face = Class.extend({
                     //        register with tr
                     //        eh .. sometimes?
 
-                    console.log(this);
                     var note = el.value;
                     this.patt.stepSeq[stepIdx] = note;
                     this.patt.updateSequence();

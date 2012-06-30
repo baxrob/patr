@@ -1,12 +1,12 @@
 data.js:9:        // FIXME: this is unsafe / clumsy - should use deferred
 ix.js:31:        // TODO: this.keyHandlers
 ix.js:33:            // FIXME: please grok!!! :
-    ix.js:57:        // TODO: move this somewhere sensible - css loader / parser class
+x    ix.js:57:        // TODO: move this somewhere sensible - css loader / parser class
 ix.js:76:        // TODO: welome dialog: automation/hwto, compat note, fadeout, thrice
 ix.js:79:        // TODO: shared info blurb on hover, expand option
 ix.js:84:        // FIXME: appears to be 3px off.  why?
-    ix.js:96:        // TODO: move this to generated css file / .classes
-    ix.js:113:        // FIXME: cleanup this clusterf* - here to func end
+x    ix.js:96:        // TODO: move this to generated css file / .classes
+x    ix.js:113:        // FIXME: cleanup this clusterf* - here to func end
 ix.js:133:            // TODO: blink scrollbar
 ix.js:158:        // FIXME: pause and reset to seq[0] without doubly-triggering
 ix.js:161:        // TODO: init/use pauseText param
@@ -14,7 +14,7 @@ ix.js:161:        // TODO: init/use pauseText param
         ix.js:168:            // TODO: use callback to pause, or defer pause
 ix.js:183:        //FIXME: fails to cycle after seq expansion 
 ix.js:200:        // FIXME: (in synth?) clicks during large sequence change (~300)
-            ix.js:214:        // FIXME: update this.patt.sequence
+x            ix.js:214:        // FIXME: update this.patt.sequence
 ix.js:225:        // FIXME: ? 
 ix.js:300:                // TODO: shift+click or enter key: stop/restart
 ix.js:419:                    // FIXME: read from url
