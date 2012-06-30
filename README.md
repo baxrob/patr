@@ -31,6 +31,8 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 Focused on Web Audio API.
 'This is ALPHA software, if that.'
 
+![screenshot](seq_prev.png)
+<!-- github doesn't render this, use link to renered audio -- just use a screenshot for now -->
 <audio controls></audio>
 
 Backend / Audio-Engin Versions:
