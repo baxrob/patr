@@ -22,7 +22,7 @@ Faders / Sliders Area:
 * ...
 * select + up/down keys
 
-![screenshot](http://proto.blandhand.net/static/js/patr/seq_prev.png)
+![screenshot](http://proto.blandhand.net/static/js/patr/20120630_screencap.png)
 <!-- github doesn't render this, use link to renered audio -- just use a screenshot for now -->
 <audio controls></audio>
 
@@ -39,7 +39,7 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 ### Roadmap
 
 ### Attribs
-1. dynamicaudio.js
+1. dynamicaudio.js https://github.com/bfirsh/dynamicaudio.js/
 
 
 
