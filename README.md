@@ -22,9 +22,15 @@ Faders / Sliders Area:
 * ...
 * select + up/down keys
 
-![screenshot](http://proto.blandhand.net/static/js/patr/20120630_screencap.png)
-<!-- github doesn't render this, use link to renered audio -- just use a screenshot for now -->
-<audio controls></audio>
+<div style="width: 300px;">
+
+<img src="http://proto.blandhand.net/static/js/patr/20120630_screencap.png" style="width: 500px;" />
+<!--![screenshot](http://proto.blandhand.net/static/js/patr/20120630_screencap.png)
+
+ github doesn't render this, use link to renered audio -- just use a screenshot for now >
+<audio controls></audio-->
+
+</div>
 
 ### Compatability
 My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html).  I've added a wrapper for Mozilla's Audio Data API, and a Flash fallback, but, while these render the audio well enough, it is utterly out-of-sync with the UI display (I'm working on this, see the Firefox and Roadmap sections, below.)
