@@ -22,13 +22,9 @@ Faders / Sliders Area:
 * ...
 * select + up/down keys
 
-<div style="width: 300px;">
+<div style="max-width: 50%;" 
 
 <img src="http://proto.blandhand.net/static/js/patr/20120630_screencap.png" style="max-width: 50%;" />
-<!--![screenshot](http://proto.blandhand.net/static/js/patr/20120630_screencap.png)
-
- github doesn't render this, use link to renered audio -- just use a screenshot for now >
-<audio controls></audio-->
 
 </div>
 
