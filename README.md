@@ -1,33 +1,5 @@
 ## Patr - a step sequencer
 
-### Basics
-* This is pre-alpha software
-
-#### How To
->
->
->
-
-Control Area (top):
-
-* go: play / pause (spacebar)
-* pace: beats per minute 
-* length: sequence steps 
-* shuffle: randomly reorder steps
-* clear: set all steps to zero
-* regen: generate new random sequence
-
-Faders / Sliders Area:
-
-* ...
-* select + up/down keys
-
-<div style="max-width: 50%;" 
-
-<img src="http://proto.blandhand.net/static/js/patr/20120630_screencap.png" style="max-width: 50%;" />
-
-</div>
-
 ### Compatability
 My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html).  I've added a wrapper for Mozilla's Audio Data API, and a Flash fallback, but, while these render the audio well enough, it is utterly out-of-sync with the UI display (I'm working on this, see the Firefox and Roadmap sections, below.)
 
@@ -36,15 +8,11 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
     * Chromium, and probably some of [these WebKit browsers](http://en.wikipedia.org/wiki/List_of_web_browsers#WebKit-based)
     * Safari - Web Audio API is only available in nightly builds, AFAIK.
 * Firefox: With version 4 and above, you should get audio playback, via mozFlashAudioContext.js which wraps the [Audio Data API](https://wiki.mozilla.org/Audio_Data_API) 
-* Other: The mozFlashAudioContext.js wrapper falls back to a flash audio engine, based on [dynamicaudio.js](...)
+* Other: The mozFlashAudioContext.js wrapper falls back to a flash audio engine, based on [dynamicaudio.js][dynamicaudio.js]
 
 ### Roadmap
 
 ### Attribs
-1. dynamicaudio.js https://github.com/bfirsh/dynamicaudio.js/
-
-
-
-#### Dedicated to
+1. [dynamicaudio.js] https://github.com/bfirsh/dynamicaudio.js/
 
 
