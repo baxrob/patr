@@ -1,4 +1,3 @@
-<style>body {font-family: verdana, arial, sans-serif; font-size: 76%;}</style>
 ## Patr - a step sequencer
 
 This is early stage, pre-alpha version software.  It's not recommended for use, in any case.  See below.
@@ -7,13 +6,15 @@ This is early stage, pre-alpha version software.  It's not recommended for use, 
 
 <http://proto.blandhand.net/patr/>
 
-Audio sample:
+[Audio sample](http://proto.blandhand.net/static/js/patr/media/aucap.html)
 
+<!--
 <audio controls>
-    <source src="media/aucap.wav">
-    <source src="media/aucap.ogg">
-    <source src="media/aucap.mp3">
+    <source src="http://proto.blandhand.net/static/js/patr/media/aucap.wav">
+    <source src="http://proto.blandhand.net/static/js/patr/media/aucap.ogg">
+    <source src="http://proto.blandhand.net/static/js/patr/media/aucap.mp3">
 </audio>
+-->
 
 Screenshot:
 
