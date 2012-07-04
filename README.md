@@ -17,7 +17,7 @@ Audio sample:
 
 Screenshot:
 
-![screenshot](/bhand/bhand/static/js/patr/media/screencap.png)
+![screenshot](media/screencap.png)
 
 #### How
 
