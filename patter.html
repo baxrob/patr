@@ -4,9 +4,11 @@
 <!-- TODO: move meta tags to ix.Face, and add others -->
 <meta charset="utf-8">
 <meta name="medium" content="audio" />
-<script src="lib/script.js"></script>
+<script src="src/lib/script.js"></script>
 <script>
-$script('patter.js');
+var appRoot = 'src/';
+$script.path(appRoot);
+$script('patter');
 </script>
 </head>
 <body>

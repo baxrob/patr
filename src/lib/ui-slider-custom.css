@@ -1,0 +1,63 @@
+
+.fdr {
+    position: relative;
+    width: 4px;
+    height: 100px;
+    margin-left: 16px;
+    border-radius: 2px;
+
+    margin-top: 14px;
+    /*border-top: 1px solid #ccc;*/
+    border-radius: 0;
+    width: 27px;
+    margin-left: 6px;
+}
+.fdr .ui-slider-range {
+    position: absolute;
+    z-index: 1;
+    display: block;
+    border: 0;
+    background-color: #ccc;
+    width: 100%;
+    bottom: 0;
+
+    padding-top: 1px;
+}
+.fdr .ui-slider-handle {
+    position: absolute;
+    left: -12px;
+    margin-bottom: -9px;
+    z-index: 2;
+    width: 25px;
+    height: 12px;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    background-color: #555;
+    border-color: #999;
+    color: #ddd;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 10px;
+    text-decoration: none;
+
+    left: 0;
+    margin-bottom: -13px;
+    margin-bottom: 0;
+}
+.fdr .ui-slider-handle.ui-state-hover {
+    background-color: #ddd;
+    color: #333;
+    border: 1px solid #333;
+    box-shadow: 0 0 1px 1px #999;
+}
+.fdr .ui-slider-handle.ui-state-focus {
+    outline: none;
+    background-color: #fff;
+    color: #222;
+    box-shadow: 0 0 1px 1px #999;
+}
+.fdr .ui-slider-handle.ui-state-active {
+    background-color: #fff;
+    color: #222;
+    box-shadow: 0 0 1px 1px #999;
+}
