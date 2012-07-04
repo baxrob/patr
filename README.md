@@ -48,10 +48,12 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 * Shuffle and sort pattern by sub-sequence.
 * Sequence Generation Alternatives: eg: "true" random; silence density; random "walk", etc.
 
+<!--
 ### Attribs
 1. [dynamicaudio.js]
 2. [soundtoy]
 3. [chipmusix]
+-->
 
 [dynamicaudio.js]: https://github.com/bfirsh/dynamicaudio.js/
 [soundtoy]: http://....
