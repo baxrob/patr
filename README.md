@@ -29,7 +29,7 @@ The controls should be self-evident, but, JIC:
 * shuff, clear and regen - buttons: randomly re-order existing notes; set all notes to zero; generate a new random set of notes.
 
 ### Compatability
-My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html).  I've added a wrapper for Mozilla's Audio Data API, and a Flash fallback, but, while these render the audio well enough, it is utterly out-of-sync with the UI display (I'm working on this, see the Firefox and Roadmap sections, below.)
+My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html).  I've added a wrapper for Mozilla's Audio Data API, and a Flash fallback, but, while these render the audio well enough, it is utterly out-of-sync with the UI display (I'm working on this.)
 
 * WebKit broswers: 
     * Google Chrome, version 16 and above (This is my main development and testing platform, though the latest Chrome [version 20.0.1132.47, on Ubuntu 12.04, at least] completely breaks audio output - see Chromium...)
