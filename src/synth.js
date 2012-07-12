@@ -1,16 +1,17 @@
 
 var ToneRow = Class.extend({
-    init: function(context, bufferSize) {
+    init: function(context, bufferLength) {
         this.context = context;
         this.sampleRate = this.context.sampleRate;
-        this.bufferSize = bufferSize;
+        this.bufferLength = bufferLength;
 
         this.jsNode = this.context.createJavaScriptNode(
-            this.bufferSize, 0, 2
+            this.bufferLength, 0, 2
         );
         this.jsNode.onaudioprocess = this.onProcess.bind(this); 
 
-        this.block = new ToneBlock(this.sampleRate, 1);
+        var baseGain = 0.8;
+        this.block = new ToneBlock(this.sampleRate, baseGain);
 
         this.reset();
         this.sequence = [];
@@ -51,6 +52,9 @@ var ToneRow = Class.extend({
         this.setUpdateHook(function() {
             // Store current sequence, blank, disconnect and restore
             var restoreElapsed = this.elapsed;
+
+            //console.log(this.elapsed, this.stepSec);
+            
             var restoreSequence = [];
             // Manually copy seqence steps to restore
             for (var i in this.sequence) {
@@ -62,17 +66,33 @@ var ToneRow = Class.extend({
                 return el;
             });
             // FIXME:
-            // Arbitrary 110 ms pause - otherwise we get a click
+
+            //console.log(this.bufferLength / this.sampleRate);
+            
+            // Somewhat arbitrary 110 ms pause - otherwise we get a click
+            // FIXME: Explain: 
             setTimeout(function() {
+                //console.log(this.newNote, this.elapsed, restoreElapsed);
+                //console.log(this.elapsed - restoreElapsed);
+                if (this.elapsed < restoreElapsed) {
+                    console.log('crak?', restoreElapsed + this.stepSec, this.elapsed, restoreElapsed, this.sequence[this.sequence.length - 1], this.sequence[this.seqIdx][0]);
+                } else {
+                    console.log('ok', restoreElapsed + this.stepSec, this.elapsed, restoreElapsed, this.sequence[this.seqIdx][0]);
+                }
                 this.jsNode.disconnect();
                 this.running = false;
                 // Reset to next note
                 this.sequence = restoreSequence;
-                this.elapsed = restoreElapsed;
+                this.elapsed = restoreElapsed + this.stepSec;
+
+                this.elapsed = this.seqIdx == 0 ? 0
+                    : this.sequence[this.seqIdx][0];
+
                 this.block.writeSample = 0;
-                this.newNote = true;
+                // Force first note case
+                //this.newNote = true;
                 this.onComplete && this.onComplete();
-            }.bind(this), 110);
+            }.bind(this), 110);//this.bufferLength / this.sampleRate * 1000 + 10);//0);//110);
         }.bind(this));
     },
     reset: function() {
@@ -110,8 +130,12 @@ var ToneRow = Class.extend({
                 this.stageBeatEvent(this.seqIdx, nextAttack, 0);
                 this.firstLoop = false;
             } else {
+                //console.log('looping', this.elapsed, this.stepSec);
+
                 // Looping, so rewind elapsed by unused buffer 
                 this.elapsed = buffer.duration - this.stepSec;
+
+                //console.log('adjusted', this.elapsed, this.stepSec);
             }
         }
 
@@ -133,7 +157,7 @@ var ToneRow = Class.extend({
 
             // Perform sequence update between notes
             if (this.sequenceUpdateHook) {
-                this.sequenceUpdateHook(this.stepSec);
+                this.sequenceUpdateHook();
             }
 
             // Begin next note

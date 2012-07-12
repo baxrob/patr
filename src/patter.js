@@ -15,9 +15,12 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
 
         // TODO: url 'engine' param: webkit, moz, flash
         //       also: never publish / bookmark this param ? (how?)
-        if ((window.AudioContext || window.webkitAudioContext)) {
+        var contextClas;
+        if (
+            contextClass = (window.AudioContext || window.webkitAudioContext)
+        ) {
             console.log('webkit adio api');
-            var audioContext = new (window.AudioContext || webkitAudioContext)();
+            var audioContext = new contextClass();
             audioContext.backend = 'webkit';
         } else {
             var audioContext = new mozFlashAudioContext();

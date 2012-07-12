@@ -125,7 +125,6 @@ var Face = Class.extend({
             this.$style.append('}');
         }
 
-        console.log(appRoot);
         var externalStyles = ['lib/ui-slider-custom.css'];
 
         externalStyles.map(function(filePath) {
