@@ -110,6 +110,7 @@ var Patter = Class.extend({
     },
 
     playSequence: function() {
+        console.log('run');
         // fixme?: clicks on first note ?
         //this.toneRow.playSequence();
         this.toneRow.run();

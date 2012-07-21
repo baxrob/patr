@@ -56,7 +56,7 @@ var Face = Class.extend({
 
         //
         // TODO: this.keyHandlers
-        this.$root.keydown(function(evt) {
+        this.$root.on('keydown', function(evt) {
             // FIXME: please grok!!! :
             //        window.onkeypress - s evt.keycode is 115
             //        window.onkeydown - s evt.keycode is 83
@@ -219,13 +219,18 @@ var Face = Class.extend({
         var playing = this.$playButton.text() === 'paus';
 
         // FIXME: patt.stageUpdate - or just change patt.update 
-        //this.patt.stop();
-        this.patt.update({ bpm: evt.target.value });
         if (playing) {
+            console.log('eh', this);
             // TODO: use callback to pause, or defer pause
-            setTimeout(function() {
+            this.patt.pause(function() {
+                //this.patt.toneRow.reset();
+        this.patt.update({ bpm: evt.target.value });
                 this.patt.playSequence();
-            }.bind(this), 100);
+            }.bind(this));
+            //this.patt.toneRow.reset();
+            setTimeout(function() {
+                //this.patt.playSequence();
+            }.bind(this), 500);
         }
 
         $(evt.target).blur();
@@ -247,6 +252,8 @@ var Face = Class.extend({
             stepCount: evt.target.value
         });
         $(evt.target).blur();
+
+        // TODO: this.rebuild
         $('#frame').remove();
         this.$frame = this.buildFrame(this.elemHeight(this.$controls));
         this.$root.append(this.$frame);

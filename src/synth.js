@@ -21,6 +21,7 @@ var ToneRow = Class.extend({
     setUpdateHook: function(newHook) {
         var restoreUpdateHook = this.sequenceUpdateHook;
         this.sequenceUpdateHook = function() {
+            //console.log(this.sequenceUpdateHook, newHook);
             newHook();
             this.sequenceUpdateHook = restoreUpdateHook;
         };
@@ -46,53 +47,47 @@ var ToneRow = Class.extend({
         }
     },
     stop: function() {
-        this.pause(this.reset);
+        console.log('call stop');
+        this.pause(null);//this.reset);
     },
     pause: function(onComplete) {
+        console.log('called pause');
         this.setUpdateHook(function() {
-            // Store current sequence, blank, disconnect and restore
-            var restoreElapsed = this.elapsed;
-
-            //console.log(this.elapsed, this.stepSec);
-            
+            console.log('pause hook');
+            // Store current sequence, then zero-fill
             var restoreSequence = [];
-            // Manually copy seqence steps to restore
             for (var i in this.sequence) {
                 restoreSequence[i] = this.sequence[i].slice();
             }
-            // Empty sequence - set all notes to zero
             this.sequence = this.sequence.map(function(el, idx) {
                 el[1] = 0;
                 return el;
             });
-            // FIXME:
-
-            //console.log(this.bufferLength / this.sampleRate);
             
-            // Somewhat arbitrary 110 ms pause - otherwise we get a click
-            // FIXME: Explain: 
+            // Disconnect and restore
+
+            // Wait ~110 ms - otherwise we get a click
+            // FIXME: Explain: Waiting bufferDuration, should put us well
+            //        into the next buffer; anyhow, should only need to wait 
+            //        this.stepSec to prevent click.  Or, stepSec + / -
+            //        setTimeout latency? Is timeout latency up to 65ms? 
+            var timeout = this.bufferLength / this.sampleRate * 1000 + 65;
+            // FIXME: use requestAnimationFrame
             setTimeout(function() {
-                //console.log(this.newNote, this.elapsed, restoreElapsed);
-                //console.log(this.elapsed - restoreElapsed);
-                if (this.elapsed < restoreElapsed) {
-                    console.log('crak?', restoreElapsed + this.stepSec, this.elapsed, restoreElapsed, this.sequence[this.sequence.length - 1], this.sequence[this.seqIdx][0]);
-                } else {
-                    console.log('ok', restoreElapsed + this.stepSec, this.elapsed, restoreElapsed, this.sequence[this.seqIdx][0]);
-                }
                 this.jsNode.disconnect();
                 this.running = false;
                 // Reset to next note
                 this.sequence = restoreSequence;
-                this.elapsed = restoreElapsed + this.stepSec;
-
                 this.elapsed = this.seqIdx == 0 ? 0
                     : this.sequence[this.seqIdx][0];
-
                 this.block.writeSample = 0;
+
                 // Force first note case
-                //this.newNote = true;
-                this.onComplete && this.onComplete();
-            }.bind(this), 110);//this.bufferLength / this.sampleRate * 1000 + 10);//0);//110);
+                this.newNote = true;
+
+                //console.log(onComplete);
+                onComplete && onComplete.bind(this)();
+            }.bind(this), timeout);
         }.bind(this));
     },
     reset: function() {
@@ -103,6 +98,7 @@ var ToneRow = Class.extend({
         this.block.writeSample = 0;
     },
     stageBeatEvent: function(idx, length, onsetDelay) {
+        // FIXME: use requestAnimationFrame
         setTimeout(function() {
             var evt = document.createEvent('Event');
             evt.initEvent('beat', false, false);
@@ -130,12 +126,8 @@ var ToneRow = Class.extend({
                 this.stageBeatEvent(this.seqIdx, nextAttack, 0);
                 this.firstLoop = false;
             } else {
-                //console.log('looping', this.elapsed, this.stepSec);
-
                 // Looping, so rewind elapsed by unused buffer 
                 this.elapsed = buffer.duration - this.stepSec;
-
-                //console.log('adjusted', this.elapsed, this.stepSec);
             }
         }
 
