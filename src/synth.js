@@ -18,21 +18,15 @@ var ToneRow = Class.extend({
         this.sequenceUpdateHook = null;
         this.running = false;
     },
-    addUpdateHook: function(newHook) {
-        //console.log(newHook);
-        var existingUpdateHook = this.sequenceUpdateHook;
+    setUpdateHook: function(newHook) {
         this.sequenceUpdateHook = function() {
-            console.log('pre', newHook, existingUpdateHook);
             newHook();
-            existingUpdateHook && existingUpdateHook();
-            this.sequenceUpdateHook = null;//restoreUpdateHook;
-            //console.log('post', this.sequenceUpdateHook);
+            this.sequenceUpdateHook = null;
         };
     },
     updateSequence: function(sequence) {
-        if (this.running) {
-            console.log('add squp hook');
-            this.addUpdateHook(function() {
+        if (false && this.running) {
+            this.setUpdateHook(function() {
                 this.sequence = sequence;
             }.bind(this));
         } else {
@@ -54,9 +48,7 @@ var ToneRow = Class.extend({
         this.pause(this.reset);
     },
     pause: function(onComplete) {
-        console.log('add pause hook');
-        this.addUpdateHook(function() {
-            console.log('pausing');
+        this.setUpdateHook(function() {
             // Store current sequence, then zero-fill
             var restoreSequence = [];
             for (var i in this.sequence) {
@@ -87,6 +79,7 @@ var ToneRow = Class.extend({
         }.bind(this));
     },
     reset: function() {
+        console.log('resetting');
         this.firstLoop = true;
         this.newNote = true;
         this.seqIdx = 0;
