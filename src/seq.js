@@ -11,11 +11,12 @@ var Patter = Class.extend({
 
         this.parseURI();
 
-        this.updateSequence();
+        this.dirty = true;
+        this.buildSequence();
 
         this.uri.onchangeHook = function() {
             this.parseURI();
-            this.updateSequence();
+            this.buildSequence();
             this.updateDisplay();
         }.bind(this);
     },
@@ -27,30 +28,72 @@ var Patter = Class.extend({
             : this.generateStepSeq(); 
     },
     // TODO: rename to buildSequence ? constructAttackSequence
-    updateSequence: function(skipURIUpdate) {
-        this.hzSeq = this.hzFromStepSeq();
-        this.attackSeq = this.flatAttackSeq();
-        this.formattedSeq = this.mergeSequences();
-        this.toneRow.updateSequence(this.formattedSeq);
-        if (! skipURIUpdate) {
+    buildSequence: function() {
+        console.log('build?', this.dirty);
+        if (this.dirty) {
+            this.hzSeq = this.hzFromStepSeq();
+            this.attackSeq = this.flatAttackSeq();
+            this.formattedSeq = this.mergeSequences();
+            this.toneRow.updateSequence(this.formattedSeq);
             this.uri.update({
                 seq: this.stepSeq,
                 rate: this.options.bpm,
                 length: this.options.stepCount
             });
+            this.dirty = false;
         }
     },
-    update: function(params) {
-        // fixme: stage updates for next note-break
-        if (params.stepCount) { 
-            if (this.toneRow.seqIdx >= params.stepCount) {
-                this.toneRow.reset();
+    update: function(params, onContinue) {
+        if (params.seq) {
+            for (var idx = 0; idx < this.stepSeq.length; idx++) {
+                if (this.stepSeq[idx] !== params.seq[idx]) {
+                    this.dirty = true;
+                    break;
+                }
+            };
+            this.dirty && (this.stepSeq = params.seq);
+        }
+        if (params.stepCount && params.stepCount !== this.options.stepCount) {
+            this.dirty = true;
+            var diff = params.stepCount - this.options.stepCount;
+            if (
+                //diff < 0
+                //&& 
+                this.isRunning() 
+                //&& this.toneRow.seqIdx >= params.stepCount
+            ) {
+                this.toneRow.pause(function() {
+                    this.reset(); 
+        this.buildSequence();
+                    this.unpause();
+                }.bind(this));
+            }
+            while (diff < 0) {
+                this.stepSeq.pop();
+                diff++;
+            }
+            while (diff > 0) {
+                this.stepSeq.push(0)
+                diff--;
             }
             this.options.stepCount = params.stepCount;
         }
-        params.bpm && (this.options.bpm = params.bpm);
-        params.seq && (this.stepSeq = params.seq);
-        this.updateSequence();
+        else if (params.bpm && params.bpm !== this.options.bpm) {
+            this.dirty = true;
+            if (this.isRunning()) {
+                this.toneRow.pause(function() {
+                    this.buildSequence();
+                    var lastAttack = this.toneRow.sequence[
+                        this.toneRow.seqIdx
+                    ][0];
+                    this.toneRow.elapsed = lastAttack;
+                    //this.reset();
+                    this.unpause();
+                }.bind(this));
+            }
+            this.options.bpm = params.bpm;
+        }
+        else this.buildSequence();
     },
     updateDisplay: function() {
         // Called from uri.onchangeHook 
@@ -110,9 +153,6 @@ var Patter = Class.extend({
     },
 
     playSequence: function() {
-        console.log('run');
-        // fixme?: clicks on first note ?
-        //this.toneRow.playSequence();
         this.toneRow.run();
     },
     stop: function() {
@@ -124,6 +164,13 @@ var Patter = Class.extend({
     pause: function(after) {
         this.toneRow.pause(after);
     },
+    reset: function() {
+        this.toneRow.reset();
+    },
+    isRunning: function() {
+        return this.toneRow.running;
+    },
+
     buildFreqTable: function() {
         this.freqTable = [this.silentNoteVal];
         var min = this.options.minNote,
@@ -135,10 +182,9 @@ var Patter = Class.extend({
         }
     },
     hzFromStepSeq: function() {
-        var self = this;
         return this.stepSeq.map(function(stepVal, idx) {
-            return self.freqTable[stepVal];
-        });
+            return this.freqTable[stepVal];
+        }.bind(this));
     },
     flatAttackSeq: function() {
         var length = this.options.stepCount;

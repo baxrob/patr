@@ -64,6 +64,7 @@ var Face = Class.extend({
             //        chrome vs ffox vs ...
             switch (evt.keyCode) {
                 case 32: // Spacebar
+                    // TODO: shift+click or enter key: stop/restart
                     evt.preventDefault();
                     this.$playButton.triggerHandler('click');
                     break;
@@ -72,6 +73,7 @@ var Face = Class.extend({
                     break;
                 // c.lear, r.egen
                 // ? - p.ace +nnn, l.en +nnn
+                // left/right - move fader selection
                 default:
                     break; 
             }
@@ -87,6 +89,39 @@ var Face = Class.extend({
         });
 
         this.styleRules = {
+            '#ctl_bar div': {
+                'background-color': '#555',
+                color: '#ddd',
+                border: '1px solid #999',
+                'border-radius': '2px',
+                cursor: 'pointer'
+            },
+            '#ctl_bar div:hover, #ctl_bar div.active': {
+                'background-color': '#ddd',
+                color: '#333',
+                'border-color': '#333',
+                'box-shadow': '0 0 1px 1px #999'
+            },
+            '#ctl_bar div:active': {
+                'background-color': '#fff',
+                color: '#222',
+                'box-shadow': '0 0 1px 1px #999'
+            },
+            '#ctl_bar input[type="text"]': {
+                'background-color': '#f9f9f9',
+                color: '#222',
+                border: '1px solid #999',
+                'border-radius': '2px'
+            },
+            '#ctl_bar input[type="text"]:hover': {
+                'background-color': '#fff',
+                color: '#222'
+            },
+            '#ctl_bar input[type="text"]:focus': {
+                'background-color': '#fff',
+                color: '#222',
+                'box-shadow': '0 0 1px 1px #999'
+            },
             '#frame::-webkit-scrollbar': {
                 width: '16px',
                 height: '16px'
@@ -173,7 +208,11 @@ var Face = Class.extend({
         });
         
         // FIXME: cleanup this clusterf* - here to func end
-        var $blinker = $('#blinker_' + step),
+        var $blinker = $('#blinker_' + step);
+        //console.log($blinker);
+        if (! $blinker.length) return;
+        //console.log(this.$frame);
+        var nop,
             blinker_height = this.elemHeight($blinker),
             frame_height = this.elemHeight(this.$frame),
             fdr_widget_height = this.elemHeight($('.fdr').parent()),
@@ -211,44 +250,28 @@ var Face = Class.extend({
 
     // Control actions
     updateRate: function(evt) {
-        // FIXME: pause and reset to seq[0] without doubly-triggering
-        //        patt.tr.setUpdateHook
 
-        // TODO: init/use pauseText param
-        //       dataDisplayMap ? or, eg dataControlMap['run']=['go','paus']
-        var playing = this.$playButton.text() === 'paus';
-
-        // FIXME: patt.stageUpdate - or just change patt.update 
-        if (playing) {
-            console.log('eh', this);
-            // TODO: use callback to pause, or defer pause
-            this.patt.pause(function() {
-                //this.patt.toneRow.reset();
-        this.patt.update({ bpm: evt.target.value });
-                this.patt.playSequence();
-            }.bind(this));
-            //this.patt.toneRow.reset();
-            setTimeout(function() {
-                //this.patt.playSequence();
-            }.bind(this), 500);
-        }
+        this.patt.update({
+            bpm: evt.target.value
+        });
 
         $(evt.target).blur();
     },
     updateLength: function(evt) {
-        var playing = this.$playButton.text() === 'paus';
-        var newSeq = this.patt.stepSeq.slice();
-        var diff = evt.target.value - this.patt.stepSeq.length;
+        /*
+        var newSeq = this.patt.stepSeq.slice(); // Copy
         // If increasing length, pad with silent notes
         //    otherwise resize, leaving previous tail
         //    intact in uri
         //FIXME: fails to cycle after seq expansion 
+        var diff = evt.target.value - this.patt.stepSeq.length;
         while (diff > 0) {
             newSeq.push(0)
             diff--;
         }
+        */
         this.patt.update({
-            seq: newSeq,
+            //seq: newSeq,
             stepCount: evt.target.value
         });
         $(evt.target).blur();
@@ -338,26 +361,27 @@ var Face = Class.extend({
                 'margin-top': '0px',
                 // Section end, extra margin
                 'margin-right': '15px',
-                'background-color': '#555',
-                color: '#ddd',
                 height: '18px',
-                border: '1px solid #999',
-                'border-radius': '2px',
                 float: 'left'
             },
             text: 'go',
             on: {
-                // TODO: shift+click or enter key: stop/restart
-                click: function() {
-                    if ($(this).text() == 'go') {
-                        //self.patt.playSequence();
-                        self.patt.unpause();
-                        $(this).text('paus');
+                click: function(evt) {
+                    if (this.patt.isRunning()) {
+                        this.patt.pause();
+                        $(evt.target).removeClass('active');
+                        $(evt.target).text('go');
                     } else {
-                        //self.patt.stop();
-                        self.patt.pause();
-                        $(this).text('go');
+                        this.patt.unpause();
+                        $(evt.target).addClass('active');
+                        $(evt.target).text('paus');
                     }
+                }.bind(this),
+                mouseover: function(evt) {
+                    $(this).addClass('hover');
+                },
+                mouseout: function(evt) {
+                    $(this).removeClass('hover');
                 }
             }
         }); // $playButton
@@ -388,10 +412,6 @@ var Face = Class.extend({
                     'text-align': 'right',
                     float: 'left',
                     width: '2.2em',
-                    'background-color': '#ddd',
-                    color: '#222',
-                    border: '1px solid #999',
-                    'border-radius': '2px',
                     'padding-left': '3px',
                     'padding-right': '3px',
                     margin: 0,
@@ -437,10 +457,6 @@ var Face = Class.extend({
                     'text-align': 'right',
                     float: 'left',
                     width: '2.2em',
-                    'background-color': '#ddd',
-                    color: '#222',
-                    border: '1px solid #999',
-                    'border-radius': '2px',
                     'padding-left': '3px',
                     'padding-right': '3px',
                     margin: 0,
@@ -536,11 +552,7 @@ var Face = Class.extend({
                     'padding-top': '1px',
                     'margin-top': '0px',
                     'margin-right': '10px',
-                    'background-color': '#555',
-                    color: '#ddd',
-                    height: '17px',
-                    'border-radius': '2px',
-                    border: '1px solid #999'
+                    height: '17px'
                 },
                 text: 'shuff',
                 on: {
@@ -563,11 +575,7 @@ var Face = Class.extend({
                     'padding-top': '1px',
                     'margin-top': '0px',
                     'margin-right': '10px',
-                    'background-color': '#555',
-                    color: '#ddd',
-                    height: '17px',
-                    'border-radius': '2px',
-                    border: '1px solid #999'
+                    height: '17px'
                 },
                 text: 'clear',
                 on: {
@@ -590,11 +598,7 @@ var Face = Class.extend({
                     'padding-top': '1px',
                     'margin-top': '0px',
                     'margin-right': '10px',
-                    'background-color': '#555',
-                    color: '#ddd',
-                    height: '17px',
-                    'border-radius': '2px',
-                    border: '1px solid #999'
+                    height: '17px'
                 },
                 text: 'regen',
                 on: {
@@ -647,7 +651,7 @@ var Face = Class.extend({
             css: {
                 // TODO: width should be viewport based
                 //       fix for scroll-down behavior
-                width: '540px', // should be 12x fader width
+                width: '480px', // should be 12x fader width
                 margin: 'auto'
             }
         });
@@ -703,7 +707,8 @@ var Face = Class.extend({
 
                     var note = el.value;
                     this.patt.stepSeq[stepIdx] = note;
-                    this.patt.updateSequence();
+                    this.patt.dirty = true;
+                    this.patt.buildSequence();
                     this.updateBlinkerState(stepIdx);
                 }.bind(this)
 
@@ -733,6 +738,7 @@ var Face = Class.extend({
     },
 
     intValFromCSS: function($el, property) {
+        if (! $el.css(property)) return;
         return + $el.css(property).slice(0, -2);
     },
     elemHeight: function($el) { // Returns int

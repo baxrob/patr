@@ -18,17 +18,21 @@ var ToneRow = Class.extend({
         this.sequenceUpdateHook = null;
         this.running = false;
     },
-    setUpdateHook: function(newHook) {
-        var restoreUpdateHook = this.sequenceUpdateHook;
+    addUpdateHook: function(newHook) {
+        //console.log(newHook);
+        var existingUpdateHook = this.sequenceUpdateHook;
         this.sequenceUpdateHook = function() {
-            //console.log(this.sequenceUpdateHook, newHook);
+            console.log('pre', newHook, existingUpdateHook);
             newHook();
-            this.sequenceUpdateHook = restoreUpdateHook;
+            existingUpdateHook && existingUpdateHook();
+            this.sequenceUpdateHook = null;//restoreUpdateHook;
+            //console.log('post', this.sequenceUpdateHook);
         };
     },
     updateSequence: function(sequence) {
         if (this.running) {
-            this.setUpdateHook(function() {
+            console.log('add squp hook');
+            this.addUpdateHook(function() {
                 this.sequence = sequence;
             }.bind(this));
         } else {
@@ -47,13 +51,12 @@ var ToneRow = Class.extend({
         }
     },
     stop: function() {
-        console.log('call stop');
-        this.pause(null);//this.reset);
+        this.pause(this.reset);
     },
     pause: function(onComplete) {
-        console.log('called pause');
-        this.setUpdateHook(function() {
-            console.log('pause hook');
+        console.log('add pause hook');
+        this.addUpdateHook(function() {
+            console.log('pausing');
             // Store current sequence, then zero-fill
             var restoreSequence = [];
             for (var i in this.sequence) {
@@ -66,13 +69,10 @@ var ToneRow = Class.extend({
             
             // Disconnect and restore
 
-            // Wait ~110 ms - otherwise we get a click
-            // FIXME: Explain: Waiting bufferDuration, should put us well
-            //        into the next buffer; anyhow, should only need to wait 
-            //        this.stepSec to prevent click.  Or, stepSec + / -
-            //        setTimeout latency? Is timeout latency up to 65ms? 
+            // Wait until current buffer has been written - buffer duration
+            //      plus arbitrary 65 ms timeout latency
+            // TODO: use requestAnimationFrame
             var timeout = this.bufferLength / this.sampleRate * 1000 + 65;
-            // FIXME: use requestAnimationFrame
             setTimeout(function() {
                 this.jsNode.disconnect();
                 this.running = false;
@@ -82,10 +82,6 @@ var ToneRow = Class.extend({
                     : this.sequence[this.seqIdx][0];
                 this.block.writeSample = 0;
 
-                // Force first note case
-                this.newNote = true;
-
-                //console.log(onComplete);
                 onComplete && onComplete.bind(this)();
             }.bind(this), timeout);
         }.bind(this));
@@ -98,7 +94,7 @@ var ToneRow = Class.extend({
         this.block.writeSample = 0;
     },
     stageBeatEvent: function(idx, length, onsetDelay) {
-        // FIXME: use requestAnimationFrame
+        // TODO: use requestAnimationFrame
         setTimeout(function() {
             var evt = document.createEvent('Event');
             evt.initEvent('beat', false, false);
@@ -132,6 +128,7 @@ var ToneRow = Class.extend({
         }
 
         // Ramp-out begins within this buffer
+        // TODO: (optionally?) join adjacent repeated notes (no ramp out)
         if (rampOnset <= this.elapsed + buffer.duration) {
             this.newNote = true;
             this.stepSec = nextAttack - this.elapsed;

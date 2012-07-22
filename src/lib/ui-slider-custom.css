@@ -1,13 +1,9 @@
 
 .fdr {
     position: relative;
-    width: 4px;
     height: 100px;
-    margin-left: 16px;
-    border-radius: 2px;
 
     margin-top: 14px;
-    /*border-top: 1px solid #ccc;*/
     border-radius: 0;
     width: 27px;
     margin-left: 6px;

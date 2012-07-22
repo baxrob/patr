@@ -1,4 +1,3 @@
-// Documentation is for the weak
 
 var URI = Class.extend({
     init: function(assignor, delimiter, params) {
@@ -6,7 +5,6 @@ var URI = Class.extend({
         this.delimiter = delimiter;
         this.params = params;
 
-        // FIXME: this is unsafe / clumsy - should use deferred
         this.updating = false;
 
         window.onhashchange = function(evt) {
@@ -23,20 +21,18 @@ var URI = Class.extend({
     parseHash: function() {
         this.hash = document.location.hash;
         var hashObj = this.hashToObj();
-        var self = this;
         this.params.map(function(name) {
-            hashObj[name] && (self[name] = hashObj[name]);
-        });
+            hashObj[name] && (this[name] = hashObj[name]);
+        }.bind(this));
     },
     hashToObj: function() {
-        var self = this;
         var hashArray = this.hash.substr(1).split(
             this.delimiter
         ).filter(function(x) {
             return x !== '';
         }).map(function(x) {
-            return x.split(self.assignor);
-        });
+            return x.split(this.assignor);
+        }.bind(this));
 
         var hashObj = {};
         hashArray.map(function(x) {
@@ -59,10 +55,9 @@ var URI = Class.extend({
     },
     buildHash: function() {
         this.hash = '#';
-        var self = this;
         this.params.map(function(name) {
-            self.hash += name + self.assignor + self[name] + self.delimiter;
-        });
+            this.hash += name + this.assignor + this[name] + this.delimiter;
+        }.bind(this));
     },
     writeHash: function() {
         document.location.hash = this.hash;
