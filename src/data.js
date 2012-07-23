@@ -8,8 +8,6 @@ var URI = Class.extend({
         this.updating = false;
 
         window.onhashchange = function(evt) {
-            // FIXME: back/fwd doesn't update seq length (eh, this is
-            //        seq.patt's problem)
             if (this.onchangeHook && ! this.updating) {
                 this.updating = true;
                 this.onchangeHook();
@@ -23,17 +21,7 @@ var URI = Class.extend({
         var hashObj = this.hashToObj();
         this.params.map(function(name) {
             hashObj[name] && (this[name] = hashObj[name]);
-            /*
-            if (hashObj[name]) {
-                this[name] = hashObj[name];
-            }
-            */
         }.bind(this));
-        /*
-        for (var name in this.params) {
-            hashObj[name] && (this[name] = hashObj[name]);
-        }
-        */
     },
     hashToObj: function() {
         var hashArray = this.hash.substr(1).split(
@@ -48,12 +36,6 @@ var URI = Class.extend({
         hashArray.map(function(x) {
             hashObj[x[0]] = x[1];
         });
-        /*
-        for (var idx in hashArray) {
-            var val = hashArray[idx];
-            hashObj[val[0]] = val[1];
-        }
-        */
         return hashObj;
     },
     update: function(params) {

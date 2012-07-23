@@ -9,6 +9,7 @@ var Face = Class.extend({
             this.updateSequenceDisplay(data.sequence);
         }.bind(this);
 
+        // FIXME: check this is accurate
         // Mapping of URI params to el id/labels 
         this.dataControlMap = {
             bpm: {
@@ -42,25 +43,18 @@ var Face = Class.extend({
                 moz: 100,
                 flash: 500
             }[this.patt.toneRow.context.backend];
-            // FIXME: use requestAnimationFrame 
+
+            // TODO: use requestAnimationFrame 
             setTimeout(function() {
-
                 this.beatHandler(evt);
-
             }.bind(this), blinkDelay);
         }.bind(this));
         
         
         this.initStyles();
 
-        //
         // TODO: this.keyHandlers
         this.$root.on('keydown', function(evt) {
-            // FIXME: please grok!!! :
-            //        window.onkeypress - s evt.keycode is 115
-            //        window.onkeydown - s evt.keycode is 83
-            //        $(window).on('key...', ... - ?
-            //        chrome vs ffox vs ...
             switch (evt.keyCode) {
                 case 32: // Spacebar
                     // TODO: shift+click or enter key: stop/restart
@@ -70,6 +64,7 @@ var Face = Class.extend({
                 case 83: // 's'
                     this.shuffle();
                     break;
+                // TODO: other key handlers
                 // c.lear, r.egen
                 // ? - p.ace +nnn, l.en +nnn
                 // left/right - move fader selection
@@ -175,7 +170,7 @@ var Face = Class.extend({
             );
         }.bind(this));
 
-        // After externals, override
+        // After externals, possibly override declarations
         $('head').append(this.$style);
 
     }, // initStyles
@@ -206,13 +201,10 @@ var Face = Class.extend({
             $('.' + className).removeClass('blinking');
         });
         
-        // FIXME: cleanup this clusterf* - here to func end
         var $blinker = $('#blinker_' + step);
-        //console.log($blinker);
         if (! $blinker.length) return;
-        //console.log(this.$frame);
-        var nop,
-            blinker_height = this.elemHeight($blinker),
+
+        var blinker_height = this.elemHeight($blinker),
             frame_height = this.elemHeight(this.$frame),
             fdr_widget_height = this.elemHeight($('.fdr').parent()),
             frame_height = this.$frame.height() + 
@@ -588,7 +580,7 @@ var Face = Class.extend({
             })
         ) // $controls
 
-        // FIXME: this is a separate deal - $controls must be in DOM before
+        // TODO: this is a separate deal - $controls must be in DOM before
         //        we can find its height -- else rethink css
         // NOTE: a favorite thing about this questoinable css-generated-in-js
         //       strategy: it's quite fluid to mind fixmes, which get way out
@@ -684,11 +676,6 @@ var Face = Class.extend({
                     $(ui.handle).text(ui.value);
                 },
                 stop: function(evt, el) {
-                    // FIXME: step-val edits after seq-len extension - if 
-                    //        in new portion of extended range - don't 
-                    //        register with tr
-                    //        eh .. sometimes?
-
                     var note = el.value;
                     this.patt.stepSeq[stepIdx] = note;
                     this.patt.dirty = true;
@@ -735,6 +722,7 @@ var Face = Class.extend({
             + cssInt('margin-top') + cssInt('margin-bottom')
             + cssInt('border-top-width') + cssInt('border-bottom-width');
     },
+
     // TODO: merge attr/css args - and reflect above
     elem: function(options) {
         var strOpts = ['tag', 'text'];
