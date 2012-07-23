@@ -37,13 +37,12 @@ var Face = Class.extend({
         $(window).on('resize', this.resizeHandler.bind(this));
         //$(document).on('beat', this.beatHandler.bind(this));
         $(document).on('beat', function(evt) {
-            //console.log(this.patt.toneRow.context.backend);
             var blinkDelay = {
                 webkit: 0,
                 moz: 100,
                 flash: 500
             }[this.patt.toneRow.context.backend];
-            //console.log(blinkDelay);
+            // FIXME: use requestAnimationFrame 
             setTimeout(function() {
 
                 this.beatHandler(evt);
@@ -250,43 +249,20 @@ var Face = Class.extend({
 
     // Control actions
     updateRate: function(evt) {
-
         this.patt.update({
             bpm: evt.target.value
         });
-
         $(evt.target).blur();
     },
     updateLength: function(evt) {
-        /*
-        var newSeq = this.patt.stepSeq.slice(); // Copy
-        // If increasing length, pad with silent notes
-        //    otherwise resize, leaving previous tail
-        //    intact in uri
-        //FIXME: fails to cycle after seq expansion 
-        var diff = evt.target.value - this.patt.stepSeq.length;
-        while (diff > 0) {
-            newSeq.push(0)
-            diff--;
-        }
-        */
         this.patt.update({
-            //seq: newSeq,
             stepCount: evt.target.value
         });
         $(evt.target).blur();
-
-        // TODO: this.rebuild
-        $('#frame').remove();
-        this.$frame = this.buildFrame(this.elemHeight(this.$controls));
-        this.$root.append(this.$frame);
-        $(window).triggerHandler('resize');
+        this.rebuildFrame();
     },
-
     shuffle: function() {
-        // FIXME: (in synth?) clicks during large sequence change (~300)
-        //        same with regenerate.  update in local +- len/x steps
-        //        first then the rest?
+        // TODO: prevent clicking with large sequence shuffle
         this.patt.shuffle();
         var newSeq = this.patt.stepSeq;
         this.updateSequenceDisplay(newSeq);
@@ -312,11 +288,15 @@ var Face = Class.extend({
         }
     },
     updateSequenceDisplay: function(sequence) {
-        $('.fdr').each(function(idx, el) {
-            $(el).slider('value', sequence[idx]);
-            $(el).find('a').text(sequence[idx]); 
-            this.updateBlinkerState(idx);
-        }.bind(this));
+        if (sequence.length !== $('.fdr').length) {
+            this.rebuildFrame();
+        } else {
+            $('.fdr').each(function(idx, el) {
+                $(el).slider('value', sequence[idx]);
+                $(el).find('a').text(sequence[idx]); 
+                this.updateBlinkerState(idx);
+            }.bind(this));
+        }
     },
     updateBlinkerState: function(idx) {
         $('#blinker_' + idx).css(
@@ -633,6 +613,12 @@ var Face = Class.extend({
         return $controls;
     }, // buildControls
 
+    rebuildFrame: function() {
+        this.$frame.remove();
+        this.$frame = this.buildFrame(this.elemHeight(this.$controls));
+        this.$root.append(this.$frame);
+        $(window).triggerHandler('resize');
+    },
     buildFrame: function(topMargin) {
         var $frame = this.elem({
             tag: 'div',
@@ -650,13 +636,11 @@ var Face = Class.extend({
             tag: 'div',
             css: {
                 // TODO: width should be viewport based
-                //       fix for scroll-down behavior
                 width: '480px', // should be 12x fader width
                 margin: 'auto'
             }
         });
         for (var i = 0; i < this.patt.options.stepCount; i++) {
-            //console.log(idx, this.buildFader(idx));
             $innerFrame.append(
                 this.buildFader(i)
             );

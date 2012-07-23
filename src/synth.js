@@ -79,7 +79,6 @@ var ToneRow = Class.extend({
         }.bind(this));
     },
     reset: function() {
-        console.log('resetting');
         this.firstLoop = true;
         this.newNote = true;
         this.seqIdx = 0;
@@ -102,7 +101,7 @@ var ToneRow = Class.extend({
                 buffer.getChannelData(0),
                 buffer.getChannelData(1)
             ];
-        var hertz = this.thisHz = this.sequence[this.seqIdx][1],
+        var hertz = this.sequence[this.seqIdx][1],
             nextSeqIdx = (this.seqIdx + 1) % this.sequence.length,
             nextAttack = this.nextAttack = this.sequence[nextSeqIdx][0],
             nextHertz = this.sequence[nextSeqIdx][1];

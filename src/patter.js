@@ -11,7 +11,7 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
     ], 
     function() {
 
-        var uri = new URI(':', ';', ['rate', 'length', 'seq']);
+        var uri = new URI(':', ';', ['rate', 'len', 'seq']);
 
         // TODO: url 'engine' param: webkit, moz, flash
         //       also: never publish / bookmark this param ? (how?)
