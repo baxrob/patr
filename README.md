@@ -1,4 +1,4 @@
-## Patr - a step sequencer
+## Patr - a [Web Audio API] based monophonic step sequencer
 
 This is early stage, pre-alpha version software.  It's not recommended for use, in any case.  See below.
 
