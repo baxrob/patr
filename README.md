@@ -2,7 +2,7 @@
 
 This is early stage, pre-alpha version software.  It's not recommended for use, in any case.  See below.
 
-### Demo
+### Live
 
 <http://proto.blandhand.net/patr/>
 
@@ -28,6 +28,7 @@ The controls should be self-evident, but:
 * pace, or bpm (P key); len, or note/step count (L key): up to 1000 bpm plays reasonably well; lengths above ~300 cause some audio glitches
 * shuff (S key); clear (C key); and regen (R key): randomly re-order existing notes; set all notes to zero; generate a new random set of notes
 * note sliders: select and drag or press up/down to change; tab / shift+tab to move left to right between sliders
+* browser back/fwd buttons (Alt+left/right) cycle through history of changes
 
 ### Compatability
 My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html).  I've added a wrapper for Mozilla's Audio Data API, and a Flash fallback, but, while these render the audio well enough, it is utterly out-of-sync with the UI display (I'm working on this.)
@@ -50,7 +51,7 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 * Sequence generation alternatives: eg: "true" random; silence density; random "walk", etc.
 
 ### License
-Released under [GPL v.3](http://www.gnu.org/licenses/gpl-3.0.txt)
+Released under [GPL v.3](http://www.gnu.org/licenses/gpl-3.0.txt).
 Other licenses may be available in future.
 
 <!--
