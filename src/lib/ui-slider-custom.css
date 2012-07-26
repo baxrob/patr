@@ -16,6 +16,7 @@
     background-color: #ccc;
     width: 100%;
     bottom: 0;
+    cursor: pointer; 
 
     padding-top: 1px;
 }
