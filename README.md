@@ -1,4 +1,4 @@
-## Patr - a [Web Audio API] based monophonic step sequencer
+## Patr - a step sequencer
 
 This is early stage, pre-alpha version software.  It's not recommended for use, in any case.  See below.
 
@@ -50,7 +50,7 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 * Sequence generation alternatives: eg: "true" random; silence density; random "walk", etc.
 
 ### License
-Released under [GPL v.3][http://www.gnu.org/licenses/gpl-3.0.txt]
+Released under [GPL v.3](http://www.gnu.org/licenses/gpl-3.0.txt)
 Other licenses may be available in future.
 
 <!--
