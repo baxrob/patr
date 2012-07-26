@@ -252,6 +252,7 @@ var Face = Class.extend({
 <meta property="og:image" content="seq_prev.png" />
 <meta property="og:site_name" content="" />
 <meta property="og:description" content="" />
+<meta name="medium" content="audio" />
      */
 
 
