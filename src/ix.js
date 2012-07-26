@@ -58,6 +58,9 @@ var Face = Class.extend({
 
         // TODO: this.keyHandlers
         this.$root.on('keydown', function(evt) {
+            if (evt.ctrlKey) {
+                return true;
+            }
             switch (evt.keyCode) {
                 case 32: // Spacebar
                     // TODO: shift+click or enter key: stop/restart
@@ -103,10 +106,28 @@ var Face = Class.extend({
                     }, 150);
                     break;
                 
-                // TODO: other key handlers
-                // c.lear, r.egen
-                // ? - p.ace +nnn, l.en +nnn
-                // left/right - move fader selection
+                case 9: // tab
+                    var handleSelector = '.fdr .ui-slider-handle';
+                    var focusedFader = $(handleSelector + ':focus');
+                    if (! focusedFader.length) {
+                        $(handleSelector)[0].focus();
+                        evt.preventDefault();
+                    } else {
+                        var lastFdrIdx = $('.fdr').length - 1;
+                        var thisFdrIdx = focusedFader.parent()
+                            .attr('id').split('_')[1];
+                        if (thisFdrIdx == 0 && evt.shiftKey) {
+                            // Moving back from first fdr
+                            $(handleSelector)[lastFdrIdx].focus();
+                            evt.preventDefault();
+                        } else if (
+                            thisFdrIdx == lastFdrIdx && ! evt.shiftKey
+                        ) {
+                            $(handleSelector)[0].focus();
+                            evt.preventDefault()
+                        }
+                    }
+                    break; 
                 default:
                     break; 
             }

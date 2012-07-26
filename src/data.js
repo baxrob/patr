@@ -8,7 +8,10 @@ var URI = Class.extend({
         this.updating = false;
 
         window.onhashchange = function(evt) {
-            if (this.onchangeHook && ! this.updating) {
+            if (
+                this.onchangeHook && ! this.updating
+                && evt.oldURL !== evt.newURL
+            ) {
                 this.updating = true;
                 this.onchangeHook();
                 this.updating = false;
