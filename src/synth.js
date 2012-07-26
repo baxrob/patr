@@ -6,7 +6,7 @@ var ToneRow = Class.extend({
         this.bufferLength = bufferLength;
 
         this.jsNode = this.context.createJavaScriptNode(
-            this.bufferLength, 0, 2
+            this.bufferLength, 2, 2//, 0, 2
         );
         this.jsNode.onaudioprocess = this.onProcess.bind(this); 
 
@@ -175,7 +175,12 @@ var ToneBlock = Class.extend({
         this.sampleVal = this.sine;
         this.hzGain = this.bleat;
 
-        this.rampLen = 250;
+        this.rampLen = 0;
+        this.rampLen = 4096;
+        this.rampLen = 1400;
+        this.rampLen = 68
+        this.rampLen = 480;
+        this.rampLen = 240;
         this.writeSample = 0;
     },
     fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
@@ -195,7 +200,13 @@ var ToneBlock = Class.extend({
             var rampPos = rampLen;
             for ( ; idx < writeEnd; idx++, this.writeSample++) {
                 sampleVal = (rampPos-- / rampLen) * gain
+                //sampleVal = Math.sqrt(rampPos-- / rampLen) * gain
+                //sampleVal = Math.log((rampPos-- / rampLen)+ 1)*1.442 * gain
                     * this.sampleVal(hz, this.writeSample) + phase; 
+                //console.log(rampPos, rampPos / rampLen);
+                //console.log(rampPos, 1 - Math.pow((rampPos / rampLen), 2)) 
+                //console.log(rampPos, Math.sqrt(rampPos / rampLen)) 
+                //console.log(rampPos, Math.log((rampPos / rampLen)+ 1)*1.442)
                 buffers[0][idx] = buffers[1][idx] = sampleVal;
             }
         }
@@ -215,6 +226,8 @@ var ToneBlock = Class.extend({
     bleat: function(hz) {
         var divisor = 220,      // "cutoff"
             multiplier = 2.4;   // "max gain"
+        //divisor = 20;
+        //multiplier = 2.8;
         var cosh = function(n) {
             return (Math.exp(n) + Math.exp(-n)) / 2;
         };

@@ -34,7 +34,6 @@ var mozFlashAudioContext = Class.extend({
         this.destination.writeAudio = this.destination.mozWriteAudio;
     },
     flashSetup: function() {
-        // From dynamicaudio.js
         console.log('flash fallback');
         this.backend = 'flash';
         this.sampleRate = 44100;

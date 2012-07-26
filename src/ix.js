@@ -25,7 +25,10 @@ var Face = Class.extend({
         $controls = this.$controls = this.buildControls();
         this.$root.append(this.$controls)
 
-        this.$frame = this.buildFrame(this.elemHeight(this.$controls));
+        // FIXME: why is $controls.height() 2px greater here?
+        this.$frame = this.buildFrame(
+            this.elemHeight(this.$controls) - 2 // KLUDGE 
+        );
         this.$root.append(this.$frame);
 
         this.$root.css({
@@ -59,11 +62,47 @@ var Face = Class.extend({
                 case 32: // Spacebar
                     // TODO: shift+click or enter key: stop/restart
                     evt.preventDefault();
-                    this.$playButton.triggerHandler('click');
+                    this.$playButton.trigger('click');
                     break;
+                
+                case 80: // 'p'
+                    var $el = $('#bpm');
+                    $el.focus();
+                    $el.select();
+                    evt.preventDefault();
+                    break;
+                case 76: // 'l'
+                    $el = $('#step_count');
+                    $el.focus();
+                    $el.select();
+                    evt.preventDefault();
+                    break;
+
                 case 83: // 's'
-                    this.shuffle();
+                    var $el = $('#shuff');
+                    $el.triggerHandler('click');
+                    $el.addClass('active');
+                    setTimeout(function() {
+                        $el.removeClass('active');
+                    }, 150);
                     break;
+                case 67: // 'c'
+                    var $el = $('#clear');
+                    $el.triggerHandler('click');
+                    $el.addClass('active');
+                    setTimeout(function() {
+                        $el.removeClass('active');
+                    }, 150);
+                    break;
+                case 82: // 'r'
+                    var $el = $('#regen');
+                    $el.triggerHandler('click');
+                    $el.addClass('active');
+                    setTimeout(function() {
+                        $el.removeClass('active');
+                    }, 150);
+                    break;
+                
                 // TODO: other key handlers
                 // c.lear, r.egen
                 // ? - p.ace +nnn, l.en +nnn
@@ -83,20 +122,26 @@ var Face = Class.extend({
         });
 
         this.styleRules = {
-            '#ctl_bar div': {
+            '#ctl_bar div.ctl': {
                 'background-color': '#555',
                 color: '#ddd',
                 border: '1px solid #999',
                 'border-radius': '2px',
                 cursor: 'pointer'
             },
-            '#ctl_bar div:hover, #ctl_bar div.active': {
+            '#ctl_bar div.ctl#play_btn': {
+                'margin-right': '29px'
+            },
+            '#ctl_bar div.ctl#play_btn.active': {
+                'margin-right': '15px'
+            },
+            '#ctl_bar div.ctl:hover': {
                 'background-color': '#ddd',
                 color: '#333',
                 'border-color': '#333',
                 'box-shadow': '0 0 1px 1px #999'
             },
-            '#ctl_bar div:active': {
+            '#ctl_bar div.ctl:active, #ctl_bar div.ctl.active': {
                 'background-color': '#fff',
                 color: '#222',
                 'box-shadow': '0 0 1px 1px #999'
@@ -122,6 +167,9 @@ var Face = Class.extend({
             },
             '#frame::-webkit-scrollbar-thumb': {
                 background: '#aaa'
+            },
+            '#frame.blinking::-webkit-scrollbar-thumb': {
+                background: '#ccc'
             },
             '#frame::-webkit-scrollbar-track': {
                 background: '#eee'
@@ -175,6 +223,16 @@ var Face = Class.extend({
 
     }, // initStyles
 
+    // TODO: fb meta tags, SEO - belongs in .html
+    /*
+<meta property="og:title" content="" />
+<meta property="og:type" content="app" />
+<meta property="og:url" content="" />
+<meta property="og:image" content="seq_prev.png" />
+<meta property="og:site_name" content="" />
+<meta property="og:description" content="" />
+     */
+
 
     welcomeDialog: function() {
         // TODO: welome dialog: automation/hwto, compat note, fadeout, thrice
@@ -197,6 +255,7 @@ var Face = Class.extend({
         // Handle beat: step UI: indicate and scroll
         var step = evt.originalEvent.beat % this.patt.stepSeq.length;
 
+        // FIXME: ? $('.fdr .ui-slider ...').removeClass(...) ?
         ['fdr', 'ui-slider-handle', 'blinker'].map(function(className) {
             $('.' + className).removeClass('blinking');
         });
@@ -214,18 +273,28 @@ var Face = Class.extend({
             frame_height / (fdr_widget_height - 10)
         );
         
+
+        var blinkScrollbar = function() {
+            $('#frame').addClass('blinking');
+            setTimeout(function() {
+                $('#frame').removeClass('blinking');
+            }, 55);
+        };
         if ($blinker.attr('id').split('_')[1] == 0) { 
             // Return to top row
+            blinkScrollbar();
             this.$frame.scrollTop(0);
+            //this.$frame.animate({ scrollTop: 0 }, 55);
         } else if (
             $blinker.position().top >
             this.$frame.height() + blinker_height
         ) {
             // Re-position off-screen row to page top
-            // TODO: blink scrollbar
-            this.$frame.scrollTop(
-                this.$frame.scrollTop() + rows_per_screen * fdr_widget_height
-            );
+            blinkScrollbar();
+            var newScrollTop = this.$frame.scrollTop()
+                + rows_per_screen * fdr_widget_height;
+            this.$frame.scrollTop(newScrollTop);
+            //this.$frame.animate({ scrollTop: newScrollTop }, 75);
         }
 
         [
@@ -311,17 +380,26 @@ var Face = Class.extend({
                 'z-index': '10',
                 width: '100%',
                 top: '0px',
-                'padding-top': '9px',
-                'padding-left': '9px',
                 'background-color': '#fcfeef',
-                'border-bottom': '1px solid silver'
+                'border-bottom': '1px solid silver',
+                'box-shadow': '0 1px 10px -4px #444'
             }
         });
+        var $innerControls = this.elem({
+            tag: 'div',
+            css: {
+                width: '480px',
+                margin: 'auto',
+                'padding-top': '9px'
+            }
+        });
+        $controls.append($innerControls);
 
         this.$playButton = this.elem({
             tag: 'div',
             attr: {
                 id: 'play_btn',
+                'class': 'ctl',
                 title: 'play/pause\n(spacebar)'
             },
             css: {
@@ -332,7 +410,6 @@ var Face = Class.extend({
                 'padding-right': '5px',
                 'margin-top': '0px',
                 // Section end, extra margin
-                'margin-right': '15px',
                 height: '18px',
                 float: 'left'
             },
@@ -358,7 +435,7 @@ var Face = Class.extend({
             }
         }); // $playButton
 
-        $controls
+        $innerControls
         .append(this.$playButton)
         .append(
             this.elem({
@@ -377,7 +454,8 @@ var Face = Class.extend({
                 attr: {
                     type: 'text',
                     id: 'bpm',
-                    title: 'bpm',
+                    'class': 'ctl',
+                    title: 'bpm\n(P key)',
                     value: this.patt.options.bpm
                 },
                 css: {
@@ -395,6 +473,13 @@ var Face = Class.extend({
                     keydown: function(evt) {
                         if (evt.keyCode == 13) {
                             $(this).trigger('focusout');
+                        }
+                        if (
+                            (evt.keyCode < 47 || evt.keyCode > 57)
+                            && (evt.keyCode !== 8) // backspace 
+                            && (evt.keyCode !== 46) // delete
+                        ) {
+                            return false;
                         }
                     },
                     click: function() {
@@ -422,7 +507,8 @@ var Face = Class.extend({
                 attr: {
                     type: 'text',
                     id: 'step_count',
-                    title: 'steps',
+                    'class': 'ctl',
+                    title: 'steps\n(L key)',
                     value: this.patt.options.stepCount
                 },
                 css: {
@@ -442,6 +528,13 @@ var Face = Class.extend({
                         if (evt.keyCode == 13) {
                             $(this).trigger('focusout');
                         }
+                        if (
+                            (evt.keyCode < 47 || evt.keyCode > 57)
+                            && (evt.keyCode !== 8) // backspace 
+                            && (evt.keyCode !== 46) // delete
+                        ) {
+                            return false;
+                        }
                     },
                     click: function() {
                         $(this).select();
@@ -457,6 +550,7 @@ var Face = Class.extend({
                 attr: {
                     type: 'checkbox',
                     id: 'reshuf',
+                    'class': 'ctl',
                     title: 'reshuf',
                     // FIXME: read from url
                     value: 'off'
@@ -476,6 +570,7 @@ var Face = Class.extend({
                 attr: {
                     type: 'text',
                     id: 'repeats',
+                    'class': 'ctl',
                     title: 'reshuf each',
                     value: 1 //this.patt.toneRow.repeats
                 },
@@ -513,7 +608,8 @@ var Face = Class.extend({
                 tag: 'div',
                 attr: {
                     id: 'shuff',
-                    title: 'shuffle notes\n("S" key)'
+                    'class': 'ctl',
+                    title: 'shuffle notes\n(S key)'
                 },
                 css: {
                     float: 'left',
@@ -536,7 +632,8 @@ var Face = Class.extend({
                 tag: 'div',
                 attr: {
                     id: 'clear',
-                    title: 'zero all'
+                    'class': 'ctl',
+                    title: 'zero all\n(C key)'
                 },
                 css: {
                     float: 'left',
@@ -559,7 +656,8 @@ var Face = Class.extend({
                 tag: 'div',
                 attr: {
                     id: 'regen',
-                    title: 'new random sequence'
+                    'class': 'ctl',
+                    title: 'new random sequence\n(R key)'
                 },
                 css: {
                     float: 'left',
@@ -621,7 +719,7 @@ var Face = Class.extend({
                 'margin-top': topMargin + 'px',
                 'padding-top': '5px',
                 'overflow-y': 'scroll',
-                height: $(window).height() - topMargin - 5 + 'px'//'100%'
+                height: $(window).height() - topMargin //- 5 + 'px'//'100%'
             }
         });
         var $innerFrame = this.elem({
@@ -713,10 +811,20 @@ var Face = Class.extend({
         return + $el.css(property).slice(0, -2);
     },
     elemHeight: function($el) { // Returns int
-        var self = this;
         var cssInt = function(property) {
-            return self.intValFromCSS($el, property);
-        };
+            return this.intValFromCSS($el, property);
+        }.bind(this);
+        /*
+        console.log( $el.height() 
+            , cssInt('padding-top') , cssInt('padding-bottom')
+            , cssInt('margin-top') , cssInt('margin-bottom')
+            , cssInt('border-top-width') , cssInt('border-bottom-width')
+            , $el.height() 
+            + cssInt('padding-top') + cssInt('padding-bottom')
+            + cssInt('margin-top') + cssInt('margin-bottom')
+            + cssInt('border-top-width') + cssInt('border-bottom-width')
+        );
+        */
         return $el.height() 
             + cssInt('padding-top') + cssInt('padding-bottom')
             + cssInt('margin-top') + cssInt('margin-bottom')

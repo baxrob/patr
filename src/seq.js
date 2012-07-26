@@ -96,8 +96,8 @@ var Patter = Class.extend({
             mustPause && this.unpause();
         }.bind(this);
 
-        // TODO: is this overkill, redundant wrt buildSequence check?
         this.dirty = bpmChanged || stepCountChanged || seqChanged;
+        // TODO: is this cond overkill, redundant wrt buildSequence check?
         if (this.dirty) {
             if (this.isRunning()) {
                 if (mustPause) {
