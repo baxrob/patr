@@ -61,9 +61,10 @@ var ToneRow = Class.extend({
             
             // Disconnect and restore
 
+            // FIXME: is this understanding accurate?
             // Wait until current buffer has been written - buffer duration
             //      plus arbitrary 65 ms timeout latency
-            // TODO: use requestAnimationFrame
+            // TODO: use requestAnimationFrame?
             var timeout = this.bufferLength / this.sampleRate * 1000 + 65;
             setTimeout(function() {
                 this.jsNode.disconnect();
@@ -96,6 +97,10 @@ var ToneRow = Class.extend({
         }, onsetDelay * 1000);
     },
     onProcess: function(evt) {
+        // KLUDGE: double safety against sequence shrink race condition 
+        if (this.seqIdx >= this.sequence.length) {
+            this.seqIdx = 0;
+        }
         var buffer = evt.outputBuffer,
             stereoBuffer = [
                 buffer.getChannelData(0),
@@ -203,14 +208,11 @@ var ToneBlock = Class.extend({
                 //sampleVal = Math.sqrt(rampPos-- / rampLen) * gain
                 //sampleVal = Math.log((rampPos-- / rampLen)+ 1)*1.442 * gain
                     * this.sampleVal(hz, this.writeSample) + phase; 
-                //console.log(rampPos, rampPos / rampLen);
-                //console.log(rampPos, 1 - Math.pow((rampPos / rampLen), 2)) 
-                //console.log(rampPos, Math.sqrt(rampPos / rampLen)) 
-                //console.log(rampPos, Math.log((rampPos / rampLen)+ 1)*1.442)
                 buffers[0][idx] = buffers[1][idx] = sampleVal;
             }
         }
     },
+
     // Sample values
     sine: function(hz, idx, phase) {
         (phase === undefined) && (phase = 0);
@@ -222,6 +224,7 @@ var ToneBlock = Class.extend({
     noise: function() {
         return sampleVal = 1 - (Math.random() * 2);
     },
+
     // Frequency based gain envelope
     bleat: function(hz) {
         var divisor = 220,      // "cutoff"

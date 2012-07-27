@@ -1,4 +1,3 @@
-var waveform;
 
 var Patter = Class.extend({
     init: function(options, uri, toneRow) {
@@ -86,8 +85,8 @@ var Patter = Class.extend({
         var mustPause = this.isRunning() && (bpmChanged || stepCountChanged);
 
         var updateCallback = function() {
-            stepOverflow && this.reset();
             this.buildSequence();
+            stepOverflow && this.reset();
             if (bpmChanged) {
                 var lastAttack = this.toneRow.seqIdx > 0 ?
                     this.toneRow.sequence[this.toneRow.seqIdx][0] : 0;
