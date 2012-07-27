@@ -10,6 +10,7 @@ var URI = Class.extend({
         window.onhashchange = function(evt) {
             if (
                 this.onchangeHook && ! this.updating
+                // CLEANUP: this should be redundant - verify
                 && evt.oldURL !== evt.newURL
             ) {
                 this.updating = true;
