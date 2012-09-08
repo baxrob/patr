@@ -1,3 +1,4 @@
+"use strict";
 // Flash debugging
 var startTime = (new Date()).getTime();
 var lastTime = 0;

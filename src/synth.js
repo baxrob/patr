@@ -1,3 +1,4 @@
+"use strict";
 
 var ToneRow = Class.extend({
     init: function(context, bufferLength) {
@@ -235,6 +236,13 @@ var ToneBlock = Class.extend({
             return (Math.exp(n) + Math.exp(-n)) / 2;
         };
         var gainVal = 1 / cosh(hz / divisor) * multiplier * this.baseGain;
+        //(1/sqrt(2*pi))*6*e^(-1/290000*x^2)
+        // TODO: this.crinkle
+        /*
+        gainVal = 5 / Math.sqrt(2*Math.PI) * Math.pow(
+            Math.E, (-1 / 200000 * Math.pow(hz, 2))
+        );
+        */
         return gainVal;
     }
 });

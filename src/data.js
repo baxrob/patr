@@ -1,3 +1,4 @@
+"use strict";
 
 var URI = Class.extend({
     init: function(assignor, delimiter, params) {
@@ -45,7 +46,7 @@ var URI = Class.extend({
     update: function(params) {
         if (! this.updating) {
             this.updating = true;
-            for (name in params) {
+            for (var name in params) {
                 params[name] && (this[name] = params[name]);
             }
             this.buildHash();

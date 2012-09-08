@@ -1,3 +1,4 @@
+"use strict";
 
 var Face = Class.extend({
     init: function($parentElem, pattern) {
@@ -22,7 +23,7 @@ var Face = Class.extend({
             }
         };
 
-        $controls = this.$controls = this.buildControls();
+        var $controls = this.$controls = this.buildControls();
         this.$root.append(this.$controls)
 
         // FIXME: why is $controls.height() 2px greater here?
@@ -415,7 +416,16 @@ var Face = Class.extend({
                 'padding-top': '9px'
             }
         });
+
+
+        //
+        $controls.append(
+            $('<div/>').css({
+
+            }).text('start over')
+        );
         $controls.append($innerControls);
+
 
         this.$playButton = this.elem({
             tag: 'div',
@@ -458,8 +468,9 @@ var Face = Class.extend({
         }); // $playButton
 
         $innerControls
-        .append(this.$playButton)
         .append(
+            this.$playButton
+        ).append(
             this.elem({
                 tag: 'label',
                 css: {
@@ -857,14 +868,14 @@ var Face = Class.extend({
     elem: function(options) {
         var strOpts = ['tag', 'text'];
         var objOpts = ['attr', 'css', 'on'];
-        for (i in strOpts) {
-            if (! options[strOpts[i]]) {
-                options[strOpts[i]] = '';
+        for (var idx in strOpts) {
+            if (! options[strOpts[idx]]) {
+                options[strOpts[idx]] = '';
             }
         }
-        for (i in objOpts) {
-            if (! options[objOpts[i]]) {
-                options[objOpts[i]] = {};
+        for (var idx in objOpts) {
+            if (! options[objOpts[idx]]) {
+                options[objOpts[idx]] = {};
             }
         }
 
@@ -873,7 +884,7 @@ var Face = Class.extend({
             .css(options.css)
             .text(options.text);
 
-        for (evt in options.on) {
+        for (var evt in options.on) {
             $el.on(evt, options.on[evt]);
         }
          

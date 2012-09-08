@@ -1,3 +1,4 @@
+"use strict";
 
 var Patter = Class.extend({
     init: function(options, uri, toneRow) {
@@ -134,7 +135,7 @@ var Patter = Class.extend({
             var generator = patt[algorithm];
         } else if (typeof algorithm === 'function') {
             var generator = algorithm;
-        } else if (! algorithm) {
+        } else if (! algorithm) { // Default
             var self = this;
             var generator = function(idx) {
                 var density = 4;
@@ -145,9 +146,12 @@ var Patter = Class.extend({
         }
         var stepSeq = [];
         var length = length || this.options.stepCount;
+
+        // Apply generator routine to each step
         for (var i = 0; i < length; i++) {
             stepSeq[i] = generator(i);
         }
+
         return stepSeq;
     },
 

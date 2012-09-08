@@ -1,3 +1,5 @@
+"use strict";
+
 $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
     $script([
         'lib/jquery-ui-1.8.21.slider.min',
@@ -15,7 +17,7 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
 
         // TODO: url 'engine' param: webkit, moz, flash
         //       also: never publish / bookmark this param ? (how?)
-        var contextClas;
+        var contextClass;
         if (
             contextClass = (window.AudioContext || window.webkitAudioContext)
         ) {
