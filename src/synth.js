@@ -244,5 +244,11 @@ var ToneBlock = Class.extend({
         );
         */
         return gainVal;
+    },
+    crinkle: function(hz0 {
+        var gainVal = 5 / Math.sqrt(2*Math.PI) * Math.pow(
+            Math.E, (-1 / 200000 * Math.pow(hz, 2))
+        );
+        return gainVal;
     }
 });
