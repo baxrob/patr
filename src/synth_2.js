@@ -1,28 +1,4 @@
 "use strict";
-
-/* CULL:
-var ToneRow = Class.extend({
-    init: function(context, bufferLength) {
-        this.context = context;
-        this.sampleRate = this.context.sampleRate;
-        this.bufferLength = bufferLength;
-
-        this.jsNode = this.context.createJavaScriptNode(
-            this.bufferLength, 2, 2//, 0, 2
-        );
-        this.jsNode.onaudioprocess = this.onProcess.bind(this); 
-
-        var baseGain = 0.8;
-        this.block = new ToneBlock(this.sampleRate, baseGain);
-
-        this.reset();
-        this.sequence = [];
-        this.sequenceUpdateHook = null;
-        this.running = false;
-    },
-});
-*/
-
 /*
 NoteBlock
 SoundChunk
@@ -370,49 +346,3 @@ var ClangBlock = Class.etend({
 
 }); // var ClangBlock = Class.etend({
 
-
-/* CULL:
-var ToneBlock = Class.extend({
-    init: function(sampleRate, baseGain) {
-        this.sampleRate = sampleRate;
-        this.baseGain = baseGain;
-
-        this.sampleVal = this.sine;
-        this.hzGain = this.bleat;
-
-        // TODO: test, chart
-        this.rampLen = 0;
-        this.rampLen = 4096;
-        this.rampLen = 1400;
-        this.rampLen = 68
-        this.rampLen = 480;
-        this.rampLen = 240;
-        this.writeSample = 0;
-    },
-    fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
-        (hz >= 20) || (hz = 0);
-        var idx = offset,
-            rampLen = rampOut ? this.rampLen : 0,
-            gain = this.hzGain(hz),
-            writeEnd = len + offset;
-
-        for ( ; idx < writeEnd - rampLen; idx++, this.writeSample++) {
-            var sampleVal = gain * this.sampleVal(hz, this.writeSample) 
-                + phase;
-            buffers[0][idx] = buffers[1][idx] = sampleVal;
-        }
-
-        if (rampOut) {
-            var rampPos = rampLen;
-            for ( ; idx < writeEnd; idx++, this.writeSample++) {
-                sampleVal = (rampPos-- / rampLen) * gain
-                //sampleVal = Math.sqrt(rampPos-- / rampLen) * gain
-                //sampleVal = Math.log((rampPos-- / rampLen)+ 1)*1.442 * gain
-                    * this.sampleVal(hz, this.writeSample) + phase; 
-                buffers[0][idx] = buffers[1][idx] = sampleVal;
-            }
-        }
-    }
-
-});
-*/
