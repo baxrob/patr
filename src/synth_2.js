@@ -98,9 +98,6 @@ var ToneRow = Class.extend({
         }, onsetDelay * 1000);
     },
     onProcess: function(evt) {
-
-        //console.log(this, window.performance.now());
-
         // KLUDGE: double safety against sequence shrink race condition 
         if (this.seqIdx >= this.sequence.length) {
             this.seqIdx = 0;
@@ -175,7 +172,75 @@ var ToneRow = Class.extend({
     }
 });
 
+/*
+NoteBlock
+SoundChunk
+Clang
 
+var ClangRow = Class.extend({
+// ? var ClangRow = Clang.extend({
+
+    init: function(context, bufferLength) {
+
+        this.context = context;
+        this.sampleRate = this.context.sampleRate;
+        this.bufferLength = bufferLength;
+
+
+        //this.super(this.sampleRate, 0.8);
+
+        var baseGain = 0.8;
+
+        this.block = new ToneBlock(this.sampleRate, baseGain);
+
+
+        this.reset();
+        this.sequence = [];
+        this.sequenceUpdateHook = null;
+        this.running = false;
+    
+    },
+
+    run: function() {
+    }
+
+});
+
+var Clang = Class.extend({
+// ? var Clang = ClangBlock.extend({
+    init: function(sampleRate, baseGain) {
+
+        this.jsNode = this.context.createJavaScriptNode(
+            this.bufferLength, 2, 2//, 0, 2
+        );
+        this.jsNode.onaudioprocess = this.onProcess.bind(this); 
+
+    },
+    strike: function(attack, duration) {
+    },
+    halt: function() {
+    }
+})
+
+var ClangBlock = Class.etend({
+    init: function(sampleRate, baseGain) {    
+        this.sampleRate = sampleRate;
+        this.baseGain = baseGain;
+
+        this.sampleVal = function(hz, idx, phase) { return 0; }; // Override
+        this.hzGain = function(hz) { return this.baseGain; };    // Override
+
+        this.rampLen = 0;
+        this.writeSample = 0;
+    },
+    noise: function(hz,) {
+        return sampleVal = 1 - (Math.random() * 2);
+    },
+    fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
+    }
+});
+
+*/
 var ToneBlock = Class.extend({
     init: function(sampleRate, baseGain) {
         this.sampleRate = sampleRate;
@@ -184,6 +249,7 @@ var ToneBlock = Class.extend({
         this.sampleVal = this.sine;
         this.hzGain = this.bleat;
 
+        // TODO: test, chart
         this.rampLen = 0;
         this.rampLen = 4096;
         this.rampLen = 1400;
