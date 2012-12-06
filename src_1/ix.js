@@ -62,6 +62,7 @@ var Face = Class.extend({
             if (evt.ctrlKey) {
                 return true;
             }
+            // TODO: vim hjkl, mmrpg/game layouts
             switch (evt.keyCode) {
                 case 32: // Spacebar
                     // TODO: shift+click or enter key: stop/restart
@@ -144,12 +145,29 @@ var Face = Class.extend({
         });
 
         this.styleRules = {
+            '#ctl_bar div.meta': {
+                display: 'none',
+                float: 'left',
+                
+                /*
+                'background-color': '#555',
+                color: '#ddd',
+                border: '1px solid #999',
+                'border-radius': '2px',
+                cursor: 'pointer',
+
+                padding: '3px'
+                */
+            },
             '#ctl_bar div.ctl': {
                 'background-color': '#555',
                 color: '#ddd',
                 border: '1px solid #999',
                 'border-radius': '2px',
                 cursor: 'pointer'
+            },
+            '#ctl_bar a.ctl': {
+                'text-decoration': 'none'
             },
             '#ctl_bar div.ctl#play_btn': {
                 'margin-right': '29px'
@@ -403,7 +421,8 @@ var Face = Class.extend({
                 'z-index': '10',
                 width: '100%',
                 top: '0px',
-                'background-color': '#fcfeef',
+                //'background-color': '#fcfeef',
+                'background-color': '#bcb',
                 'border-bottom': '1px solid silver',
                 'box-shadow': '0 1px 10px -4px #444'
             }
@@ -437,17 +456,17 @@ var Face = Class.extend({
                 height: '18px',
                 float: 'left'
             },
-            text: 'go',
+            html: '&#xE760;',//'&#x27f3;',
             on: {
                 click: function(evt) {
                     if (this.patt.isRunning()) {
                         this.patt.pause();
                         $(evt.target).removeClass('active');
-                        $(evt.target).text('go');
+                        $(evt.target).html('&#x27f3;');
                     } else {
                         this.patt.unpause();
                         $(evt.target).addClass('active');
-                        $(evt.target).text('paus');
+                        $(evt.target).html('&#xe800;');
                     }
                 }.bind(this),
                 mouseover: function(evt) {
@@ -457,7 +476,8 @@ var Face = Class.extend({
                     $(this).removeClass('hover');
                 }
             }
-        }); // $playButton
+        //}); // $playButton
+        })//.html('&#x27f3;'); // $playButton
 
         //
         $innerControls
@@ -545,7 +565,8 @@ var Face = Class.extend({
                     'padding-right': '3px',
                     margin: 0,
                     // Section end, extra margin
-                    'margin-right': '18px',
+                    //'margin-right': '18px',
+                    'margin-right': '12px',
                     'margin-bottom': '10px'
                 },
                 on: {
@@ -572,6 +593,42 @@ var Face = Class.extend({
             })
         ).append(
             this.elem({
+                tag: 'div',
+                attr: {
+                    id: 'shuff',
+                    'class': 'ctl',
+                    title: 'shuffle notes\n(S key)'
+                },
+                css: {
+                    float: 'left',
+                    'font-family': 'verdana',
+                    'font-size': '12px',
+                    'padding-left': '5px',
+                    'padding-right': '5px',
+                    'padding-top': '1px',
+                    'margin-top': '0px',
+                    //'margin-right': '10px',
+                    'margin-right': '4px',
+                    height: '17px'
+                },
+                text: 'shuff',
+                on: {
+                    'click': self.shuffle.bind(self) 
+                }
+            })
+        ).append(
+            this.elem({
+                tag: 'label',
+                css: {
+                    'font-size': '12px',
+                    float: 'left',
+                    'padding-top': '2px',
+                    margin: 0,
+                    'margin-right': '4px'
+                }
+            }).text('ea:')
+        ).append(
+            this.elem({
                 tag: 'input',
                 attr: {
                     type: 'checkbox',
@@ -583,7 +640,9 @@ var Face = Class.extend({
                 },
                 css: {
                     float: 'left',
-                    margin: '3px 0 3px 12px'
+                    height: '15px',
+                    background: 'white',
+                    margin: '5px 3px 3px 0'
                 },
                 on: {
                     click: function(evt) {
@@ -610,7 +669,8 @@ var Face = Class.extend({
                     'padding-right': '3px',
                     margin: 0,
                     'margin-right': '10px',
-                    'margin-bottom': '10px'
+                    'margin-bottom': '0',
+                    'margin-top': '2px'
                 },
                 on: {
                     focusout: function() {
@@ -627,30 +687,6 @@ var Face = Class.extend({
                     blur: function(evt) {
                         evt.stopPropagation();
                     }
-                }
-            })
-        ).append(
-            this.elem({
-                tag: 'div',
-                attr: {
-                    id: 'shuff',
-                    'class': 'ctl',
-                    title: 'shuffle notes\n(S key)'
-                },
-                css: {
-                    float: 'left',
-                    'font-family': 'verdana',
-                    'font-size': '12px',
-                    'padding-left': '5px',
-                    'padding-right': '5px',
-                    'padding-top': '1px',
-                    'margin-top': '0px',
-                    'margin-right': '10px',
-                    height: '17px'
-                },
-                text: 'shuff',
-                on: {
-                    'click': self.shuffle.bind(self) 
                 }
             })
         ).append(
@@ -707,31 +743,45 @@ var Face = Class.extend({
 
         $controls.append($innerControls);
 
-        // TODO: move below styled controls, prepend(...
         $controls.prepend(
-            $('<a>startover</a>').attr({
+            // Start Over
+            $('<div>&#x27f2;</div>').attr({
                 href: '',
+                'class': 'meta',
+                id: 'start_over'
             }).css({
                 float: 'left'   
             })//.text('start over')
         );
-        this.items = [
+        this.subSeqs = [
             '1', '2', '3' 
         ];
-        this.items.forEach(function(el, idx) {
+        this.subSeqs.forEach(function(el, idx) {
             $controls.append(
-                $('<a/>').attr({
+                $('<div/>').attr({
                     href: '#',
+                    'class': 'ctl meta',
+                    id: 'sub_seq_' + idx
                 }).css({
+                }).on('click', function(evt) {
+                    document.location = '';
                 }).text(el)
             );
             //$controls.append($el);
             console.log(this.patt.uri);
         }.bind(self));
+        
+
+        //
+        var addBtnColor = this.subSeqs.length < this.maxSubSeqs ? '#949' : '#449'
         $controls.append(
-            $('<a/>').attr({
-                href: '#'
+            $('<div/>').attr({
+                'class': 'ctl meta',
+                id: 'write_sub_seq'
             }).css({
+                background: addBtnColor
+            }).on('click', function(evt) {
+
             }).text('+')
         );
 
