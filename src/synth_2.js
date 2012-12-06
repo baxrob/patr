@@ -1,5 +1,6 @@
 "use strict";
 
+/* CULL:
 var ToneRow = Class.extend({
     init: function(context, bufferLength) {
         this.context = context;
@@ -19,6 +20,145 @@ var ToneRow = Class.extend({
         this.sequenceUpdateHook = null;
         this.running = false;
     },
+});
+*/
+
+/*
+NoteBlock
+SoundChunk
+Clang
+
+ClangRow: 
+Clang
+ClangBlock
+*/
+
+var ToneRow = ClangRow.extend({
+});
+
+var SineRow = ClangRow.extend({
+});
+
+var NoiseCrinkleRow = ClangRow.extend({
+    init: function(context, bufferLength, sampleRate, baseGain) {
+        this._super(context, bufferLength, sampleRate, baseGain);
+
+        // ?
+        //this.subrows = [this];
+
+        this.sampleVal = this.noise;
+        this.hzGain = this.crinkle;
+    },
+    // Sample values
+    noise: function() {
+        return sampleVal = 1 - (Math.random() * 2);
+    },
+    // Frequency based gain envelope
+    crinkle: function(hz) {
+        var gainVal = 5 / Math.sqrt(2*Math.PI) * Math.pow(
+            Math.E, (-1 / 200000 * Math.pow(hz, 2))
+        );
+        return gainVal;
+    }
+});
+
+var SineBleatRow = ClangRow.extend({
+    init: function(context, bufferLength, sampleRate, baseGain) {
+        this._super(context, bufferLength, sampleRate, baseGain);
+
+        // ?
+        //this.subrows = [this];
+
+        this.sampleVal = this.sine;
+        this.hzGain = this.bleat;
+    },
+    // Sample values
+    sine: function(hz, idx, phase) {
+        (phase === undefined) && (phase = 0);
+        var sampleVal = Math.sin(
+            hz * (2 * Math.PI) * idx / this.sampleRate + phase
+        );
+        return sampleVal;
+    },
+    // Frequency based gain envelope
+    bleat: function(hz) {
+        var divisor = 220,      // "cutoff"
+            multiplier = 2.4;   // "max gain"
+        //divisor = 20;
+        //multiplier = 2.8;
+        var cosh = function(n) {
+            return (Math.exp(n) + Math.exp(-n)) / 2;
+        };
+        var gainVal = 1 / cosh(hz / divisor) * multiplier * this.baseGain;
+        //(1/sqrt(2*pi))*6*e^(-1/290000*x^2)
+        // TODO: this.crinkle
+        
+        //gainVal = 5 / Math.sqrt(2*Math.PI) * Math.pow(
+        //    Math.E, (-1 / 200000 * Math.pow(hz, 2))
+        //);
+        
+        return gainVal;
+    }
+});
+
+
+
+var ClangRow = Clang.extend({
+
+    init: function(context, bufferLength) {
+
+        this.context = context;
+        this.sampleRate = this.context.sampleRate;
+        this.bufferLength = bufferLength;
+
+        // Considering 0.8 a "sensible default"
+        this.baseGain = 0.8;
+
+        this._super(this.sampleRate, this.baseGain);
+
+        var baseGain = 0.8;
+
+        this.block = new ToneBlock(this.sampleRate, baseGain);
+
+
+        this.reset();
+        this.sequence = [];
+        this.sequenceUpdateHook = null;
+        this.running = false;
+    
+    },
+
+    run: function() {
+    }
+
+}); // var ClangRow = Clang.extend({
+
+
+
+var Clang = ClangBlock.extend({
+    
+    
+    init: function(sampleRate, baseGain) {
+
+        this._super(sampleRate, baseGain);
+
+        this.sampleVal = function(hz, idx, phase) { return 0; }; // Override
+        this.hzGain = function(hz) { return this.baseGain; };    // Override
+
+        this.processorNode = this.context.createJavaScriptNode(
+            this.bufferLength, 2, 2//, 0, 2
+        );
+        this.jsNode.onaudioprocess = this.onProcess.bind(this); 
+
+    },
+
+
+    strike: function(attack, duration) {
+    },
+    halt: function() {
+    },
+
+
     setUpdateHook: function(newHook) {
         this.sequenceUpdateHook = function() {
             newHook();
@@ -34,6 +174,8 @@ var ToneRow = Class.extend({
             this.sequence = sequence;
         }
     },
+    
+    
     run: function(durationLimit) {
         if (this.sequence.length && this.jsNode.onaudioprocess) {
             this.jsNode.connect(this.context.destination);
@@ -45,8 +187,17 @@ var ToneRow = Class.extend({
             }
         }
     },
+    
+    
     stop: function() {
         this.pause(this.reset);
+    },
+    reset: function() {
+        this.firstLoop = true;
+        this.newNote = true;
+        this.seqIdx = 0;
+        this.elapsed = 0;
+        this.block.writeSample = 0;
     },
     pause: function(onComplete) {
         this.setUpdateHook(function() {
@@ -79,14 +230,9 @@ var ToneRow = Class.extend({
                 onComplete && onComplete.bind(this)();
             }.bind(this), timeout);
         }.bind(this));
-    },
-    reset: function() {
-        this.firstLoop = true;
-        this.newNote = true;
-        this.seqIdx = 0;
-        this.elapsed = 0;
-        this.block.writeSample = 0;
-    },
+    }, // pause: function(onComplete) {
+    
+    
     stageBeatEvent: function(idx, length, onsetDelay) {
         // TODO: use requestAnimationFrame
         setTimeout(function() {
@@ -97,6 +243,8 @@ var ToneRow = Class.extend({
             document.dispatchEvent(evt);
         }, onsetDelay * 1000);
     },
+    
+    
     onProcess: function(evt) {
         // KLUDGE: double safety against sequence shrink race condition 
         if (this.seqIdx >= this.sequence.length) {
@@ -169,60 +317,15 @@ var ToneRow = Class.extend({
             );
         }
         this.elapsed += buffer.duration;
-    }
-});
-
-/*
-NoteBlock
-SoundChunk
-Clang
-
-var ClangRow = Class.extend({
-// ? var ClangRow = Clang.extend({
-
-    init: function(context, bufferLength) {
-
-        this.context = context;
-        this.sampleRate = this.context.sampleRate;
-        this.bufferLength = bufferLength;
+    } // onProcess: function(evt) {
 
 
-        //this.super(this.sampleRate, 0.8);
-
-        var baseGain = 0.8;
-
-        this.block = new ToneBlock(this.sampleRate, baseGain);
+}); // var Clang = ClangBlock.extend({
 
 
-        this.reset();
-        this.sequence = [];
-        this.sequenceUpdateHook = null;
-        this.running = false;
-    
-    },
-
-    run: function() {
-    }
-
-});
-
-var Clang = Class.extend({
-// ? var Clang = ClangBlock.extend({
-    init: function(sampleRate, baseGain) {
-
-        this.jsNode = this.context.createJavaScriptNode(
-            this.bufferLength, 2, 2//, 0, 2
-        );
-        this.jsNode.onaudioprocess = this.onProcess.bind(this); 
-
-    },
-    strike: function(attack, duration) {
-    },
-    halt: function() {
-    }
-})
 
 var ClangBlock = Class.etend({
+
     init: function(sampleRate, baseGain) {    
         this.sampleRate = sampleRate;
         this.baseGain = baseGain;
@@ -233,14 +336,42 @@ var ClangBlock = Class.etend({
         this.rampLen = 0;
         this.writeSample = 0;
     },
+
     noise: function(hz,) {
         return sampleVal = 1 - (Math.random() * 2);
     },
-    fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
-    }
-});
 
-*/
+    _fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
+    },
+    fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
+        (hz >= 20) || (hz = 0);
+        var idx = offset,
+            rampLen = rampOut ? this.rampLen : 0,
+            gain = this.hzGain(hz),
+            writeEnd = len + offset;
+
+        for ( ; idx < writeEnd - rampLen; idx++, this.writeSample++) {
+            var sampleVal = gain * this.sampleVal(hz, this.writeSample) 
+                + phase;
+            buffers[0][idx] = buffers[1][idx] = sampleVal;
+        }
+
+        if (rampOut) {
+            var rampPos = rampLen;
+            for ( ; idx < writeEnd; idx++, this.writeSample++) {
+                sampleVal = (rampPos-- / rampLen) * gain
+                //sampleVal = Math.sqrt(rampPos-- / rampLen) * gain
+                //sampleVal = Math.log((rampPos-- / rampLen)+ 1)*1.442 * gain
+                    * this.sampleVal(hz, this.writeSample) + phase; 
+                buffers[0][idx] = buffers[1][idx] = sampleVal;
+            }
+        }
+    } // fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
+
+}); // var ClangBlock = Class.etend({
+
+
+/* CULL:
 var ToneBlock = Class.extend({
     init: function(sampleRate, baseGain) {
         this.sampleRate = sampleRate;
@@ -281,43 +412,7 @@ var ToneBlock = Class.extend({
                 buffers[0][idx] = buffers[1][idx] = sampleVal;
             }
         }
-    },
-
-    // Sample values
-    sine: function(hz, idx, phase) {
-        (phase === undefined) && (phase = 0);
-        var sampleVal = Math.sin(
-            hz * (2 * Math.PI) * idx / this.sampleRate + phase
-        );
-        return sampleVal;
-    },
-    noise: function() {
-        return sampleVal = 1 - (Math.random() * 2);
-    },
-
-    // Frequency based gain envelope
-    bleat: function(hz) {
-        var divisor = 220,      // "cutoff"
-            multiplier = 2.4;   // "max gain"
-        //divisor = 20;
-        //multiplier = 2.8;
-        var cosh = function(n) {
-            return (Math.exp(n) + Math.exp(-n)) / 2;
-        };
-        var gainVal = 1 / cosh(hz / divisor) * multiplier * this.baseGain;
-        //(1/sqrt(2*pi))*6*e^(-1/290000*x^2)
-        // TODO: this.crinkle
-        /*
-        gainVal = 5 / Math.sqrt(2*Math.PI) * Math.pow(
-            Math.E, (-1 / 200000 * Math.pow(hz, 2))
-        );
-        */
-        return gainVal;
-    },
-    crinkle: function(hz) {
-        var gainVal = 5 / Math.sqrt(2*Math.PI) * Math.pow(
-            Math.E, (-1 / 200000 * Math.pow(hz, 2))
-        );
-        return gainVal;
     }
+
 });
+*/
