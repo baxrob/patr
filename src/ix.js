@@ -836,7 +836,6 @@ var Face = Class.extend({
                 }
             })
         );
-
     },
 
     intValFromCSS: function($el, property) {
