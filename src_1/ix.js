@@ -170,7 +170,7 @@ var Face = Class.extend({
                 'text-decoration': 'none'
             },
             '#ctl_bar div.ctl#play_btn': {
-                'margin-right': '29px'
+                'margin-right': '15px'
             },
             '#ctl_bar div.ctl#play_btn.active': {
                 'margin-right': '15px'
@@ -183,7 +183,7 @@ var Face = Class.extend({
             },
             '#ctl_bar div.ctl:active, #ctl_bar div.ctl.active': {
                 'background-color': '#fff',
-                color: '#222',
+                color: '#555',
                 'box-shadow': '0 0 1px 1px #999'
             },
             '#ctl_bar input[type="text"]': {
@@ -447,7 +447,8 @@ var Face = Class.extend({
             },
             css: {
                 'z-indez': '1000',
-                'font-family': 'verdana',
+                'font-family': 'fontello',
+                'line-height': '1.5em',
                 'font-size': '12px',
                 'padding-left': '5px',
                 'padding-right': '5px',
@@ -456,13 +457,14 @@ var Face = Class.extend({
                 height: '18px',
                 float: 'left'
             },
-            html: '&#xE760;',//'&#x27f3;',
+            html: '&#x27f3;',
             on: {
                 click: function(evt) {
                     if (this.patt.isRunning()) {
                         this.patt.pause();
                         $(evt.target).removeClass('active');
-                        $(evt.target).html('&#x27f3;');
+                        $(evt.target).html('&#xe760');
+                        console.log('&#xe760;');
                     } else {
                         this.patt.unpause();
                         $(evt.target).addClass('active');
@@ -943,14 +945,16 @@ var Face = Class.extend({
 
     // TODO: merge attr/css args - and reflect above
     elem: function(options) {
-        var strOpts = ['tag', 'text'];
+        var strOpts = ['tag', 'text', 'html'];
         var objOpts = ['attr', 'css', 'on'];
         for (var idx in strOpts) {
+            console.log(options[strOpts[idx]]);
             if (! options[strOpts[idx]]) {
                 options[strOpts[idx]] = '';
             }
         }
         for (var idx in objOpts) {
+            console.log(options[objOpts[idx]]);
             if (! options[objOpts[idx]]) {
                 options[objOpts[idx]] = {};
             }
@@ -958,8 +962,15 @@ var Face = Class.extend({
 
         var $el = $('<' + options.tag + '/>')
             .attr(options.attr)
-            .css(options.css)
-            .text(options.text);
+            .css(options.css);
+
+        if (options.text !== '') {
+            $el.text(options.text);
+        }
+        // NOTE: html overrides text
+        if (options.html != '') {
+            $el.html(options.html);
+        }
 
         for (var evt in options.on) {
             $el.on(evt, options.on[evt]);

@@ -10,23 +10,36 @@ ClangBlock
 */
 
 var ToneRow = ClangRow.extend({
+    init: function(context, bufferLength, sampleRate, baseGain) {
+        this._super(context, bufferLength, sampleRate, baseGain);
+    }
+});
+
+var BeatRow = ClangRow.extend({
+    init: function(context, bufferLength, sampleRate, baseGain) {
+        this._super(context, bufferLength, sampleRate, baseGain);
+    },
+    p1Val: function(p1_val, idx, phase) {
+    },
+    p2Gain: function(p2_val) {
+    }
 });
 
 var SineRow = ClangRow.extend({
+    init: function(context, bufferLength, sampleRate, baseGain) {
+        this._super(context, bufferLength, sampleRate, baseGain);
+    }
 });
 
 var NoiseCrinkleRow = ClangRow.extend({
     init: function(context, bufferLength, sampleRate, baseGain) {
         this._super(context, bufferLength, sampleRate, baseGain);
 
-        // ?
-        //this.subrows = [this];
-
         this.sampleVal = this.noise;
         this.hzGain = this.crinkle;
     },
     // Sample values
-    noise: function() {
+    noise: function(hz, idx, phase) {
         return sampleVal = 1 - (Math.random() * 2);
     },
     // Frequency based gain envelope
@@ -41,9 +54,6 @@ var NoiseCrinkleRow = ClangRow.extend({
 var SineBleatRow = ClangRow.extend({
     init: function(context, bufferLength, sampleRate, baseGain) {
         this._super(context, bufferLength, sampleRate, baseGain);
-
-        // ?
-        //this.subrows = [this];
 
         this.sampleVal = this.sine;
         this.hzGain = this.bleat;
@@ -102,6 +112,9 @@ var ClangRow = Clang.extend({
         this.sequenceUpdateHook = null;
         this.running = false;
     
+        // ?
+        //this.subrows = [this];
+
     },
 
     run: function() {

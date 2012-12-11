@@ -41,9 +41,15 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
         
         $(document).ready(function() {
             var face = window.face = new Face($('body'), patt);
+
             face.welcomeDialog();
-            console.log($(window).height(), $('body').height(), $(document).height(), $(parent).height(), $(parent).children(), $(this).parent(), this, $(parent.document).find('body iframe'), parent);
+            
+            //console.log($(window).height(), $('body').height(), $(document).height(), $(parent).height(), $(parent).children(), $(this).parent(), this, $(parent.document).find('body iframe'), parent);
+
+            console.log(patt);
+            
             $(parent.document).find('body iframe').height($(parent).height() - 50);
+            
             $(window).blur();
         });
     })

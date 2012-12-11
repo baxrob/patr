@@ -37,7 +37,11 @@ var ToneRow = Class.extend({
     run: function(durationLimit) {
         if (this.sequence.length && this.jsNode.onaudioprocess) {
             this.jsNode.connect(this.context.destination);
+            //console.log(durationLimit, this.sequence.length, this.jsNode.onaudioprocess);
+
+            // FIXME: ??
             this.running = true;
+            
             if (durationLimit !== undefined) {
                 setTimeout(function() {
                     this.stop();
