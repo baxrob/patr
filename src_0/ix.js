@@ -730,7 +730,11 @@ var Face = Class.extend({
                 width: 'auto', // sum(controls.children.widths)
                 border: '1px solid #999'
             }
-        }).text('[explanatory, as hover-text per control above: fade out after 10, 5, 3 secs, per user\'s visit count; then don\'t show, (but also add help button at control edge-right.)]');
+        }).text(
+            '[explanatory, as hover-text per control above: fade out '
+            + 'after 10, 5, 3 secs, per user\'s visit count; then don\'t '
+            + 'show, (but also add help button at control edge-right.)]'
+        );
         //$controls.append($controlsHint);
 
         return $controls;
