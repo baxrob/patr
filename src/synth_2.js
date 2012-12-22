@@ -31,6 +31,9 @@ var SineRow = ClangRow.extend({
     }
 });
 
+var SineRow = ClangRow.extend({
+});
+
 var NoiseCrinkleRow = ClangRow.extend({
     init: function(context, bufferLength, sampleRate, baseGain) {
         this._super(context, bufferLength, sampleRate, baseGain);
