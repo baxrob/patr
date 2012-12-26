@@ -9,7 +9,7 @@ var Patter = Class.extend({
         this.silentNoteVal = 0;
         this.buildFreqTable();
 
-        this.dirty = true;
+        this.changed = true;
         this.updateFromURI();
 
         this.uri.onchangeHook = function() {
@@ -33,7 +33,7 @@ var Patter = Class.extend({
 
     },
     buildSequence: function() {
-        if (this.dirty) {
+        if (this.changed) {
             this.hzSeq = this.hzFromStepSeq();
             this.attackSeq = this.flatAttackSeq();
             this.formattedSeq = this.mergeSequences();
@@ -43,7 +43,7 @@ var Patter = Class.extend({
                 rate: this.options.bpm,
                 len: this.options.stepCount
             });
-            this.dirty = false;
+            this.changed = false;
         }
     },
     update: function(params) {
@@ -84,6 +84,7 @@ var Patter = Class.extend({
         }
         
         var stepOverflow = this.toneRow.seqIdx >= this.options.stepCount - 1;
+
         var mustPause = this.isRunning() && (bpmChanged || stepCountChanged);
 
         var updateCallback = function() {
@@ -97,9 +98,9 @@ var Patter = Class.extend({
             mustPause && this.unpause();
         }.bind(this);
 
-        this.dirty = bpmChanged || stepCountChanged || seqChanged;
+        this.changed = bpmChanged || stepCountChanged || seqChanged;
         // TODO: is this cond overkill, redundant wrt buildSequence check?
-        if (this.dirty) {
+        if (this.changed) {
             if (this.isRunning()) {
                 if (mustPause) {
                     this.toneRow.pause(updateCallback);

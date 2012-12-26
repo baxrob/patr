@@ -103,6 +103,7 @@ var Face = Class.extend({
                     }, 150);
                     break;
                 case 82: // 'r'
+                    // FIXME: filter ctrl/sh
                     var $el = $('#regen');
                     $el.triggerHandler('click');
                     $el.addClass('active');
@@ -166,19 +167,22 @@ var Face = Class.extend({
             },
             '#ctl_bar div.ctl': {
                 'background-color': '#555',
-                color: '#ddd',
-                border: '1px solid #999',
+                //color: '#ddd',
+                color: '#eee',
+                //border: '1px solid #999',
+                padding: '2px',
                 'border-radius': '2px',
+                'line-height': '1.5em',
                 cursor: 'pointer'
             },
             '#ctl_bar a.ctl': {
                 'text-decoration': 'none'
             },
             '#ctl_bar div.ctl#play_btn': {
-                'margin-right': '15px'
+                'margin-right': '34px'
             },
             '#ctl_bar div.ctl#play_btn.active': {
-                'margin-right': '15px'
+                'margin-right': '34px'
             },
             '#ctl_bar div.ctl:hover': {
                 'background-color': '#ddd',
@@ -437,7 +441,8 @@ var Face = Class.extend({
                 width: '100%',
                 top: '0px',
                 //'background-color': '#fcfeef',
-                'background-color': '#bcb',
+                //'background-color': '#bcb',
+                'background-color': 'transparent',
                 'border-bottom': '1px solid silver',
                 'box-shadow': '0 1px 10px -4px #444'
             }
@@ -468,6 +473,7 @@ var Face = Class.extend({
                 'padding-left': '5px',
                 'padding-right': '5px',
                 'margin-top': '0px',
+                'margin-left': '8px',
                 // Section end, extra margin
                 height: '18px',
                 float: 'left'
@@ -506,9 +512,7 @@ var Face = Class.extend({
                 css: {
                     'font-size': '12px',
                     float: 'left',
-                    'padding-top': '2px',
-                    margin: 0,
-                    'margin-right': '4px'
+                    margin: '-6px 4px 0 0'
                 }
             }).text('pace:')
         ).append(
@@ -524,12 +528,10 @@ var Face = Class.extend({
                 css: {
                     'text-align': 'right',
                     float: 'left',
-                    width: '2.2em',
+                    width: '2.5em',
                     'padding-left': '3px',
                     'padding-right': '3px',
-                    margin: 0,
-                    'margin-right': '10px',
-                    'margin-bottom': '10px'
+                    margin: '7px 10px 10px -37px'
                 },
                 on: {
                     focusout: self.updateRate.bind(self), 
@@ -559,9 +561,7 @@ var Face = Class.extend({
                 css: {
                     'font-size': '12px',
                     float: 'left',
-                    'padding-top': '2px',
-                    margin: 0,
-                    'margin-right': '4px'
+                    margin: '-6px 4px 0 13px'
                 }
             }).text('len:')
         ).append(
@@ -583,8 +583,10 @@ var Face = Class.extend({
                     margin: 0,
                     // Section end, extra margin
                     //'margin-right': '18px',
-                    'margin-right': '12px',
-                    'margin-bottom': '10px'
+                    'margin-top': '7px',
+                    'margin-right': '34px',
+                    'margin-bottom': '10px',
+                    'margin-left': '-30px'
                 },
                 on: {
                     focusout: self.updateLength.bind(self),
@@ -639,9 +641,7 @@ var Face = Class.extend({
                 css: {
                     'font-size': '12px',
                     float: 'left',
-                    'padding-top': '2px',
-                    margin: 0,
-                    'margin-right': '4px'
+                    margin: '-4px 4px 0 2px'
                 }
             }).text('ea:')
         ).append(
@@ -658,8 +658,9 @@ var Face = Class.extend({
                 css: {
                     float: 'left',
                     height: '15px',
+                    'backgound-url': 'none',
                     background: 'white',
-                    margin: '5px 3px 3px 0'
+                    margin: '9px 9px 3px -19px'
                 },
                 on: {
                     click: function(evt) {
@@ -684,10 +685,7 @@ var Face = Class.extend({
                     'border-radius': '2px',
                     'padding-left': '3px',
                     'padding-right': '3px',
-                    margin: 0,
-                    'margin-right': '10px',
-                    'margin-bottom': '0',
-                    'margin-top': '2px'
+                    margin: '2px 34px 0 0'
                 },
                 on: {
                     focusout: function() {
@@ -722,7 +720,7 @@ var Face = Class.extend({
                     'padding-right': '5px',
                     'padding-top': '1px',
                     'margin-top': '0px',
-                    'margin-right': '10px',
+                    'margin-right': '13px',
                     height: '17px'
                 },
                 text: 'clear',

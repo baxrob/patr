@@ -107,8 +107,7 @@ var ClangRow = Clang.extend({
 
         var baseGain = 0.8;
 
-        this.block = new ToneBlock(this.sampleRate, baseGain);
-
+        //this.block = new ToneBlock(this.sampleRate, baseGain);
 
         this.reset();
         this.sequence = [];
@@ -129,7 +128,7 @@ var ClangRow = Clang.extend({
 
 var Clang = ClangBlock.extend({
     
-    
+    // 
     init: function(sampleRate, baseGain) {
 
         this._super(sampleRate, baseGain);
@@ -144,19 +143,20 @@ var Clang = ClangBlock.extend({
 
     },
 
-
+    //
     strike: function(attack, duration) {
     },
     halt: function() {
     },
 
-
+    // Public
     setUpdateHook: function(newHook) {
         this.sequenceUpdateHook = function() {
             newHook();
             this.sequenceUpdateHook = null;
         };
     },
+    // Public
     updateSequence: function(sequence) {
         if (false && this.running) {
             this.setUpdateHook(function() {
@@ -167,7 +167,7 @@ var Clang = ClangBlock.extend({
         }
     },
     
-    
+    // 
     run: function(durationLimit) {
         if (this.sequence.length && this.jsNode.onaudioprocess) {
             this.jsNode.connect(this.context.destination);
@@ -179,8 +179,6 @@ var Clang = ClangBlock.extend({
             }
         }
     },
-    
-    
     stop: function() {
         this.pause(this.reset);
     },
@@ -189,7 +187,7 @@ var Clang = ClangBlock.extend({
         this.newNote = true;
         this.seqIdx = 0;
         this.elapsed = 0;
-        this.block.writeSample = 0;
+        this.writeSample = 0;
     },
     pause: function(onComplete) {
         this.setUpdateHook(function() {
@@ -217,14 +215,14 @@ var Clang = ClangBlock.extend({
                 this.sequence = restoreSequence;
                 this.elapsed = this.seqIdx == 0 ? 0
                     : this.sequence[this.seqIdx][0];
-                this.block.writeSample = 0;
+                this.writeSample = 0;
 
                 onComplete && onComplete.bind(this)();
             }.bind(this), timeout);
         }.bind(this));
     }, // pause: function(onComplete) {
     
-    
+    // 
     stageBeatEvent: function(idx, length, onsetDelay) {
         // TODO: use requestAnimationFrame
         setTimeout(function() {
@@ -236,7 +234,7 @@ var Clang = ClangBlock.extend({
         }, onsetDelay * 1000);
     },
     
-    
+    //
     onProcess: function(evt) {
         // KLUDGE: double safety against sequence shrink race condition 
         if (this.seqIdx >= this.sequence.length) {
@@ -251,7 +249,7 @@ var Clang = ClangBlock.extend({
             nextSeqIdx = (this.seqIdx + 1) % this.sequence.length,
             nextAttack = this.nextAttack = this.sequence[nextSeqIdx][0],
             nextHertz = this.sequence[nextSeqIdx][1];
-        var rampOnset = nextAttack - (this.block.rampLen / this.sampleRate);
+        var rampOnset = nextAttack - (this.rampLen / this.sampleRate);
 
         // Special cases for first note in sequence
         if (this.seqIdx === 0 && this.newNote) {
@@ -278,7 +276,7 @@ var Clang = ClangBlock.extend({
                 var blockLength = parseInt(this.stepSec * this.sampleRate);
             }
 
-            this.block.fillBuffer(
+            this.fillBuffer(
                 hertz, blockLength, stereoBuffer, 0, true, 0
             );
 
@@ -289,22 +287,24 @@ var Clang = ClangBlock.extend({
 
             // Begin next note
             this.seqIdx = nextSeqIdx;
-            hertz = this.sequence[nextSeqIdx][1];
+            //hertz = this.sequence[nextSeqIdx][1];
+            hertz = nextHertz;
+
             // Reset phase
-            this.block.writeSample = 0;
+            this.writeSample = 0;
 
             this.stageBeatEvent(this.seqIdx, nextAttack, this.stepSec);
 
             var offset = blockLength;
             blockLength = buffer.length - offset;
 
-            this.block.fillBuffer(
+            this.fillBuffer(
                 hertz, blockLength, stereoBuffer, offset, false, 0
             );
         } else {
             // Full single-Hz buffer
             this.newNote = false;
-            this.block.fillBuffer(
+            this.fillBuffer(
                 hertz, buffer.length, stereoBuffer, 0, false, 0
             );
         }
@@ -328,11 +328,13 @@ var ClangBlock = Class.etend({
         this.rampLen = 0;
         this.writeSample = 0;
     },
-
+    sanity: function() {
+    },
+    /*
     noise: function(hz,) {
         return sampleVal = 1 - (Math.random() * 2);
     },
-
+    */
     _fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
     },
     fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
