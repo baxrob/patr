@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<soundtoy version="0.1">
+
+    <info name="Flute 1" date="2006" author="iq" link="http://www.iquilezles.org">
+    <comments>a simple flute-like sound</comments>
+    </info>
+
+    <options applyeffects="yes"/>
+
+    <code>y  = 6.0*t*exp( -2*t )*sin( w*t );
+y *= .8+.2*cos(16*t);</code>
+
+</soundtoy>

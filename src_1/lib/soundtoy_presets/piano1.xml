@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<soundtoy version="0.1">
+
+    <info name="Piano" date="2006" author="iq" link="http://www.iquilezles.org">
+    <comments>a simple "piano"</comments>
+    </info>
+
+    <options applyeffects="yes"/>
+
+    <code>y  = 0.6*sin(1.0*w*t)*exp(-0.0008*w*t);
+y += 0.3*sin(2.0*w*t)*exp(-0.0010*w*t);
+y += 0.1*sin(4.0*w*t)*exp(-0.0015*w*t);
+y += 0.2*y*y*y;
+y *= 0.9 + 0.1*cos(70.0*t);
+y = 2.0*y*exp(-22.0*t) + y;</code>
+
+</soundtoy>
