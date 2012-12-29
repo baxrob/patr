@@ -6,7 +6,7 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
         'lib/swfobject',
         'mozFlashAudioContext',
 
-        'synth', 
+        'synth_1', 
         'seq', 
         'data',
         'ix'

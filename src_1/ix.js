@@ -966,13 +966,12 @@ var Face = Class.extend({
         var strOpts = ['tag', 'text', 'html'];
         var objOpts = ['attr', 'css', 'on'];
         for (var idx in strOpts) {
-            console.log(options[strOpts[idx]]);
             if (! options[strOpts[idx]]) {
                 options[strOpts[idx]] = '';
             }
         }
         for (var idx in objOpts) {
-            console.log(options[objOpts[idx]]);
+            //console.log(options[objOpts[idx]]);
             if (! options[objOpts[idx]]) {
                 options[objOpts[idx]] = {};
             }
