@@ -531,7 +531,7 @@ var Face = Class.extend({
                     width: '2.5em',
                     'padding-left': '3px',
                     'padding-right': '3px',
-                    margin: '7px 10px 10px -37px'
+                    margin: '7px 10px 4px -37px'
                 },
                 on: {
                     focusout: self.updateRate.bind(self), 
@@ -585,7 +585,7 @@ var Face = Class.extend({
                     //'margin-right': '18px',
                     'margin-top': '7px',
                     'margin-right': '34px',
-                    'margin-bottom': '10px',
+                    'margin-bottom': '4px',
                     'margin-left': '-30px'
                 },
                 on: {
