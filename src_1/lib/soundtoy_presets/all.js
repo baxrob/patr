@@ -1,345 +1,249 @@
-//(function() {
-var sin = Math.sin;
-/*
+// Sample functions from [google "soundtoy", or see github.com/baxrob for ref - FIXME]
+//
+var soundToyTones = {
 
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Bell" date="2004" author="iq" link="http://www.iquilezles.org">
-    <comments>a bell made from inharmonic tones (numbers taken from a book which name i can't recall)</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
+    _getSampleProc: function(name) {
+        // Renamings.
+        name == 'spring' && (name = 'bell');
+        name == 'organ' && (name = 'piano1');
+        return function(hz, idx, phase) {
+            (phase === undefined) && (phase = 0);
+            var idx2PI_SR = idx * (2 * Math.PI) / 44100;
+            var sampleVal = this[name](hz, idx2PI_SR);
+            return sampleVal + phase;  
+        }.bind(this);
+    },
+    //  Temp hack
+    spring: '',
+    organ: '',
 
-var bell = function() {
-    y = 0.100*exp( -t/1.000 )*sin( 0.56*w*t );
-    y += 0.067*exp( -t/0.900 )*sin( 0.56*w*t );
-    y += 0.100*exp( -t/0.650 )*sin( 0.92*w*t );
-    y += 0.180*exp( -t/0.550 )*sin( 0.92*w*t );
-    y += 0.267*exp( -t/0.325 )*sin( 1.19*w*t );
-    y += 0.167*exp( -t/0.350 )*sin( 1.70*w*t );
-    y += 0.146*exp( -t/0.250 )*sin( 2.00*w*t );
-    y += 0.133*exp( -t/0.200 )*sin( 2.74*w*t );
-    y += 0.133*exp( -t/0.150 )*sin( 3.00*w*t );
-    y += 0.100*exp( -t/0.100 )*sin( 3.76*w*t );
-    y += 0.133*exp( -t/0.075 )*sin( 4.07*w*t );
-}
+    _tri: function(a, x) {
+        x = x / (2.0 * Math.PI);
+        x = x % 1.0;
+        if (x < 0.0) x = 1.0 + x;
+        if (x < a) {
+            x = x / a; 
+        } else {
+            x = 1.0 - (x - a) / (1.0 - a);
+        }
+        return -1.0 + 2.0 * x;
+    },
+    _saw: function(x, a) {
+        var f = x % 1.0;
+        if (f < a) {
+            f = f / a;
+        } else {
+            f = 1.0 - (f - a) / (1.0 - a);
+        }
+        return f;
+    },
+    _sqr: function(a,x) {
+        if (Math.sin(x) > a) {
+            x=1.0; 
+        } else {
+            x = -1.0;
+        }
+        return x;
+    },
+    _noise: function(x) {
+        var i = Math.floor(x);
+        var f = x - i;
+        var w = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+        var a = this._grad(i+0, f+0.0);
+        var b = this._grad(i+1, f-1.0);
+        return a + (b-a) * w;
+    },
+    _fmod: function(x,y) {
+        return x % y;
+    },
+    _sign: function(x) {
+        if (x > 0.0) {
+            x = 1.0; 
+        } else {
+            x = -1.0;
+        }
+        return x;
+    },
+    _grad: function(n, x) {
+        n = (n << 13) ^ n;
+        n = (n * (n * n * 15731 + 789221) + 1376312589);
+        var res = x;
+        if( n & 0x20000000 ) res = -x;
+        return res;
+    },
 
-/*
-</code>
-</soundtoy>
+    //
+    bell: function(hz, sampIdx) {
+        y = 0.100 * Math.exp(-sampIdx / 1.000) * Math.sin(0.56 * hz * sampIdx);
+        y += 0.067 * Math.exp(-sampIdx / 0.900) * Math.sin(0.56 * hz * sampIdx);
+        y += 0.100 * Math.exp(-sampIdx / 0.650) * Math.sin(0.92 * hz * sampIdx);
+        y += 0.180 * Math.exp(-sampIdx / 0.550) * Math.sin(0.92 * hz * sampIdx);
+        y += 0.267 * Math.exp(-sampIdx / 0.325) * Math.sin(1.19 * hz * sampIdx);
+        y += 0.167 * Math.exp(-sampIdx / 0.350) * Math.sin(1.70 * hz * sampIdx);
+        y += 0.146 * Math.exp(-sampIdx / 0.250) * Math.sin(2.00 * hz * sampIdx);
+        y += 0.133 * Math.exp(-sampIdx / 0.200) * Math.sin(2.74 * hz * sampIdx);
+        y += 0.133 * Math.exp(-sampIdx / 0.150) * Math.sin(3.00 * hz * sampIdx);
+        y += 0.100 * Math.exp(-sampIdx / 0.100) * Math.sin(3.76 * hz * sampIdx);
+        y += 0.133 * Math.exp(-sampIdx / 0.075) * Math.sin(4.07 * hz * sampIdx);
+        return y;
+    },
 
+    drum1: function(hz, sampIdx) {
+        y = Math.max(-1.0, Math.min(1.0, 8.0 * Math.sin(3000 * sampIdx * Math.exp(-6 * sampIdx))));
+        return y;
+    },
 
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Drum 1" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>a simple drum sound</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
+    drum2: function(hz, sampIdx) {
+        y = 0.5 * this._noise(32000 * sampIdx) * Math.exp(-32 * sampIdx);
+        y += 2.0 * this._noise(3200 * sampIdx) * Math.exp(-32 * sampIdx);
+        y += 3.0 * Math.cos(400 * (1-sampIdx) * sampIdx) * Math.exp(-4 * sampIdx);
+        return y;
+    },
 
-var drum1 = function() {
-    y = max(-1.0,min(1.0,8.0*sin(3000*t*exp(-6*t))));
-}
+    drum3: function(hz, sampIdx) {
+        f = 1000-2500 * sampIdx;
+        y = Math.sin(f * sampIdx);
+        y += .2 * Math.random();
+        y *= Math.exp(-12 * sampIdx);
+        y *= 8;
+        return y;
+    },
 
-/*
-</code>
-</soundtoy>
+    flute1: function(hz, sampIdx) {
+        y = 6.0 * sampIdx * Math.exp(-2 * sampIdx) * Math.sin(hz * sampIdx);
+        y *= .8 + .2 * Math.cos(16 * sampIdx);
+        return y;
+    },
 
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Drum 2" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>a drum</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
+    guitar: function(hz, sampIdx) {
+        f = Math.cos(0.251 * hz * sampIdx);
+        y = 0.5 * Math.cos(1.0 * hz * sampIdx + 3.14 * f) * Math.exp(-0.0007 * hz * sampIdx);
+        y += 0.2 * Math.cos(2.0 * hz * sampIdx + 3.14 * f) * Math.exp(-0.0009 * hz * sampIdx);
+        y += 0.2 * Math.cos(4.0 * hz * sampIdx + 3.14 * f) * Math.exp(-0.0016 * hz * sampIdx);
+        y += 0.1 * Math.cos(8.0 * hz * sampIdx + 3.14 * f) * Math.exp(-0.0020 * hz * sampIdx);
+        y *= 0.9 + 0.1 * Math.cos(70.0 * sampIdx);
+        y = 2.0 * y * Math.exp(-22.0 * sampIdx) + y;
+        return y;
+    },
 
-var drum2 = function() {
-    y = 0.5*noise(32000*t)*exp(-32*t);
-    y += 2.0*noise(3200*t)*exp(-32*t);
-    y += 3.0*cos(400*(1-t)*t)*exp(-4*t);
-}
+    organ1: function(hz, sampIdx) {
+        y = .6 * Math.cos(hz * sampIdx) * Math.exp(-4 * sampIdx);
+        y += .4 * Math.cos(2 * hz * sampIdx) * Math.exp(-3 * sampIdx);
+        y += .01 * Math.cos(4 * hz * sampIdx) * Math.exp(-1 * sampIdx);
+        y = y * y * y + y * y * y * y * y + y * y;
+        a = .5 + .5 * Math.cos(8 * sampIdx); y = Math.sin(y * a * 3.14);
+        y *= 30 * sampIdx * Math.exp(-.1 * sampIdx);
+        return y;
+    },
 
-/*
-</code>
-</soundtoy>
+    organ2: function(hz, sampIdx) {
+        f = this._fmod(sampIdx, 6.2831 / hz) * hz / 6.2831;
+        a = .7 + .3 * Math.cos(6.2831 * sampIdx);
+        y = -1.0 + 2 * this._saw(f, a);
+        y = y * y * y;
+        y = 15 * y * sampIdx * Math.exp(-5 * sampIdx);
+        return y;
+    },
 
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Drum 3" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>an drum</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
+    organ3: function(hz, sampIdx) {
+        a1 = .5 + .5 * Math.cos(0 + sampIdx * 12);
+        a2 = .5 + .5 * Math.cos(1 + sampIdx * 8);
+        a3 = .5 + .5 * Math.cos(2 + sampIdx * 4);
+        y = this._saw(.2500 * hz * sampIdx, a1) * Math.exp(-2 * sampIdx);
+        y += this._saw(.1250 * hz * sampIdx, a2) * Math.exp(-3 * sampIdx);
+        y += this._saw(.0625 * hz * sampIdx, a3) * Math.exp(-4 * sampIdx);
+        y *= .8 + .2 * Math.cos(64 * sampIdx);
+        return y;
+    },
 
-var drum3 = function() {
-    f = 1000-2500*t;
-    y = sin(f*t);
-    y += .2*random();
-    y *= exp(-12*t);
-    y *= 8;
-}
+    organ4: function(hz, sampIdx) {
+        var f = 0.001 * (Math.cos(5 * sampIdx));
+        y = 1.0 * (this._saw((1.00 + f) * 0.1 * hz * sampIdx, 1)-0.5);
+        y += 0.7 * (this._saw((2.01 + f) * 0.1 * hz * sampIdx, 1)-0.5);
+        y += 0.5 * (this._saw((4.02 + f) * 0.1 * hz * sampIdx, 1)-0.5);
+        y += 0.2 * (this._saw((8.02 + f) * 0.1 * hz * sampIdx, 1)-0.5);
+        y *= 20 * sampIdx * Math.exp(-4 * sampIdx);
+        y *= 0.9 + 0.1 * Math.cos(40 * sampIdx);
+        return y;
+    },
 
-/*
-</code>
-</soundtoy>
+    piano1: function(hz, sampIdx) {
+        w = hz * (2 * Math.PI);
+        y = 0.6 * Math.sin(1.0 * hz * sampIdx) * Math.exp(-0.0008 * hz * sampIdx);
+        y += 0.3 * Math.sin(2.0 * hz * sampIdx) * Math.exp(-0.0010 * hz * sampIdx);
+        y += 0.1 * Math.sin(4.0 * hz * sampIdx) * Math.exp(-0.0015 * hz * sampIdx);
+        y += 0.2 * y * y * y;
+        y *= 0.9 + 0.1 * Math.cos(70.0 * sampIdx);
+        y = 2.0 * y * Math.exp(-22.0 * sampIdx) + y;
+        return y;
+    },
 
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Flute 1" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>a simple flute-like sound</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
+    piano2: function(hz, sampIdx) {
+        sampIdx = sampIdx + .00015 * this._noise(12 * sampIdx);
+        rt = sampIdx;
+        r = sampIdx * hz * .2;
+        r = this._fmod(r, 1);
+        a = 0.15 + 0.6 * (rt);
+        b = 0.65 - 0.5 * (rt);
+        y = 50 * r * (r-1) * (r-.2) * (r-a) * (r-b);
+        r = sampIdx * hz * .401;
+        r = this._fmod(r, 1);
+        a = 0.12 + 0.65 * (rt);
+        b = 0.67 - 0.55 * (rt);
+        y2 = 50 * r * (r-1) * (r-.4) * (r-a) * (r-b);
+        r = sampIdx * hz * .399;
+        r = this._fmod(r, 1);
+        a = 0.14 + 0.55 * (rt);
+        b = 0.66 - 0.65 * (rt);
+        y3 = 50 * r * (r-1) * (r-.8) * (r-a) * (r-b);
+        y += .02 * this._noise(1000 * sampIdx);
+        y  /= (sampIdx * hz * .0015 + .1);
+        y2 /= (sampIdx * hz * .0020 + .1);
+        y3 /= (sampIdx * hz * .0025 + .1);
+        y = (y + y2 + y3) / 3;
+        return y;
+    },
 
-var flute1 = function() {
-    y = 6.0*t*exp( -2*t )*sin( w*t );
-    y *= .8+.2*cos(16*t);
-}
+    rhyeg: function(hz, sampIdx) {
+        h = this._fmod(sampIdx, .5);
+        y = 0.2 * this._noise(32000 * h) * Math.exp(-32 * h);
+        y += 1.0 * this._noise(3200 * h) * Math.exp(-32 * h);
+        y += 7.0 * Math.cos(320-100 * Math.exp(-10 * h)) * Math.exp(-4 * h);
+        //---------
+        h = this._fmod(sampIdx + .15, 1.0);
+        y += 0.5 * this._noise(32000 * h) * Math.exp(-64 * h);
+        //------------
+        h = this._fmod(sampIdx + .25, 1.0);
+        y += 1.0 * this._noise(32000 * h) * Math.exp(-32 * h);
+        //------------
+        sampIdx += .25;
+        s = this._sign(Math.sin(.5 * 6.2831 * sampIdx));
+        h = this._fmod(sampIdx, .5);
+        y += 2.0 * Math.cos(6.2831 * (105 + 11 * s) * sampIdx) * Math.exp(-6 * h);
+        //---------
+        h = this._fmod(sampIdx, .125) / .125;
+        y += 1.4 * this._noise(320 * h) * Math.exp(-32 * h);
+        //---------
+        g = .018;
+        t2 = sampIdx+ .05 * Math.cos(sampIdx * 6.2831);
+        f = this._fmod(t2, g) / g;
+        a = .5 + .4 * Math.cos(6.2831 * t2);
+        f = this._saw(f, a);
+        f = -1.0 + 2 * f;
+        f = f * f * f;
+        y += f * 1.5;
+        //---------
+        y *= .6;
+        return y;
+    },
 
-/*
-</code>
-</soundtoy>
+    spacePiano: function(hz, sampIdx) {
+        tt = 1-sampIdx;
+        a = Math.sin(sampIdx * hz * .5) * Math.log(sampIdx + 0.3) * tt;
+        b = Math.sin(sampIdx * hz) * sampIdx * .4;
+        c = this._fmod(tt, .075) * Math.cos(Math.pow(tt, 3) * hz) * sampIdx * 2;
+        y = (a + b + c) * tt;
+        return y;
+    }
 
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Guitar" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>a simple "guitar"</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
-
-var guitar = function() {
-    f = cos(0.251*w*t);
-    y = 0.5*cos(1.0*w*t+3.14*f)*exp(-0.0007*w*t);
-    y += 0.2*cos(2.0*w*t+3.14*f)*exp(-0.0009*w*t);
-    y += 0.2*cos(4.0*w*t+3.14*f)*exp(-0.0016*w*t);
-    y += 0.1*cos(8.0*w*t+3.14*f)*exp(-0.0020*w*t);
-    y *= 0.9 + 0.1*cos(70.0*t);
-    y = 2.0*y*exp(-22.0*t) + y;
-}
-
-/*
-</code>
-</soundtoy>
-
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Organ 1" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>an organ</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
-
-var organ1 = function() {
-    y = .6*cos(w*t)*exp(-4*t);
-    y += .4*cos(2*w*t)*exp(-3*t);
-    y += .01*cos(4*w*t)*exp(-1*t);
-    y = y*y*y + y*y*y*y*y + y*y;
-    a = .5+.5*cos(8*t); y = sin(y*a*3.14);
-    y *= 30*t*exp(-.1*t);
-}
-
-/*
-</code>
-</soundtoy>
-
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Organ 2" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>an organ</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
-
-var organ2 = function() {
-    f = fmod(t,6.2831/w)*w/6.2831;
-    a = .7+.3*cos(6.2831*t);
-    y = -1.0+2*saw(f,a);
-    y = y*y*y;
-    y = 15*y*t*exp(-5*t);
-}
-
-/*
-</code>
-</soundtoy>
-
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Organ 3" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>an organ</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
-
-var organ3 = function() {
-    a1 = .5+.5*cos(0+t*12);
-    a2 = .5+.5*cos(1+t*8);
-    a3 = .5+.5*cos(2+t*4);
-    y = saw(.2500*w*t,a1)*exp(-2*t);
-    y += saw(.1250*w*t,a2)*exp(-3*t);
-    y += saw(.0625*w*t,a3)*exp(-4*t);
-    y *= .8+.2*cos(64*t);
-}
-
-/*
-</code>
-</soundtoy>
-
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Organ 4" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>an organ</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
-
-var organ4 = function() {
-    var f = 0.001*(cos(5*t));
-    y = 1.0*(saw((1.00+f)*0.1*w*t,1)-0.5);
-    y += 0.7*(saw((2.01+f)*0.1*w*t,1)-0.5);
-    y += 0.5*(saw((4.02+f)*0.1*w*t,1)-0.5);
-    y += 0.2*(saw((8.02+f)*0.1*w*t,1)-0.5);
-    y *= 20*t*exp(-4*t);
-    y *= 0.9+0.1*cos(40*t);
-}
-
-/*
-</code>
-</soundtoy>
-
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Piano" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>a simple "piano"</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
-
-var piano1 = function() {
-    y = 0.6*sin(1.0*w*t)*exp(-0.0008*w*t);
-    y += 0.3*sin(2.0*w*t)*exp(-0.0010*w*t);
-    y += 0.1*sin(4.0*w*t)*exp(-0.0015*w*t);
-    y += 0.2*y*y*y;
-    y *= 0.9 + 0.1*cos(70.0*t);
-    y = 2.0*y*exp(-22.0*t) + y;
-}
-
-/*
-</code>
-</soundtoy>
-
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Piano 2" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>a simple "piano"</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
-
-var piano2 = function() {
-    t = t + .00015*noise(12*t);
-    rt = t;
-    r = t*w*.2;
-    r = fmod(r,1);
-    a = 0.15 + 0.6*(rt);
-    b = 0.65 - 0.5*(rt);
-    y = 50*r*(r-1)*(r-.2)*(r-a)*(r-b);
-    r = t*w*.401;
-    r = fmod(r,1);
-    a = 0.12 + 0.65*(rt);
-    b = 0.67 - 0.55*(rt);
-    y2 = 50*r*(r-1)*(r-.4)*(r-a)*(r-b);
-    r = t*w*.399;
-    r = fmod(r,1);
-    a = 0.14 + 0.55*(rt);
-    b = 0.66 - 0.65*(rt);
-    y3 = 50*r*(r-1)*(r-.8)*(r-a)*(r-b);
-    y += .02*noise(1000*t);
-    y  /= (t*w*.0015+.1);
-    y2 /= (t*w*.0020+.1);
-    y3 /= (t*w*.0025+.1);
-    y = (y+y2+y3)/3;
-}
-
-/*
-</code>
-</soundtoy>
-
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Rythm" date="2006" author="iq" link="http://www.iquilezles.org">
-    <comments>some rythmic sounds</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
-
-var rhyeg = function() {
-    h = fmod(t,.5);
-    y = 0.2*noise(32000*h)*exp(-32*h);
-    y += 1.0*noise(3200*h)*exp(-32*h);
-    y += 7.0*cos( 320-100*exp(-10*h))*exp(-4*h);
-    //---------
-    h = fmod(t+.15,1.0);
-    y += 0.5*noise(32000*h)*exp(-64*h);
-    //------------
-    h = fmod(t+.25,1.0);
-    y += 1.0*noise(32000*h)*exp(-32*h);
-    //------------
-    t += .25;
-    s = sign(sin(.5*6.2831*t));
-    h = fmod(t,.5);
-    y += 2.0*cos(6.2831*(105+11*s)*t)*exp(-6*h);
-    //---------
-    h = fmod(t,.125)/.125;
-    y += 1.4*noise(320*h)*exp(-32*h);
-    //---------
-    g = .018;
-    t2 = t+ .05*cos(t*6.2831);
-    f = fmod(t2,g)/g;
-    a = .5+.4*cos(6.2831*t2);
-    f = saw(f,a);
-    f = -1.0+2*f;
-    f = f*f*f;
-    y += f*1.5;
-    //---------
-    y *= .6;
-}
-
-/*
-</code>
-</soundtoy>
-
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<soundtoy version="0.1">
-    <info name="Space Piano" date="2011" author="Diego F Goberna, aka Interface" link="http://feiss.be">
-    <comments>physcodelic space piano</comments>
-    </info>
-    <options applyeffects="yes"/>
-    <code>
-*/
-
-var spacePiano = function() {
-    tt= 1-t;
-    a= sin(t*w*.5)*log(t+0.3)*tt;
-    b= sin(t*w)*t*.4;
-    c= fmod(tt,.075)*cos(pow(tt,3)*w)*t*2;
-    y= (a+b+c)*tt;
-}
-
-/*
-</code>
-</soundtoy>
-*/
+};

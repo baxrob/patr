@@ -13,9 +13,10 @@ var URI = Class.extend({
         this.updating = false;
 
         window.onhashchange = function(evt) {
+            //console.log('onhashchange', this.onchahgeHook, this.updating, evt.oldURL === evt.newURL, evt.oldURL == evt.newURL);
             if (
                 this.onchangeHook && ! this.updating
-                // CLEANUP: this should be redundant - verify
+                // FIXME: this should be redundant - verify
                 && evt.oldURL !== evt.newURL
             ) {
                 this.updating = true;
@@ -54,6 +55,7 @@ var URI = Class.extend({
             for (var name in params) {
                 // params are instance properties
                 params[name] && (this[name] = params[name]);
+                //console.log('uri.update', name, this[name]);
             }
             this.buildHash();
             if (this.hash !== this.target.hash) {

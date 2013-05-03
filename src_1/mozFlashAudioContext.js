@@ -1,4 +1,5 @@
 "use strict";
+
 // Flash debugging
 var startTime = (new Date()).getTime();
 var lastTime = 0;
@@ -12,11 +13,12 @@ var traceStart = function() {
     logElapsed();
 };
 
+
 var mozFlashAudioContext = Class.extend({
     init: function() {
         this.sampleRate = 48000;
-        if (false && typeof Audio !== 'undefined') {
-        //if (typeof Audio !== 'undefined') {
+        //if (false && typeof Audio !== 'undefined') {
+        if (typeof Audio !== 'undefined') {
             this.destination = new Audio();
             if (this.destination.mozSetup) {
                 this.mozSetup();
@@ -67,15 +69,14 @@ var mozFlashAudioContext = Class.extend({
             {'allowScriptAccess': 'always'},
             null,
             function(e) {
-                console.log(e);
+                console.log('flash ready', e, typeof e);
                 // TODO:
-                // if e.sucess && e.ref
-                // else error out
+                //       if e.sucess && e.ref
+                //       else error out
                 this.flashElement = e.ref;
                 this.destination = this.flashElement;
 
                 this.destination.writeAudio = function(samples) {
-                    //console.log(samples.length);
                     var out = new Array(samples.length);
                     for (var i = 0; i < samples.length; i++) {
                         out[i] = samples[i];
@@ -108,7 +109,7 @@ var mozFlashJavaScriptNode = Class.extend({
         this.outputChannels = outputChannels; 
     },
     connect: function(target) {
-        // fixme: moz loses setup audio obj on quick connect/disconnect?
+        // FIXME: moz loses setup audio obj on quick connect/disconnect?
         this.target = target;
         this.outputBuffer = new mozFlashJavaScriptBuffer(
             this.bufferSize, 
@@ -129,7 +130,7 @@ var mozFlashJavaScriptNode = Class.extend({
         this.interval = setInterval(function() {
             this.onaudioprocess(evt);
             
-            outputBuffer = this.interleaveStereoBuffers(
+            var interleavedBuffer = this.interleaveStereoBuffers(
                 this.outputBuffer.channelBuffers
             );
             
@@ -137,11 +138,10 @@ var mozFlashJavaScriptNode = Class.extend({
             while (written < this.bufferSize * this.outputChannels) {
                 written += this.target.writeAudio(
                     //outputBuffer.subarray(written)
-                    outputBuffer.slice(written)
+                    interleavedBuffer.slice(written)
                 ); 
             }
         }.bind(this), intervalMilliseconds);
-
     },
     interleaveStereoBuffers: function(buffers) {
         // Note: IE < 10 doesn't have typed arrays

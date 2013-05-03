@@ -1,12 +1,13 @@
 "use strict";
 
-$script('patter', function() {
+$script(['patter'], function() {
 
-    console.log(arguments);
+    //console.log(arguments);
     
     // TODO: grok: so document.ready already happened...
-    $(document).ready(function() {
-        alert(arguments);
-    });
+    //       er, no $ here?
+    //$(document).ready(function() {
+    //    alert(arguments);
+    //});
 
 });

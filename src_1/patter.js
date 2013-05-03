@@ -5,18 +5,18 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
         'lib/jquery-ui-1.8.21.slider.min',
         'lib/swfobject',
         'mozFlashAudioContext',
+        
+        'lib/soundtoyTones',
 
-        'synth_1', 
+        'synth', 
         'seq', 
         'data',
         'ix'
     ], 
     function() {
 
-        var uri = new URI(':', ';', ['subs', 'cookie?', 'rate', 'len', 'seq']);
+        var uri = new URI(':', ';', ['rate', 'len', 'reshuf', 'tone', 'seq']);
 
-        // TODO: url 'engine' param: webkit, moz, flash
-        //       also: never publish / bookmark this param ? (how?)
         var contextClass;
         if (
             contextClass = (window.AudioContext || window.webkitAudioContext)
@@ -31,7 +31,7 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
         var audioProcessBlockSize = 2048,
             toneRow = new ToneRow(audioContext, audioProcessBlockSize);
 
-        // FIXME: shou
+        // FIXME: ? include uri/synth param defaults here ?
         var patt = window.patt = new Patter({
             minNote: 0,
             maxNote: 46,
@@ -46,8 +46,6 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
             
             //console.log($(window).height(), $('body').height(), $(document).height(), $(parent).height(), $(parent).children(), $(this).parent(), this, $(parent.document).find('body iframe'), parent);
 
-            console.log(patt);
-            
             $(parent.document).find('body iframe').height($(parent).height() - 50);
             
             $(window).blur();

@@ -1,14 +1,4 @@
 "use strict";
-/*
-NoteBlock
-SoundChunk
-Clang
-
-ClangRow: 
-Clang
-ClangBlock
-*/
-
 
 var ClangBlock = Class.extend({
 
@@ -16,30 +6,24 @@ var ClangBlock = Class.extend({
         this.sampleRate = sampleRate;
         this.baseGain = baseGain;
 
-        this.sampleVal = function(hz, idx, phase) { return 0; }; // Override
-        this.hzGain = function(hz) { return this.baseGain; };    // Override
+        this.sampleProc = function(hz, idx, phase) { return 0; }; // Override
+        this.hzGain = function(hz) { return this.baseGain; };     // Override
 
-        this.rampLen = 0;
+        this.rampLen = 240;
         this.writeSample = 0;
     },
-    sanity: function() {
-    },
-    /*
-    noise: function(hz,) {
-        return sampleVal = 1 - (Math.random() * 2);
-    },
-    */
-    _fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
-    },
+
     fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
         (hz >= 20) || (hz = 0);
         var idx = offset,
             rampLen = rampOut ? this.rampLen : 0,
             gain = this.hzGain(hz),
-            writeEnd = len + offset;
+            writeEnd = len + offset,
+            sustainEnd = writeEnd - rampLen,
+            sampleVal;
 
-        for ( ; idx < writeEnd - rampLen; idx++, this.writeSample++) {
-            var sampleVal = gain * this.sampleVal(hz, this.writeSample) 
+        for ( ; idx < sustainEnd; idx++, this.writeSample++) {
+            sampleVal = gain * this.sampleProc(hz, this.writeSample) 
                 + phase;
             buffers[0][idx] = buffers[1][idx] = sampleVal;
         }
@@ -50,27 +34,25 @@ var ClangBlock = Class.extend({
                 sampleVal = (rampPos-- / rampLen) * gain
                 //sampleVal = Math.sqrt(rampPos-- / rampLen) * gain
                 //sampleVal = Math.log((rampPos-- / rampLen)+ 1)*1.442 * gain
-                    * this.sampleVal(hz, this.writeSample) + phase; 
+                    * this.sampleProc(hz, this.writeSample) + phase; 
                 buffers[0][idx] = buffers[1][idx] = sampleVal;
             }
         }
-    } // fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
+    } // fillBuffer
 
-}); // var ClangBlock = Class.etend({
+}); // ClangBlock
 
-
-
-//
 var Clang = ClangBlock.extend({
     
-    // 
+    // FIXME: much of this belongs in ClangRow
     init: function(sampleRate, baseGain) {
 
         this._super(sampleRate, baseGain);
 
-        this.sampleVal = function(hz, idx, phase) { return 0; }; // Override
+        this.sampleProc = function(hz, idx, phase) { return 0; }; // Override
         this.hzGain = function(hz) { return this.baseGain; };    // Override
 
+        //this.processorNode = this.context.createSriptProcessorNode(
         this.processorNode = this.context.createJavaScriptNode(
             this.bufferLength, 2, 2//, 0, 2
         );
@@ -78,31 +60,35 @@ var Clang = ClangBlock.extend({
 
     },
 
-    //
+    // TODO: replace run / stop
     strike: function(attack, duration) {
     },
     halt: function() {
     },
 
-    // Public
+    // TODO: use pub-sub, ala balman
     setUpdateHook: function(newHook) {
+        //var oldHook = this.sequenceUpdateHook;
         this.sequenceUpdateHook = function() {
             newHook();
             this.sequenceUpdateHook = null;
         };
     },
-    // Public
     updateSequence: function(sequence) {
-        if (false && this.running) {
+        // FIXME: necessary?
+        if (this.running) {
             this.setUpdateHook(function() {
                 this.sequence = sequence;
             }.bind(this));
         } else {
             this.sequence = sequence;
         }
+        /*
+        */
+        // 
+        this.sequence = sequence;
     },
     
-    // 
     run: function(durationLimit) {
         if (this.sequence.length && this.processorNode.onaudioprocess) {
             this.processorNode.connect(this.context.destination);
@@ -125,8 +111,12 @@ var Clang = ClangBlock.extend({
         this.writeSample = 0;
     },
     pause: function(onComplete) {
-        this.setUpdateHook(function() {
-            // Store current sequence, then zero-fill
+        this.setUpdateHook(function(timeout) {
+            //var startCtxTime = this.context.currentTime;
+            //var startDateTime = Date.now();
+            //console.log(startDateTime, startCtxTime);
+
+            // Store current sequence, then zero-fill.
             var restoreSequence = [];
             for (var i in this.sequence) {
                 restoreSequence[i] = this.sequence[i].slice();
@@ -136,14 +126,15 @@ var Clang = ClangBlock.extend({
                 return el;
             });
             
-            // Disconnect and restore
+            // Disconnect and restore.
 
-            // FIXME: is this understanding accurate?
-            // Wait until current buffer has been written - buffer duration
-            //      plus arbitrary 65 ms timeout latency
-            // TODO: use requestAnimationFrame?
-            var timeout = this.bufferLength / this.sampleRate * 1000 + 65;
+            // UGH:
+            // FIXME: just do a timeout longer than bufferDuration
+            //        or busyLoop            
+            /*
+            var timeout = this.bufferLength / this.sampleRate * 1000 + 75;
             setTimeout(function() {
+                console.log('atpause', (this.context.currentTime - startCtxTime) * 1000, (Date.now() - startDateTime));
                 this.processorNode.disconnect();
                 this.running = false;
                 // Reset to next note
@@ -154,12 +145,46 @@ var Clang = ClangBlock.extend({
 
                 onComplete && onComplete.bind(this)();
             }.bind(this), timeout);
+            */
+
+            timeout = this.stepSec;
+            timeout += 100;
+
+            var doPause = function(t) {
+                var progress = t - start;
+
+                //console.log('inc', t - lastT);
+                lastT = t;
+
+                if (progress >= timeout) {
+
+                    this.processorNode.disconnect();
+                    this.running = false;
+                    // Reset to next note
+                    this.sequence = restoreSequence;
+                    this.elapsed = this.seqIdx == 0 ? 0
+                        : this.sequence[this.seqIdx][0];
+                    this.writeSample = 0;
+
+                    onComplete && onComplete.bind(this)();
+                } else {
+                    requestAnimationFrame(doPause);
+                }
+            }.bind(this);
+
+            var requestAnimationFrame = window.mozRequestAnimationFrame 
+                || window.webkitRequestAnimationFrame;
+            var start = window.mozAnimationStartTime || Date.now();
+            var lastT = start;
+            requestAnimationFrame(doPause); 
+            /*
+            */
+
         }.bind(this));
-    }, // pause: function(onComplete) {
-    
-    // 
+    }, // pause
+
     stageBeatEvent: function(idx, length, onsetDelay) {
-        // TODO: use requestAnimationFrame
+        // FIXME: does this matter, when visual perception as 200ms LND?
         setTimeout(function() {
             var evt = document.createEvent('Event');
             evt.initEvent('beat', false, false);
@@ -169,9 +194,9 @@ var Clang = ClangBlock.extend({
         }, onsetDelay * 1000);
     },
     
-    //
     onProcess: function(evt) {
         // KLUDGE: double safety against sequence shrink race condition 
+        // FIXME: necessary?
         if (this.seqIdx >= this.sequence.length) {
             this.seqIdx = 0;
         }
@@ -182,30 +207,35 @@ var Clang = ClangBlock.extend({
             ];
         var hertz = this.sequence[this.seqIdx][1],
             nextSeqIdx = (this.seqIdx + 1) % this.sequence.length,
-            nextAttack = this.nextAttack = this.sequence[nextSeqIdx][0],
-            nextHertz = this.sequence[nextSeqIdx][1];
-        var rampOnset = nextAttack - (this.rampLen / this.sampleRate);
+            nextAttack = this.sequence[nextSeqIdx][0];
 
-        // Special cases for first note in sequence
+        // Special cases for first note in sequence.
         if (this.seqIdx === 0 && this.newNote) {
             if (this.firstLoop) {
-                // Absolute beginning, so fire the first beat immediately 
+                // Absolute beginning, so fire the first beat now.
                 this.stageBeatEvent(this.seqIdx, nextAttack, 0);
                 this.firstLoop = false;
             } else {
-                // Looping, so rewind elapsed by unused buffer 
+                // Looping, so rewind elapsed by unused buffer .
                 this.elapsed = buffer.duration - this.stepSec;
+                $.event.trigger('loop');   
             }
         }
 
-        // Ramp-out begins within this buffer
-        // TODO: (optionally?) join adjacent repeated notes (no ramp out)
-        if (rampOnset <= this.elapsed + buffer.duration) {
+        var rampOnset = nextAttack - (this.rampLen / this.sampleRate);
+        var bufferEnd = this.elapsed + buffer.duration;
+
+        // TODO: optionally join adjacent repeated notes with
+        //       brief pitch shift
+        if (rampOnset <= bufferEnd) {
+            // Ramp-out begins within this buffer.
             this.newNote = true;
             this.stepSec = nextAttack - this.elapsed;
 
-            // If ramp-out crosses buffer boundary, fudge it
-            if (this.elapsed + buffer.duration < nextAttack) {
+            // If we are ramping out, but the next attack is not 
+            //    in this buffer, then shorten note slightly 
+            //    (by < rampLen) to complete rampOut.
+            if (bufferEnd < nextAttack) {
                 var blockLength = buffer.length;
             } else { 
                 var blockLength = parseInt(this.stepSec * this.sampleRate);
@@ -215,17 +245,16 @@ var Clang = ClangBlock.extend({
                 hertz, blockLength, stereoBuffer, 0, true, 0
             );
 
-            // Perform sequence update between notes
+            // Perform sequence update between notes.
             if (this.sequenceUpdateHook) {
-                this.sequenceUpdateHook();
+                this.sequenceUpdateHook(this.stepSec * 1000);
             }
 
-            // Begin next note
+            // Begin next note.
             this.seqIdx = nextSeqIdx;
-            //hertz = this.sequence[nextSeqIdx][1];
-            hertz = nextHertz;
+            hertz = this.sequence[this.seqIdx][1];
 
-            // Reset phase
+            // Reset phase.
             this.writeSample = 0;
 
             this.stageBeatEvent(this.seqIdx, nextAttack, this.stepSec);
@@ -237,17 +266,16 @@ var Clang = ClangBlock.extend({
                 hertz, blockLength, stereoBuffer, offset, false, 0
             );
         } else {
-            // Full single-Hz buffer
+            // Full single-Hz buffer.
             this.newNote = false;
             this.fillBuffer(
                 hertz, buffer.length, stereoBuffer, 0, false, 0
             );
         }
         this.elapsed += buffer.duration;
-    } // onProcess: function(evt) {
+    } // onProcess
 
-
-}); // var Clang = ClangBlock.extend({
+}); // Clang
 
 
 
@@ -260,46 +288,31 @@ var ClangRow = Clang.extend({
         this.sampleRate = this.context.sampleRate;
         this.bufferLength = bufferLength;
 
-        // Considering 0.8 a "sensible default"
+        // Considering 0.8 a "sensible default".
         this.baseGain = 0.8;
 
         this._super(this.sampleRate, this.baseGain);
 
         var baseGain = 0.8;
 
-        //this.block = new ToneBlock(this.sampleRate, baseGain);
-
         this.reset();
         this.sequence = [];
         this.sequenceUpdateHook = null;
         this.running = false;
     
-        // ?
-        //this.subrows = [this];
-
-    },
-
-    run: function() {
     }
+}); // ClangRow
 
-}); // var ClangRow = Clang.extend({
-
-
-
-//
-var ToneRow = ClangRow.extend({
-    init: function(context, bufferLength, sampleRate, baseGain) {
-        this._super(context, bufferLength, sampleRate, baseGain);
-    }
-});
 
 var BeatRow = ClangRow.extend({
     init: function(context, bufferLength, sampleRate, baseGain) {
         this._super(context, bufferLength, sampleRate, baseGain);
     },
     p1Val: function(p1_val, idx, phase) {
+        // STUB
     },
     p2Gain: function(p2_val) {
+        // STUB
     }
 });
 
@@ -316,12 +329,12 @@ var NoiseCrinkleRow = ClangRow.extend({
     init: function(context, bufferLength, sampleRate, baseGain) {
         this._super(context, bufferLength, sampleRate, baseGain);
 
-        this.sampleVal = this.noise;
+        this.sampleProc = this.noise;
         this.hzGain = this.crinkle;
     },
     // Sample values
     noise: function(hz, idx, phase) {
-        return sampleVal = 1 - (Math.random() * 2);
+        return 1 - (Math.random() * 2);
     },
     // Frequency based gain envelope
     crinkle: function(hz) {
@@ -336,7 +349,8 @@ var SineBleatRow = ClangRow.extend({
     init: function(context, bufferLength, sampleRate, baseGain) {
         this._super(context, bufferLength, sampleRate, baseGain);
 
-        this.sampleVal = this.sine;
+        this.sampleProc = this.sine;
+        this.currentTone = 'sine';
         this.hzGain = this.bleat;
     },
     // Sample values
@@ -346,6 +360,9 @@ var SineBleatRow = ClangRow.extend({
             hz * (2 * Math.PI) * idx / this.sampleRate + phase
         );
         return sampleVal;
+    },
+    square: function(hz, idx, phase) {
+
     },
     // Frequency based gain envelope
     bleat: function(hz) {
@@ -358,15 +375,28 @@ var SineBleatRow = ClangRow.extend({
         };
         var gainVal = 1 / cosh(hz / divisor) * multiplier * this.baseGain;
         //(1/sqrt(2*pi))*6*e^(-1/290000*x^2)
-        // TODO: this.crinkle
-        
-        //gainVal = 5 / Math.sqrt(2*Math.PI) * Math.pow(
-        //    Math.E, (-1 / 200000 * Math.pow(hz, 2))
-        //);
         
         return gainVal;
+    },
+    crinkle: function(hz) {
+        var gainVal = 5 / Math.sqrt(2*Math.PI) * Math.pow(
+            Math.E, (-1 / 200000 * Math.pow(hz, 2))
+        );
+        return gainVal;
+    },
+    unity: function(hz) {
+        return this.baseGain * 0.9;
     }
 });
 
+//
+var ToneRow = ClangRow.extend({
+    // STUB:
+    init: function(context, bufferLength) {
+        this._super(context, bufferLength);
+    }
+});
+
+ToneRow = SineBleatRow;
 
 
