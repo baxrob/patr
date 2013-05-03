@@ -1,6 +1,6 @@
 // Sample functions from http://www.iquilezles.org/apps/soundtoy/ 
 
-var soundToyTones = {
+var soundtoyTones = {
 
     _getSampleProc: function(name) {
         // Renamings.
