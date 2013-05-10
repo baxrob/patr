@@ -959,7 +959,7 @@ var Face = Class.extend({
         // Max of nine tones are handled by the widget key commands
         //var toneList = ['sine', 'square', 'sawtooth', 'triangle', 'bell', 'piano1'];
         //var toneList = ['sine', 'square', 'bell', 'piano1'];
-        var toneList = ['sine', 'square', 'spring', 'organ', 'flute1'];
+        var toneList = ['sine', 'square', 'spring', 'organ', 'wind'];
         /*
         var toneList = [
             'sine', 'square', 'spring', 'organ',
