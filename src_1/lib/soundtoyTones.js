@@ -6,6 +6,7 @@ var soundtoyTones = {
         // Renamings.
         name == 'spring' && (name = 'bell');
         name == 'organ' && (name = 'piano1');
+        name == 'wind' && (name = 'flute1');
         return function(hz, idx, phase) {
             (phase === undefined) && (phase = 0);
             var idx2PI_SR = idx * (2 * Math.PI) / 44100;
