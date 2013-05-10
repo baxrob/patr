@@ -16,18 +16,27 @@ var Patter = Class.extend({
             this.updateDisplay();
         }.bind(this);
         
+        // The Loop Event.
         this.loopCount = 0;
         $(document).on('loop', function(evt) {
             this.loopCount += 1; 
-            console.log(this.loopCount, this.reshuf);
             var reshuf = parseInt(this.reshuf) !== 0;
             if (reshuf && this.loopCount >= this.reshuf) {
-                this.shuffle();
-                // FIXME: KLUDGE, coupling
-                $('#shuff').addClass('active');
-                setTimeout(function() {
-                    $('#shuff').removeClass('active');
-                }, 150);
+                if (this.uri.volatile) {
+                    $('#reshuf').addClass('blocked');
+                    setTimeout(function() {
+                        $('#reshuf').removeClass('blocked');
+                    }, 100);
+                } else {
+                    // TODO: re-select focused input
+                    //console.log($(':focus'));
+                    this.shuffle();
+                    // FIXME: KLUDGE, coupling
+                    $('#shuff').addClass('active');
+                    setTimeout(function() {
+                        $('#shuff').removeClass('active');
+                    }, 100);
+                }
                 this.loopCount = 0;
             }
         }.bind(this));
@@ -79,7 +88,7 @@ var Patter = Class.extend({
             
             this.changed = false;
         }
-    },
+    }, // buildSequence
     update: function(params) {
         // FIXME: coupling
 
@@ -142,7 +151,9 @@ var Patter = Class.extend({
         var mustPause = this.isRunning() && (bpmChanged || stepCountChanged);
 
         var updateCallback = function() {
+            // Actual update occurs in buildSequence
             this.buildSequence();
+            // 
             stepOverflow && this.reset();
             // FIXME: should live in synth.js
             if (bpmChanged) {
@@ -179,6 +190,27 @@ var Patter = Class.extend({
             },
             sequence: this.stepSeq
         });
+    },
+
+    updateTone: function(tone) {
+        // TODO: use; update to ix.js.window.setTone
+        if (tone in soundtoyTones) { 
+            toneRow.sampleProc = soundtoyTones._getSampleProc(tone);
+            //toneRow.hzGain = toneRow.unity;
+        } else {
+            toneRow.sampleProc = toneRow[tone];
+            toneRow.hzGain = toneRow.bleat;
+        }
+        toneRow.setUpdateHook(function() {
+            console.log('', this);
+            this.currentTone = tone;
+        });
+        var busyWait = setInterval(function() {
+            if ($('#tone_menu_button').length) {
+                $('#tone_menu_button').html(tone + ' &#x25be;');
+                clearInterval(busyWait);
+            }
+        }, 1);
     },
 
     // Sequence data generation

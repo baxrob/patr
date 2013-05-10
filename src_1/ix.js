@@ -4,12 +4,24 @@
 window.setTone = function(toneRow, tone) {
     if (tone in soundtoyTones) { 
         toneRow.sampleProc = soundtoyTones._getSampleProc(tone);
-        toneRow.hzGain = toneRow.unity;
+        // FIXME: do this in synth
+        //toneRow.hzGain = toneRow.unity;
+        if (tone == 'spring') {
+            toneRow.hzGain = function(hz) {
+                return toneRow.baseGain * 0.75 * toneRow.crinkle(hz);
+            };
+        } else if (tone == 'organ') {
+            toneRow.hzGain = function(hz) {
+                return toneRow.baseGain * 0.65;
+            };
+        }
     } else {
         toneRow.sampleProc = toneRow[tone];
         toneRow.hzGain = toneRow.bleat;
     }
-    toneRow.currentTone = tone;
+    toneRow.setUpdateHook(function() {
+        this.currentTone = tone;
+    });
     var busyWait = setInterval(function() {
         if ($('#tone_menu_button').length) {
             $('#tone_menu_button').html(tone + ' &#x25be;');
@@ -75,6 +87,7 @@ var Face = Class.extend({
 
         this.$root.append(this.$frame);
 
+        // TODO: move to css section
         this.$root.css({
             'font-family': 'verdana',
             margin: 0,
@@ -261,6 +274,12 @@ var Face = Class.extend({
                 'background-color': '#fff',
                 color: '#555',
                 'box-shadow': '0 0 1px 1px #999'
+            },
+            '#ctl_bar .ctl.blocked': {
+                'background-color': '#f89'
+            },
+            '#ctl_bar #tone_menu div.ctl.active': {
+                'padding-right': '3px'
             },
             '#ctl_bar input[type="text"]': {
                 'background-color': '#f9f9f9',
@@ -519,6 +538,7 @@ var Face = Class.extend({
                 'box-shadow': '0 1px 10px -4px #444'
             }
         });
+
         var $innerControls = this.elem({
             tag: 'div',
             css: {
@@ -756,7 +776,7 @@ var Face = Class.extend({
                         ) {
                             return true;
                         }
-                        // TODO: handle delete+enter 
+                        // TODO: handle delete+enter - empty input
                         if (evt.keyCode == 13) {
                             $(this).triggerHandler('focusout');
                             return false;
@@ -770,6 +790,7 @@ var Face = Class.extend({
                     },
                     click: function(evt) {
                         $(this).select();
+                        $(this).focus();
                     },
                     blur: function(evt) {
                         evt.stopPropagation();
@@ -825,8 +846,32 @@ var Face = Class.extend({
                 }
 
             })
-        ) // $controls
+        ); // $innerControls
 
+        $controls.append(
+            $('<div>&#x27f2;</div>').attr({
+                id: 'start_over',
+                'class': 'meta ctl',
+                title: 're-start (randomize all)'
+            }).css({
+                float: 'left',
+                height: '18px',
+                'text-align': 'center',
+                'font-family': 'fontello',
+                'line-height': '1.5em',
+                'font-size': '12px',
+                'padding-left': '5px',
+                'padding-right': '5px',
+                margin: '9px 0 0 9px'
+            }).on({
+                click: function() {
+                    // FIXME: refresh clobbers history - generate 
+                    //        in seq.js on blank hash
+                    //document.location.href = '#'
+                    document.location.href = ''
+                }
+            })
+        );
 
         $controls.append($innerControls);
 
@@ -844,14 +889,13 @@ var Face = Class.extend({
             },
             on: {
                 mouseover: function(evt) {
-                    console.log('over');
+                    //console.log('over');
                     $('#tone_menu_button').html(
-                        //'<span style="font-size:0.8em;">tone</span> &#x25be;'
                         'tone &#x25be;'
                     ); 
                 },
                 mouseout: function(evt) {
-                    console.log('out');
+                    //console.log('out');
                     $('#tone_menu_button').html(
                         this.patt.toneRow.currentTone + ' &#x25be;'
                     );
@@ -915,7 +959,14 @@ var Face = Class.extend({
         // Max of nine tones are handled by the widget key commands
         //var toneList = ['sine', 'square', 'sawtooth', 'triangle', 'bell', 'piano1'];
         //var toneList = ['sine', 'square', 'bell', 'piano1'];
-        var toneList = ['sine', 'square', 'spring', 'organ'];
+        var toneList = ['sine', 'square', 'spring', 'organ', 'flute1'];
+        /*
+        var toneList = [
+            'sine', 'square', 'spring', 'organ',
+            'drum1', 'drum2', 'drum3', 'flute1', 'guitar', 'organ1', 'organ2',
+            'organ3', 'organ4', 'piano1', 'piano2', 'rhyeg', 'spacePiano' 
+        ];
+        */
 
         for (var key in toneList) {
             var active = (toneList[key] == currentTone) ? 'active' : '';
@@ -942,7 +993,6 @@ var Face = Class.extend({
                         css: {
                             'text-align': 'right',
                             margin: '2px 2px 2px 14px',
-                            padding: '0 0 0 3px',
                             'letter-spacing': '0.1em'
                         },
                         text: toneList[key],

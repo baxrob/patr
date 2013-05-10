@@ -1,6 +1,6 @@
-:// Sample functions from [google "soundtoy", or see github.com/baxrob for ref - FIXME]
-//
-var soundToyTones = {
+// Sample functions from [google "soundtoy", or see github.com/baxrob for ref - FIXME]
+
+var soundtoyTones = {
 
     _getSampleProc: function(name) {
         // Renamings.

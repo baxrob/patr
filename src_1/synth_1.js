@@ -68,10 +68,11 @@ var Clang = ClangBlock.extend({
 
     // TODO: use pub-sub, ala balman
     setUpdateHook: function(newHook) {
-        //var oldHook = this.sequenceUpdateHook;
-        this.sequenceUpdateHook = function() {
+        //console.log(newHook);
+        //var oldHook = this.updateHook;
+        this.updateHook = function() {
             newHook();
-            this.sequenceUpdateHook = null;
+            this.updateHook = null;
         };
     },
     updateSequence: function(sequence) {
@@ -168,15 +169,20 @@ var Clang = ClangBlock.extend({
 
                     onComplete && onComplete.bind(this)();
                 } else {
-                    requestAnimationFrame(doPause);
+                    this.pauseRequestId = requestAnimationFrame(doPause);
                 }
             }.bind(this);
 
             var requestAnimationFrame = window.mozRequestAnimationFrame 
                 || window.webkitRequestAnimationFrame;
             var start = window.mozAnimationStartTime || Date.now();
+            // TODO: timing tests
             var lastT = start;
-            requestAnimationFrame(doPause); 
+            // FIXME: 
+            if (this.pauseRequestId !== undefined) {
+                window.cancelAnimationFrame(this.pauseRequestId);
+            }
+            this.pauseRequestId = requestAnimationFrame(doPause); 
             /*
             */
 
@@ -184,7 +190,7 @@ var Clang = ClangBlock.extend({
     }, // pause
 
     stageBeatEvent: function(idx, length, onsetDelay) {
-        // FIXME: does this matter, when visual perception as 200ms LND?
+        // FIXME: does this matter, when visual perception has 200ms LND?
         setTimeout(function() {
             var evt = document.createEvent('Event');
             evt.initEvent('beat', false, false);
@@ -218,8 +224,14 @@ var Clang = ClangBlock.extend({
             } else {
                 // Looping, so rewind elapsed by unused buffer .
                 this.elapsed = buffer.duration - this.stepSec;
-                $.event.trigger('loop');   
             }
+        }
+        // Last note case
+        if (
+            this.seqIdx == this.sequence.length - 1
+            && this.newNote
+        ) {
+            $.event.trigger('loop');
         }
 
         var rampOnset = nextAttack - (this.rampLen / this.sampleRate);
@@ -246,8 +258,8 @@ var Clang = ClangBlock.extend({
             );
 
             // Perform sequence update between notes.
-            if (this.sequenceUpdateHook) {
-                this.sequenceUpdateHook(this.stepSec * 1000);
+            if (this.updateHook) {
+                this.updateHook(this.stepSec * 1000);
             }
 
             // Begin next note.
@@ -297,7 +309,7 @@ var ClangRow = Clang.extend({
 
         this.reset();
         this.sequence = [];
-        this.sequenceUpdateHook = null;
+        this.updateHook = null;
         this.running = false;
     
     }
@@ -320,9 +332,6 @@ var SineRow = ClangRow.extend({
     init: function(context, bufferLength, sampleRate, baseGain) {
         this._super(context, bufferLength, sampleRate, baseGain);
     }
-});
-
-var SineRow = ClangRow.extend({
 });
 
 var NoiseCrinkleRow = ClangRow.extend({
@@ -361,8 +370,17 @@ var SineBleatRow = ClangRow.extend({
         );
         return sampleVal;
     },
+    partials: 6,
     square: function(hz, idx, phase) {
-
+        (phase === undefined) && (phase = 0);
+        var sampleVal = this.sine(hz, idx, phase);
+        for (var part = 1; part <= this.partials; part++) {
+            var partGain = 1 / (2 * part - 1),
+                partHz = (2 * part - 1) * hz;
+            sampleVal += partGain * this.sine(partHz, idx, phase);
+        }
+        // FIXME: is this to be expected, or am i doing it wrong?
+        return 0.2 * sampleVal;
     },
     // Frequency based gain envelope
     bleat: function(hz) {
@@ -385,7 +403,7 @@ var SineBleatRow = ClangRow.extend({
         return gainVal;
     },
     unity: function(hz) {
-        return this.baseGain * 0.9;
+        return this.baseGain * 0.65;
     }
 });
 
