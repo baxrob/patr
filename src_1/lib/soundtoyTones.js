@@ -1,4 +1,4 @@
-// Sample functions from [google "soundtoy", or see github.com/baxrob for ref - FIXME]
+// Sample functions from http://www.iquilezles.org/apps/soundtoy/ 
 
 var soundtoyTones = {
 
