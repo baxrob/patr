@@ -12,7 +12,11 @@ window.setTone = function(toneRow, tone) {
             };
         } else if (tone == 'organ') {
             toneRow.hzGain = function(hz) {
-                return toneRow.baseGain * 0.65;
+                return toneRow.bleat(hz) * 0.65;
+            };
+        } else if (tone == 'wind') {
+            toneRow.hzGain = function(hz) {
+                return toneRow.crinkle(hz) * 0.65;
             };
         }
     } else {

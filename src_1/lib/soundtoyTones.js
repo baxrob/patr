@@ -17,6 +17,7 @@ var soundtoyTones = {
     //  Temp hack
     spring: '',
     organ: '',
+    wind: '',
 
     _tri: function(a, x) {
         x = x / (2.0 * Math.PI);

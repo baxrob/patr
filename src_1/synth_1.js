@@ -23,7 +23,9 @@ var ClangBlock = Class.extend({
             sampleVal;
 
         for ( ; idx < sustainEnd; idx++, this.writeSample++) {
-            sampleVal = gain * this.sampleProc(hz, this.writeSample) 
+            sampleVal = 
+                gain 
+                * this.sampleProc(hz, this.writeSample) 
                 + phase;
             buffers[0][idx] = buffers[1][idx] = sampleVal;
         }
