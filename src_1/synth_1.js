@@ -249,7 +249,7 @@ var Clang = ClangBlock.extend({
 
             // If we are ramping out, but the next attack is not 
             //    in this buffer, then shorten note slightly 
-            //    (by < rampLen) to complete rampOut.
+            //    (by < rampLen) to complete ramp out.
             if (bufferEnd < nextAttack) {
                 var blockLength = buffer.length;
             } else { 
@@ -335,7 +335,7 @@ var ToneRow = ClangRow.extend({
         return sampleVal;
     },
     // FIXME: this is totally arbitrary - add all partials  < nyquist
-    partials: 6,
+    partials: 20,
     square: function(hz, idx, phase) {
         (phase === undefined) && (phase = 0);
         var sampleVal = this.sine(hz, idx, phase);
