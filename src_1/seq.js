@@ -247,7 +247,7 @@ var Patter = Class.extend({
     },
 
     shuffle: function() {
-        // FIXME: syntax ambiguity
+        // FIXME: tabination ambiguity ?
         var newSeq = this.stepSeq.slice(0, this.options.stepCount)
             .sort(function(x) {
                 return 0.5 - Math.random();
