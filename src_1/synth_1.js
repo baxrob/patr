@@ -6,13 +6,15 @@ var ClangBlock = Class.extend({
         this.sampleRate = sampleRate;
         this.baseGain = baseGain;
 
-        this.sampleProc = function(hz, idx, phase) { return 0; }; // Override
-        this.hzGain = function(hz) { return this.baseGain; };     // Override
+        // Override in sub-class
+        this.sampleProc = function(hz, idx, phase) { return 0; }; 
+        this.hzGain = function(hz) { return this.baseGain; };
 
         this.rampLen = 240;
         this.writeSample = 0;
     },
 
+    // TODO: rampIn option, later: adsr
     fillBuffer: function(hz, len, buffers, offset, rampOut, phase) {
         (hz >= 20) || (hz = 0);
         var idx = offset,
@@ -34,8 +36,6 @@ var ClangBlock = Class.extend({
             var rampPos = rampLen;
             for ( ; idx < writeEnd; idx++, this.writeSample++) {
                 sampleVal = (rampPos-- / rampLen) * gain
-                //sampleVal = Math.sqrt(rampPos-- / rampLen) * gain
-                //sampleVal = Math.log((rampPos-- / rampLen)+ 1)*1.442 * gain
                     * this.sampleProc(hz, this.writeSample) + phase; 
                 buffers[0][idx] = buffers[1][idx] = sampleVal;
             }
@@ -47,12 +47,10 @@ var ClangBlock = Class.extend({
 var Clang = ClangBlock.extend({
     
     // FIXME: much of this belongs in ClangRow
+    //        ? and / or in seq/patt ?
     init: function(sampleRate, baseGain) {
 
         this._super(sampleRate, baseGain);
-
-        this.sampleProc = function(hz, idx, phase) { return 0; }; // Override
-        this.hzGain = function(hz) { return this.baseGain; };    // Override
 
         //this.processorNode = this.context.createSriptProcessorNode(
         this.processorNode = this.context.createJavaScriptNode(
@@ -62,23 +60,23 @@ var Clang = ClangBlock.extend({
 
     },
 
-    // TODO: replace run / stop
+    // TODO: ? replace run / stop ?
     strike: function(attack, duration) {
     },
     halt: function() {
     },
 
-    // TODO: use pub-sub, ala balman
+    // TODO: use pub-sub (a la b.alman micro pubsub)
     setUpdateHook: function(newHook) {
-        //console.log(newHook);
-        //var oldHook = this.updateHook;
+        // FIXME: is this safe if updateHook is changed during execution?
         this.updateHook = function() {
             newHook();
             this.updateHook = null;
         };
     },
     updateSequence: function(sequence) {
-        // FIXME: necessary?
+        // FIXME: this is redundant wrt patt.update
+        //        where should it occur?
         if (this.running) {
             this.setUpdateHook(function() {
                 this.sequence = sequence;
@@ -86,9 +84,6 @@ var Clang = ClangBlock.extend({
         } else {
             this.sequence = sequence;
         }
-        /*
-        */
-        // 
         this.sequence = sequence;
     },
     
@@ -113,8 +108,12 @@ var Clang = ClangBlock.extend({
         this.elapsed = 0;
         this.writeSample = 0;
     },
+
     pause: function(onComplete) {
+
         this.setUpdateHook(function(timeout) {
+
+            // TODO: timing tests
             //var startCtxTime = this.context.currentTime;
             //var startDateTime = Date.now();
             //console.log(startDateTime, startCtxTime);
@@ -157,13 +156,14 @@ var Clang = ClangBlock.extend({
                 var progress = t - start;
 
                 //console.log('inc', t - lastT);
+                // TODO: timing tests
                 lastT = t;
 
                 if (progress >= timeout) {
 
                     this.processorNode.disconnect();
                     this.running = false;
-                    // Reset to next note
+                    // Reset to next note.
                     this.sequence = restoreSequence;
                     this.elapsed = this.seqIdx == 0 ? 0
                         : this.sequence[this.seqIdx][0];
@@ -178,21 +178,22 @@ var Clang = ClangBlock.extend({
             var requestAnimationFrame = window.mozRequestAnimationFrame 
                 || window.webkitRequestAnimationFrame;
             var start = window.mozAnimationStartTime || Date.now();
+            
             // TODO: timing tests
             var lastT = start;
+
             // FIXME: 
             if (this.pauseRequestId !== undefined) {
                 window.cancelAnimationFrame(this.pauseRequestId);
             }
             this.pauseRequestId = requestAnimationFrame(doPause); 
-            /*
-            */
 
-        }.bind(this));
+        }.bind(this)); // setUpdateHook call
+    
     }, // pause
 
-    stageBeatEvent: function(idx, length, onsetDelay) {
-        // FIXME: does this matter, when visual perception has 200ms LND?
+    stageBeatEvent: function(idx, length, onsetDelay) { // onsetDelay in seconds
+        // FIXME: does this timeout matter, when visual perception has 200ms LND?
         setTimeout(function() {
             var evt = document.createEvent('Event');
             evt.initEvent('beat', false, false);
@@ -228,7 +229,7 @@ var Clang = ClangBlock.extend({
                 this.elapsed = buffer.duration - this.stepSec;
             }
         }
-        // Last note case
+        // Last note case.
         if (
             this.seqIdx == this.sequence.length - 1
             && this.newNote
@@ -292,8 +293,6 @@ var Clang = ClangBlock.extend({
 }); // Clang
 
 
-
-//
 var ClangRow = Clang.extend({
 
     init: function(context, bufferLength) {
@@ -317,46 +316,7 @@ var ClangRow = Clang.extend({
     }
 }); // ClangRow
 
-
-var BeatRow = ClangRow.extend({
-    init: function(context, bufferLength, sampleRate, baseGain) {
-        this._super(context, bufferLength, sampleRate, baseGain);
-    },
-    p1Val: function(p1_val, idx, phase) {
-        // STUB
-    },
-    p2Gain: function(p2_val) {
-        // STUB
-    }
-});
-
-var SineRow = ClangRow.extend({
-    init: function(context, bufferLength, sampleRate, baseGain) {
-        this._super(context, bufferLength, sampleRate, baseGain);
-    }
-});
-
-var NoiseCrinkleRow = ClangRow.extend({
-    init: function(context, bufferLength, sampleRate, baseGain) {
-        this._super(context, bufferLength, sampleRate, baseGain);
-
-        this.sampleProc = this.noise;
-        this.hzGain = this.crinkle;
-    },
-    // Sample values
-    noise: function(hz, idx, phase) {
-        return 1 - (Math.random() * 2);
-    },
-    // Frequency based gain envelope
-    crinkle: function(hz) {
-        var gainVal = 5 / Math.sqrt(2*Math.PI) * Math.pow(
-            Math.E, (-1 / 200000 * Math.pow(hz, 2))
-        );
-        return gainVal;
-    }
-});
-
-var SineBleatRow = ClangRow.extend({
+var ToneRow = ClangRow.extend({
     init: function(context, bufferLength, sampleRate, baseGain) {
         this._super(context, bufferLength, sampleRate, baseGain);
 
@@ -364,7 +324,9 @@ var SineBleatRow = ClangRow.extend({
         this.currentTone = 'sine';
         this.hzGain = this.bleat;
     },
-    // Sample values
+    noise: function(hz, idx, phase) {
+        return 1 - (Math.random() * 2);
+    },
     sine: function(hz, idx, phase) {
         (phase === undefined) && (phase = 0);
         var sampleVal = Math.sin(
@@ -372,6 +334,7 @@ var SineBleatRow = ClangRow.extend({
         );
         return sampleVal;
     },
+    // FIXME: this is totally arbitrary - add all partials  < nyquist
     partials: 6,
     square: function(hz, idx, phase) {
         (phase === undefined) && (phase = 0);
@@ -381,20 +344,16 @@ var SineBleatRow = ClangRow.extend({
                 partHz = (2 * part - 1) * hz;
             sampleVal += partGain * this.sine(partHz, idx, phase);
         }
-        // FIXME: is this to be expected, or am i doing it wrong?
+        // TODO: tone -> gain mapping
         return 0.2 * sampleVal;
     },
-    // Frequency based gain envelope
     bleat: function(hz) {
         var divisor = 220,      // "cutoff"
             multiplier = 2.4;   // "max gain"
-        //divisor = 20;
-        //multiplier = 2.8;
         var cosh = function(n) {
             return (Math.exp(n) + Math.exp(-n)) / 2;
         };
         var gainVal = 1 / cosh(hz / divisor) * multiplier * this.baseGain;
-        //(1/sqrt(2*pi))*6*e^(-1/290000*x^2)
         
         return gainVal;
     },
@@ -409,14 +368,5 @@ var SineBleatRow = ClangRow.extend({
     }
 });
 
-//
-var ToneRow = ClangRow.extend({
-    // STUB:
-    init: function(context, bufferLength) {
-        this._super(context, bufferLength);
-    }
-});
-
-ToneRow = SineBleatRow;
 
 

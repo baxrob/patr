@@ -23,24 +23,25 @@ var URI = Class.extend({
                 this.historyPointer != 0
                 && evt.newURL == this.history[this.historyPointer - 1]
             ) {
-                //console.log('went back');
+                console.log('went back (?)');
                 this.historyPointer -= 1;
             } else if (
                 this.historyPointer < this.history.length - 1
                 && evt.newURL == this.history[this.historyPointer + 1]
             ) {
-                //console.log('went forward');
+                console.log('went forward');
                 this.historyPointer += 1;
             } else {
                 this.history.push(evt.newURL);
                 this.historyPointer += 1; 
             }
+            //console.log(this.history, this.historyPointer, this.history.length);
             this.volatile = this.historyPointer != this.history.length - 1;
 
             if (
                 this.onchangeHook && ! this.updating
                 // FIXME: why do i think the following?
-                // FIXME: this should be redundant - verify
+                //        FIXME: this should be redundant - verify
                 && evt.oldURL !== evt.newURL
             ) {
                 this.updating = true;
@@ -50,6 +51,7 @@ var URI = Class.extend({
         }.bind(this);
 
         // FIXME: pause, and wait, before unload to prevent click
+        //        .. if this is possible (?)
         window.onbeforeunload = function(evt) {
             /*
             tr.pause();

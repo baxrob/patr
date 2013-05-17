@@ -147,7 +147,7 @@ var Patter = Class.extend({
             this.stepSeq = params.seq;
         }
         
-        var stepOverflow = this.toneRow.seqIdx >= this.options.stepCount - 1;
+        var stepOverflow = this.toneRow.seqIdx > this.options.stepCount - 1;
         var mustPause = this.isRunning() && (bpmChanged || stepCountChanged);
 
         var updateCallback = function() {
