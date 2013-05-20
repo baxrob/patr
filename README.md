@@ -18,7 +18,7 @@ This is early stage, pre-alpha version software.  It's not recommended for use, 
 
 Screenshot:
 
-![screenshot](http://proto.blandhand.net/static/js/patr.2/media/screencap.png)
+![screenshot](http://proto.blandhand.net/static/js/patr.2/ media/screencap.png)
 
 #### How
 
