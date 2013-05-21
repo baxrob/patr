@@ -6,54 +6,102 @@ var Patter = Class.extend({
         this.uri = uri;
         this.toneRow = window.tr = toneRow;
 
-        this.silentNoteVal = 0;
         this.buildFreqTable();
 
-        this.dirty = true;
+        this.changed = true;
         this.updateFromURI();
 
         this.uri.onchangeHook = function() {
             this.updateFromURI();
             this.updateDisplay();
         }.bind(this);
+        
+        // The Loop Event.
+        this.loopCount = 0;
+        $(document).on('loop', function(evt) {
+            this.loopCount += 1; 
+            var reshuf = parseInt(this.reshuf) !== 0;
+            if (reshuf && this.loopCount >= this.reshuf) {
+                if (this.uri.volatile) {
+                    $('#reshuf').addClass('blocked');
+                    setTimeout(function() {
+                        $('#reshuf').removeClass('blocked');
+                    }, 100);
+                } else {
+                    // TODO: re-select focused input
+                    //console.log($(':focus'));
+                    this.shuffle();
+                    // FIXME: KLUDGE, coupling
+                    $('#shuff').addClass('active');
+                    setTimeout(function() {
+                        $('#shuff').removeClass('active');
+                    }, 100);
+                }
+                this.loopCount = 0;
+            }
+        }.bind(this));
+        
     },
     updateFromURI: function() {
         this.uri.parseHash();
              
-        // FIXME: these varnames should come from patter.js
+        // FIXME: coupling
+        //        these varnames should come from patter.js
         var length = this.uri.len || this.randomStepCount();
         var bpm = this.uri.rate || this.randomBPM();
+        var reshuf = this.uri.reshuf || '0';
+        var tone = this.uri.tone || 'sine'; // FIXME: should be toneRow.tones[0]
         var seq = this.uri.seq && this.uri.seq.length 
             ? this.uri.seq.split(',') : this.generateStepSeq(length)
+
         this.update({
             stepCount: length,
             bpm: bpm,
+            reshuf: reshuf,
+            tone: tone,
             seq: seq
         });
+        //console.log(this.options.tone, tone, this.uri.tone);
 
     },
     buildSequence: function() {
-        if (this.dirty) {
+        if (this.changed) {
             this.hzSeq = this.hzFromStepSeq();
             this.attackSeq = this.flatAttackSeq();
             this.formattedSeq = this.mergeSequences();
             this.toneRow.updateSequence(this.formattedSeq);
+
+            // FIXME: coupling
             this.uri.update({
                 seq: this.stepSeq,
                 rate: this.options.bpm,
-                len: this.options.stepCount
+                len: this.options.stepCount,
+                reshuf: this.options.reshuf,
+                tone: this.options.tone
             });
-            this.dirty = false;
+
+            //console.log(soundtoyTones);
+            // FIXME: temp kludge, see ix.js
+            window.setTone(this.toneRow, this.options.tone);
+            
+            this.reshuf = this.options.reshuf;
+            
+            this.changed = false;
         }
-    },
+    }, // buildSequence
     update: function(params) {
+        // FIXME: coupling
+
+        // Pace
         var bpmChanged = params.bpm !== undefined
             && params.bpm !== this.options.bpm;
         bpmChanged && (this.options.bpm = params.bpm);
         
+        // Len
         var stepCountChanged = params.stepCount !== undefined 
             && params.stepCount !== this.options.stepCount;
         if (stepCountChanged) {
+            // Adjust sequence length if not otherwise changing sequence 
             if (! params.seq) {
                 var diff = params.stepCount - this.options.stepCount;
                 while (diff < 0) {
@@ -68,7 +116,23 @@ var Patter = Class.extend({
             this.options.stepCount = params.stepCount;
         }
 
+        // Shuf
+        var reshufChanged = params.reshuf !== undefined
+            && params.reshuf !== this.options.reshuf;
+        reshufChanged && (this.options.reshuf = params.reshuf);
+
+        // Tone
+        //console.log(this.options.tone, params.tone);
+        var toneChanged = params.tone !== undefined
+            && params.tone !== this.options.tone;
+        toneChanged && (this.options.tone = params.tone);
+        //console.log(this.options.tone, params.tone);
+
+        // Seq
         var seqChanged = false;
+        // FIXME: negate extra conditionals:
+        //        params.seq should only be passed if the sequence has
+        //        actually changed
         if (params.seq) {
             if (params.seq.length !== this.stepCount) {
                 seqChanged = true;
@@ -83,12 +147,15 @@ var Patter = Class.extend({
             this.stepSeq = params.seq;
         }
         
-        var stepOverflow = this.toneRow.seqIdx >= this.options.stepCount - 1;
+        var stepOverflow = this.toneRow.seqIdx > this.options.stepCount - 1;
         var mustPause = this.isRunning() && (bpmChanged || stepCountChanged);
 
         var updateCallback = function() {
+            // Actual update occurs in buildSequence
             this.buildSequence();
+            // 
             stepOverflow && this.reset();
+            // FIXME: should live in synth.js
             if (bpmChanged) {
                 var lastAttack = this.toneRow.seqIdx > 0 ?
                     this.toneRow.sequence[this.toneRow.seqIdx][0] : 0;
@@ -97,30 +164,53 @@ var Patter = Class.extend({
             mustPause && this.unpause();
         }.bind(this);
 
-        this.dirty = bpmChanged || stepCountChanged || seqChanged;
-        // TODO: is this cond overkill, redundant wrt buildSequence check?
-        if (this.dirty) {
-            if (this.isRunning()) {
-                if (mustPause) {
-                    this.toneRow.pause(updateCallback);
-                } else {
-                    this.toneRow.setUpdateHook(updateCallback);
-                }
+        // FIXME: coupling
+        this.changed = bpmChanged || stepCountChanged || seqChanged
+            || reshufChanged || toneChanged;
+        if (this.isRunning()) {
+            if (mustPause) {
+                this.toneRow.pause(updateCallback);
             } else {
-                updateCallback();
+                this.toneRow.setUpdateHook(updateCallback);
             }
+        } else {
+            updateCallback();
         }
     }, // update
+
 
     updateDisplay: function() {
         // Called from uri.onchangeHook 
         this.updateDisplayHook && this.updateDisplayHook({
             controls: {
                 bpm: this.options.bpm,
-                stepCount: this.options.stepCount 
+                stepCount: this.options.stepCount ,
+                reshuf: this.options.reshuf,
+                tone: this.options.tone
             },
             sequence: this.stepSeq
         });
+    },
+
+    updateTone: function(tone) {
+        // TODO: use; update to ix.js.window.setTone
+        if (tone in soundtoyTones) { 
+            toneRow.sampleProc = soundtoyTones._getSampleProc(tone);
+            //toneRow.hzGain = toneRow.unity;
+        } else {
+            toneRow.sampleProc = toneRow[tone];
+            toneRow.hzGain = toneRow.bleat;
+        }
+        toneRow.setUpdateHook(function() {
+            console.log('', this);
+            this.currentTone = tone;
+        });
+        var busyWait = setInterval(function() {
+            if ($('#tone_menu_button').length) {
+                $('#tone_menu_button').html(tone + ' &#x25be;');
+                clearInterval(busyWait);
+            }
+        }, 1);
     },
 
     // Sequence data generation
@@ -157,10 +247,11 @@ var Patter = Class.extend({
     },
 
     shuffle: function() {
+        // FIXME: tabination ambiguity ?
         var newSeq = this.stepSeq.slice(0, this.options.stepCount)
-        .sort(function(x) {
-            return 0.5 - Math.random();
-        });
+            .sort(function(x) {
+                return 0.5 - Math.random();
+            });
         this.update({
             seq: newSeq
         });
@@ -174,6 +265,7 @@ var Patter = Class.extend({
         });
     },
 
+    // FIXME: redundant / inelegant
     // Controls
     playSequence: function() {
         this.toneRow.run();
@@ -189,6 +281,7 @@ var Patter = Class.extend({
     },
     reset: function() {
         this.toneRow.reset();
+        this.loopCount = 0;
     },
     isRunning: function() {
         return this.toneRow.running;
@@ -196,7 +289,7 @@ var Patter = Class.extend({
 
     // Sequence formatting
     buildFreqTable: function() {
-        this.freqTable = [this.silentNoteVal];
+        this.freqTable = [0];
         var min = this.options.minNote,
             max = this.options.maxNote,
             base = this.options.baseFreq,

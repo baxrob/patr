@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<soundtoy version="0.1">
+
+    <info name="Space Piano" date="2011" author="Diego F Goberna, aka Interface" link="http://feiss.be">
+    <comments>physcodelic space piano</comments>
+    </info>
+
+    <options applyeffects="yes"/>
+
+    <code>tt= 1-t;
+a= sin(t*w*.5)*log(t+0.3)*tt;
+b= sin(t*w)*t*.4;
+c= fmod(tt,.075)*cos(pow(tt,3)*w)*t*2;
+y= (a+b+c)*tt;</code>
+
+</soundtoy>

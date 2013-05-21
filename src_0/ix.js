@@ -1,6 +1,9 @@
 "use strict";
 
 var Face = Class.extend({
+
+    // ********* //
+    // ** Init ** //
     init: function($parentElem, pattern) {
         this.$root = $parentElem;
         this.patt = pattern;
@@ -137,6 +140,8 @@ var Face = Class.extend({
     }, // init
 
 
+    // ********* //
+    // ** CSS ** //
     initStyles: function() {
         this.$style = this.elem({
             tag: 'style',
@@ -211,6 +216,7 @@ var Face = Class.extend({
             }
         };
 
+        // this.$style
         for (var selector in this.styleRules) {
             this.$style.append(
                 selector + '{'
@@ -224,6 +230,7 @@ var Face = Class.extend({
             this.$style.append('}');
         }
 
+        // Extern
         var externalStyles = ['lib/ui-slider-custom.css'];
 
         externalStyles.map(function(filePath) {
@@ -256,7 +263,11 @@ var Face = Class.extend({
 <meta name="medium" content="audio" />
      */
 
+     // ** CSS ** //
 
+
+    // ********* //
+    // ** Meta ** //
     welcomeDialog: function() {
         // TODO: welome dialog: automation/hwto, compat note, fadeout, thrice
     },
@@ -264,7 +275,9 @@ var Face = Class.extend({
         // TODO: shared info blurb on hover, expand option
     },
 
-    // Event handlers
+    
+    // ********* //
+    // ** Event handlers ** //
     resizeHandler: function() {
         // FIXME: appears to be 3px off.  why?
         this.$frame.css(
@@ -331,7 +344,7 @@ var Face = Class.extend({
     },
 
 
-    // Control actions
+    // ** Control actions ** //
     updateRate: function(evt) {
         this.patt.update({
             bpm: evt.target.value
@@ -364,8 +377,8 @@ var Face = Class.extend({
         this.updateSequenceDisplay(newSeq);
     },
 
-
-    // Display updates
+    
+    // ** Display updates ** //
     updateControlDisplay: function(data) {
         for (var key in data) {
             $('#' + this.dataControlMap[key]['id']).val(data[key]);
@@ -390,7 +403,10 @@ var Face = Class.extend({
     },
 
 
-    // Construction
+    // ********* //
+    // ** Construction ** //
+    
+    // Controls
     buildControls: function() {
         var self = this;
         var $controls = this.elem({
@@ -711,6 +727,8 @@ var Face = Class.extend({
             })
         ) // $controls
 
+        
+        // TODO: abstract to Meta
         // TODO: this is a separate deal - $controls must be in DOM before
         //        we can find its height -- else rethink css
         // NOTE: a favorite thing about this questoinable css-generated-in-js
@@ -736,10 +754,12 @@ var Face = Class.extend({
             + 'show, (but also add help button at control edge-right.)]'
         );
         //$controls.append($controlsHint);
+        // TODO'NT
 
         return $controls;
     }, // buildControls
 
+    // Frame
     rebuildFrame: function() {
         this.$frame.remove();
         this.$frame = this.buildFrame(this.elemHeight(this.$controls));
@@ -776,6 +796,7 @@ var Face = Class.extend({
         return $frame;
     }, // buildFrame
 
+    // Fader
     buildFader: function(stepIdx) {
         var self = this;
         var note = this.patt.stepSeq[stepIdx];
@@ -842,6 +863,9 @@ var Face = Class.extend({
         );
     },
 
+
+    // ********* //
+    // ** Util ** //
     intValFromCSS: function($el, property) {
         if (! $el.css(property)) return;
         return + $el.css(property).slice(0, -2);
