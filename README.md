@@ -24,11 +24,17 @@ Screenshot:
 
 The controls should be self-evident, but:
 
-* go/paus &equiv; play/pause (press the spacebar).
-* pace, or bpm (P key); len, or note/step count (L key): up to 1000 bpm plays reasonably well; lengths above ~300 cause some audio glitches
-* shuff (S key); clear (C key); and regen (R key): randomly re-order existing notes; set all notes to zero; generate a new random set of notes
+* re-start: refresh to a new random pattern - no control key, to avoid unexpected results
+* go/paus &equiv; play/pause (press the spacebar)
+* pace (P key): BPM - up to 1000 bpm plays reasonably well
+* len (L key): note/step count - lengths above ~300 cause some audio glitches
+* shuff (S key): shuffle - randomly re-order existing notes
+* ea (E key): reshuffle each n cycles - disabled when not on last history item [this is buggy on short sequences]
+* clear (C key): set all notes to zero
+* regen (R key): generate a new random set of notes - weighted to give significant off/0 notes
+* tone: 
 * note sliders: select and drag or press up/down to change; tab / shift+tab to move left to right between sliders
-* browser back/fwd buttons (Alt+left/right) cycle through history of changes
+* browser back/fwd buttons (Alt/AppleKey + left or right) cycle through history of changes
 
 ### Compatability
 My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html).  I've added a wrapper for Mozilla's Audio Data API, and a Flash fallback, but, while these render the audio well enough, it is utterly out-of-sync with the UI display (I'm working on this.)
@@ -37,7 +43,7 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
     * Google Chrome, version 16 and above
     * Chromium, and probably some of [these other WebKit browsers](http://en.wikipedia.org/wiki/List_of_web_browsers#WebKit-based)
     * Safari 6
-* Firefox: With version 4 and above, you should get audio playback, via mozFlashAudioContext.js which wraps the [Audio Data API](https://wiki.mozilla.org/Audio_Data_API), but audio synchronizes with UI state /very/ poorly. 
+* Firefox: Firefox nightly builds now support AudioContext.  With version 4 and above, you should get audio playback via mozFlashAudioContext.js which wraps the deprecated [Audio Data API](https://wiki.mozilla.org/Audio_Data_API), but audio synchronizes with UI state /very/ poorly.
 * Other: The mozFlashAudioContext.js wrapper falls back to a flash audio engine, based on [dynamicaudio.js] - audio/UI sync is even worse than Firefox.
 
 
@@ -45,7 +51,6 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 * How-to: An automated walk-through.
 * Improve Mozilla / Flash fallbacks (timing is currently borken - see above).
 * Meta-sequences: Arrangement add/delete buttons top left, in control bar.
-* Simple mathematical synth alternatives: [soundtoy], etc
 * Render and download PCM data - per sequence, maybe (later) per session.
 * Shuffle and sort pattern by sub-sequence.
 * Sequence generation alternatives: eg: "true" random; silence density; random "walk", etc.

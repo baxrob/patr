@@ -41,9 +41,20 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
         // FIXME: ? include uri/synth param defaults here ?
         var patt = window.patt = new Patter({
             minNote: 0,
+            
+            //maxNote: 200,//46,
             maxNote: 46,
+            //maxNote: 26,
+            //maxNote: 16,
+
             baseFreq: 55,
+
+            //octaveDivisions: 42//512//96//48//9//7//12 
             octaveDivisions: 12 
+            //octaveDivisions: 7//12 
+            //octaveDivisions: 5//12 
+            //octaveDivisions: 3//12 
+        
         }, uri, toneRow);
         
         $(document).ready(function() {

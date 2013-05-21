@@ -345,7 +345,7 @@ var ToneRow = ClangRow.extend({
             sampleVal += partGain * this.sine(partHz, idx, phase);
         }
         // TODO: tone -> gain mapping
-        return 0.2 * sampleVal;
+        return 0.14 * sampleVal;
     },
     bleat: function(hz) {
         var divisor = 220,      // "cutoff"
