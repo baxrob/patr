@@ -4,16 +4,17 @@
 This is early stage, pre-alpha version software.  It's not recommended for use, in any case.  See below.
 -->
 
-Simple monophonic note sequencer.  One-page client-driven application using [web-audio api], query-fragment data model, and anti-HTML/CSS UI.
+Simple monophonic note sequencer.
 
 <!--
+One-page client-driven application using [web-audio api], query-fragment data model, and anti-HTML/CSS UI.
 see here  happily accepting bug reports [issues]
 ### Features
--->
-
 ### Status
 
 Currently considered v0.02 alpha version.
+
+-->
 
 ### Live
 
