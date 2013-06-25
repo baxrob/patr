@@ -65,7 +65,7 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
             
             //console.log($(window).height(), $('body').height(), $(document).height(), $(parent).height(), $(parent).children(), $(this).parent(), this, $(parent.document).find('body iframe'), parent);
 
-            // FIXME: ???
+            // FIXME: ? html { height: 100%; } ?
             $(parent.document).find('body iframe').height($(parent).height() - 50);
             
             $(window).blur();

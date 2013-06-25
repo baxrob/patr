@@ -1,7 +1,5 @@
 "use strict";
 
-var URN;
-var URL;
 var URI = Class.extend({
     init: function(assignor, delimiter, params, target) {
         this.assignor = assignor;
@@ -18,7 +16,8 @@ var URI = Class.extend({
 
         window.onhashchange = function(evt) {
             
-            // 
+            // FIXME: Kludge to detect history movement
+            //        Breaks randomly, see below. 
             if (
                 this.historyPointer != 0
                 && evt.newURL == this.history[this.historyPointer - 1]
@@ -36,7 +35,9 @@ var URI = Class.extend({
                 this.historyPointer += 1; 
             }
             //console.log(this.history, this.historyPointer, this.history.length);
-            this.volatile = this.historyPointer != this.history.length - 1;
+            // Disabled due to bug: random(?) blocking of reshuffle.
+            //      See seq.js/Patter.init
+            //this.volatile = this.historyPointer != this.history.length - 1;
 
             if (
                 this.onchangeHook && ! this.updating
