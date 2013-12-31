@@ -61,12 +61,12 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 * Firefox / Gecko: Firefox nightly builds now support AudioContext.  With version 4 and above, you should get audio playback via mozFlashAudioContext.js which wraps the deprecated [Audio Data API](https://wiki.mozilla.org/Audio_Data_API), but audio synchronizes with UI state /very/ poorly.
 * Other: The mozFlashAudioContext.js wrapper falls back to a flash audio engine, based on [dynamicaudio.js] - audio/UI sync is even worse than Firefox.
 
-
+<!--
 ### Issues
 *
+-->
 
 ### Roadmap
-* 
 * How-to: An automated walk-through.
 * Improve Mozilla / Flash fallbacks (timing is currently borken - see above).
 * Meta-sequences: Arrangement add/delete buttons top left, in control bar.
