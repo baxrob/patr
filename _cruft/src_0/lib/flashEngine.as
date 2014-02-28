@@ -34,9 +34,6 @@ package {
         }
 
         public function soundGenerator(event:SampleDataEvent):void {
-            // event.data wants 2048-8192 samples [num written determines buffer
-            //   length ?]
-
             var i:int;
             
             // If we haven't got enough data, write 2048 samples of silence to 

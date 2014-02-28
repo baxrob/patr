@@ -1,0 +1,292 @@
+Only in src_1: .synth.js.swp
+diff -r src/data.js src_1/data.js
+2a3,4
+> var URN;
+> var URL;
+4c6
+<     init: function(assignor, delimiter, params) {
+---
+>     init: function(assignor, delimiter, params, target) {
+8a11,12
+>         this.target = target ? target : document.location;
+> 
+25c29
+<         this.hash = document.location.hash;
+---
+>         this.hash = this.target.hash;
+27a32
+>             // params become instance properties 
+49a55
+>                 // params are instance properties
+53c59
+<             if (this.hash !== document.location.hash) {
+---
+>             if (this.hash !== this.target.hash) {
+66c72
+<         document.location.hash = this.hash;
+---
+>         this.target.hash = this.hash;
+diff -r src/ix.js src_1/ix.js
+67a68
+>             // TODO: vim hjkl, mmrpg/game layouts
+151a153,166
+>             '#ctl_bar div.meta': {
+>                 display: 'none',
+>                 float: 'left',
+>                 
+>                 /*
+>                 'background-color': '#555',
+>                 color: '#ddd',
+>                 border: '1px solid #999',
+>                 'border-radius': '2px',
+>                 cursor: 'pointer',
+> 
+>                 padding: '3px'
+>                 */
+>             },
+158a174,176
+>             '#ctl_bar a.ctl': {
+>                 'text-decoration': 'none'
+>             },
+160c178
+<                 'margin-right': '29px'
+---
+>                 'margin-right': '15px'
+173c191
+<                 color: '#222',
+---
+>                 color: '#555',
+219d236
+<         // this.$style
+380c397
+<     
+---
+> 
+422c439,440
+<                 'background-color': '#fcfeef',
+---
+>                 //'background-color': '#fcfeef',
+>                 'background-color': '#bcb',
+437,444d454
+<         //
+<         $controls.append(
+<             $('<div/>').css({
+< 
+<             }).text('start over')
+<         );
+<         $controls.append($innerControls);
+< 
+455c465,466
+<                 'font-family': 'verdana',
+---
+>                 'font-family': 'fontello',
+>                 'line-height': '1.5em',
+464c475
+<             text: 'go',
+---
+>             html: '&#x27f3;',
+470c481,482
+<                         $(evt.target).text('go');
+---
+>                         $(evt.target).html('&#xe760');
+>                         console.log('&#xe760;');
+474c486
+<                         $(evt.target).text('paus');
+---
+>                         $(evt.target).html('&#xe800;');
+484c496,497
+<         }); // $playButton
+---
+>         //}); // $playButton
+>         })//.html('&#x27f3;'); // $playButton
+485a499
+>         //
+571c585,586
+<                     'margin-right': '18px',
+---
+>                     //'margin-right': '18px',
+>                     'margin-right': '12px',
+596c611,647
+<         )/*.append(
+---
+>         ).append(
+>             this.elem({
+>                 tag: 'div',
+>                 attr: {
+>                     id: 'shuff',
+>                     'class': 'ctl',
+>                     title: 'shuffle notes\n(S key)'
+>                 },
+>                 css: {
+>                     float: 'left',
+>                     'font-family': 'verdana',
+>                     'font-size': '12px',
+>                     'padding-left': '5px',
+>                     'padding-right': '5px',
+>                     'padding-top': '1px',
+>                     'margin-top': '0px',
+>                     //'margin-right': '10px',
+>                     'margin-right': '4px',
+>                     height: '17px'
+>                 },
+>                 text: 'shuff',
+>                 on: {
+>                     'click': self.shuffle.bind(self) 
+>                 }
+>             })
+>         ).append(
+>             this.elem({
+>                 tag: 'label',
+>                 css: {
+>                     'font-size': '12px',
+>                     float: 'left',
+>                     'padding-top': '2px',
+>                     margin: 0,
+>                     'margin-right': '4px'
+>                 }
+>             }).text('ea:')
+>         ).append(
+609c660,662
+<                     margin: '3px 0 3px 12px'
+---
+>                     height: '15px',
+>                     background: 'white',
+>                     margin: '5px 3px 3px 0'
+636c689,690
+<                     'margin-bottom': '10px'
+---
+>                     'margin-bottom': '0',
+>                     'margin-top': '2px'
+655,678d708
+<         )*/.append(
+<             this.elem({
+<                 tag: 'div',
+<                 attr: {
+<                     id: 'shuff',
+<                     'class': 'ctl',
+<                     title: 'shuffle notes\n(S key)'
+<                 },
+<                 css: {
+<                     float: 'left',
+<                     'font-family': 'verdana',
+<                     'font-size': '12px',
+<                     'padding-left': '5px',
+<                     'padding-right': '5px',
+<                     'padding-top': '1px',
+<                     'margin-top': '0px',
+<                     'margin-right': '10px',
+<                     height: '17px'
+<                 },
+<                 text: 'shuff',
+<                 on: {
+<                     'click': self.shuffle.bind(self) 
+<                 }
+<             })
+729a760,789
+> 
+>         $controls.append($innerControls);
+> 
+>         $controls.prepend(
+>             // Start Over
+>             $('<div>&#x27f2;</div>').attr({
+>                 href: '',
+>                 'class': 'meta',
+>                 id: 'start_over'
+>             }).css({
+>                 float: 'left'   
+>             })//.text('start over')
+>         );
+>         this.subSeqs = [
+>             '1', '2', '3' 
+>         ];
+>         this.subSeqs.forEach(function(el, idx) {
+>             $controls.append(
+>                 $('<div/>').attr({
+>                     href: '#',
+>                     'class': 'ctl meta',
+>                     id: 'sub_seq_' + idx
+>                 }).css({
+>                 }).on('click', function(evt) {
+>                     document.location = '';
+>                 }).text(el)
+>             );
+>             //$controls.append($el);
+>             console.log(this.patt.uri);
+>         }.bind(self));
+731c791,805
+<         // TODO: abstract to Meta
+---
+> 
+>         //
+>         var addBtnColor = this.subSeqs.length < this.maxSubSeqs ? '#949' : '#449'
+>         $controls.append(
+>             $('<div/>').attr({
+>                 'class': 'ctl meta',
+>                 id: 'write_sub_seq'
+>             }).css({
+>                 background: addBtnColor
+>             }).on('click', function(evt) {
+> 
+>             }).text('+')
+>         );
+> 
+> 
+753c827,828
+<         // TODO'NT
+---
+> 
+> 
+893c968
+<         var strOpts = ['tag', 'text'];
+---
+>         var strOpts = ['tag', 'text', 'html'];
+895a971
+>             console.log(options[strOpts[idx]]);
+900a977
+>             console.log(options[objOpts[idx]]);
+908,909c985,993
+<             .css(options.css)
+<             .text(options.text);
+---
+>             .css(options.css);
+> 
+>         if (options.text !== '') {
+>             $el.text(options.text);
+>         }
+>         // NOTE: html overrides text
+>         if (options.html != '') {
+>             $el.html(options.html);
+>         }
+diff -r src/patter.js src_1/patter.js
+16c16
+<         var uri = new URI(':', ';', ['rate', 'len', 'seq']);
+---
+>         var uri = new URI(':', ';', ['subs', 'cookie?', 'rate', 'len', 'seq']);
+33a34
+>         // FIXME: shou
+42a44
+> 
+43a46,53
+>             
+>             //console.log($(window).height(), $('body').height(), $(document).height(), $(parent).height(), $(parent).children(), $(this).parent(), this, $(parent.document).find('body iframe'), parent);
+> 
+>             console.log(patt);
+>             
+>             $(parent.document).find('body iframe').height($(parent).height() - 50);
+>             
+>             $(window).blur();
+diff -r src/seq.js src_1/seq.js
+22a23
+>         // FIXME: these varnames should come from patter.js
+diff -r src/synth.js src_1/synth.js
+39a40,42
+>             //console.log(durationLimit, this.sequence.length, this.jsNode.onaudioprocess);
+> 
+>             // FIXME: ??
+40a44
+>             
+100a105,107
+> 
+>         //console.log(this, window.performance.now());
+> 
+Only in src: synth_2.js

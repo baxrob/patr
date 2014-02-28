@@ -1,0 +1,12 @@
+
+keyboard / cli / interpreter / repl mode
+
+_ptr[drum_notation]_
+
+
+beg - a new programming language, based on the strategy of wishful-thinking as introduced by Ableson and Sussman in SICP.  Examples:
+  beg('make it work')
+  beg('write the spec for me') [see Dilbert]
+  beg('get it all shippable')
+  beg('make this whole misunderstanding wrt exponential vs linear variation work out in the end')
+note that semicolons are optional in beg - how convenient is that not!?

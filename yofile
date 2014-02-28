@@ -1,0 +1,133 @@
+new Worker(workerUrl);
+If you are like I was a couple weeks ago, the above JavaScript statement means very little to you. I came across it while digging in the source code of the Ace Editor. After searching the code base and the web, I discovered it was a built-in for a feature set I had never encountered before: Web Workers! With curiosity piqued, I dove in to learn about the mysterious call and what it can do.
+
+So what are web workers?
+
+At the most basic level, they are scripts that run in their own background thread. Independence from the regular JavaScript event loop means that a worker can churn away at something for a long time and your UI will remain responsive. Very nice.
+
+Your app communicates with its spawned workers by passing messages back and forth. Each side registers an onmessage(e) event listener, then sends messages via postMessage(<some_data>).
+
+There are two main types of workers: dedicated and shared. The distinction comes from whether the worker can talk to one page/tab or multiple.
+
+Dedicated Worker
+
+To start off, let's take a look at how you create a simple dedicated worker. First, you define a script that your worker will execute. We'll put ours in basic-worker.js
+
+basic-worker.js
+
+// onmessage gets executed for every postMessage on main page
+onmessage = function(e) {
+    // Simply parrot back what worker was told
+    postMessage("You said: " + e.data);
+}
+Then, you use this script in your app.
+
+Your web page
+
+// Spawn a worker by giving it a url to a self-contained script to execute
+var worker = new Worker('basic-worker.js');
+
+// Decide what to do when the worker sends us a message
+worker.onmessage = function(e) {
+    console.log(e.data);
+};
+
+// Send the worker a message
+worker.postMessage('hello worker');
+Voila, a functional multi-threaded JS application. Ok, that wasn't so hard. Let's try a shared worker.
+
+Shared Worker
+
+(A note to those playing along at home; IE and Firefox do not support shared workers)
+
+Your web page
+
+// Basically the same as a dedicated worker
+var worker = new SharedWorker('shared-worker.js');
+
+// Note we have to deal with port now
+worker.port.onmessage = function(e) {
+    msg = 'Someone just said "' + e.data.message + '". That is message number ' + e.data.counter;
+    console.log(msg);
+};
+
+// Messages must go to the port as well
+worker.port.postMessage('hello shared worker!');
+shared-worker.js
+
+var counter = 0;
+var connections = [];
+// Define onconnect hanlder that triggers when "new SharedWorker()" is invoked
+onconnect = function(eConn) {
+   var port = eConn.ports[0]; // Unique port for this connection
+
+   // Let's tell all connected clients when we get a message
+   port.onmessage = function(eMsg) { 
+       counter++;
+       for (var i=0; i < connections.length; i++) {
+           connections[i].postMessage({
+               message: eMsg.data,
+               counter: counter
+           });
+       }
+   }
+   port.start();
+   connections.push(port);
+If you put this into a test page and then open up two tabs, what you see is that the first page to load receives a Someone just said "Hello shared worker!" This is message number 1 and the second tab receives the same, only message number 2. This illustrates how a shared worker maintains a single global state across all the tabs that connect to it via new SharedWorker().
+
+Minification
+
+As we've seen, web workers must execute a single script. This seems innocuous enough, at least until you try deploying your shiny new worker to production and realize you have to deal with a single minified JS file. What to do?
+
+It turns out you can trick the worker with a Blob (don't feel bad, I had no idea what these were either). From MDN "A Blob object represents a file-like object of immutable, raw data." Great, a blob can hold some data, any data, even a string of valid JS code. The other neat thing about them is that they can be passed to window.URL.createObjectURL(). The result? A url that points to an in-memory "file." And since web workers need a url to a file...
+
+your-site.min.js
+
+// Lots of other code your site needs to function
+...snip...
+// Code included from basic-worker.js
+var workerCode = function() {
+    onmessage = function(e) {
+        self.postMessage("You said: " + e.data);
+    };
+};
+Your Web Page
+
+// Fill a blob with the code we want the worker to execute
+var blob = new Blob(['(' + workerCode.toString() + ')();'], {type: "text/javascript"});
+
+// Obtain a URL to our worker 'file'
+var blobURL = window.URL.createObjectURL(blob);
+var worker = new Worker(blobURL); // Create the worker as usual
+
+worker.onmessage = function(e) {
+    console.log(e.data);
+};
+
+worker.postMessage('Hello inlined worker!');
+That code is a little gnarly, so let's unpack it. Writing our worker using the module pattern, we encapsulate everything in a function. Typically modules end off with an immediate execution of the function to actually load the module. We intentionally don't do this so we can access the complete source code using .toString(). In the app, we get that source code, wrap it in the immediate execute, and store it away inside a blob. At this point, the blob contains:
+
+(function() {
+    onmessage = function(e) {
+        self.postMessage("You said: " + e.data);
+    };
+})();
+We generate a url to that blob, pass it to the worker, and as soon as the worker executes the code inside the blob, it has an onmessage handler defined! Pretty nifty.
+
+One gotchya with this approach is that, because workers do not have access to the global state of the main app, the worker only knows about the code you pass it. Thus, if there is a library you want to use inside the worker, you'll have to either come up with a clever way to pass it in as well or bite the bullet and use importScript() from inside the worker to load the library independently.
+
+Web Workers at Zapier
+
+Circling back to spelunking around Ace Editor, I ought to say what use we found (indirectly) for web workers. We use the Ace editor for our Scripting API. To make the coding process a bit nicer, we thought it would be cool to introduce code completion.
+
+It just so happens that Ace recently added native support. Their implementation defers the expensive regular expression matching and scoring to a web worker. When you hit the key to begin autocompletion, the web worker is passed the current token. The worker computes possible matches, then messages the UI with the list.
+
+More things to know
+
+There is plenty more to know about web workers. Other articles elaborate on those points, so rather than make my own list, I'll leave you with a few links to continue your learning.
+
+Mozilla Developer Network - Great summary article
+WHATWG - Lots of examples, plus full spec.
+My Demos - Repo of examples similar to what I covered here
+Browser Support for Dedicated - IE10, plus long time support in all other major browsers (and even some mobile)
+Browser Support for Shared - Chrome, Safari, and Opera only

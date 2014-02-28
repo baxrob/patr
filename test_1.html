@@ -1,0 +1,151 @@
+<html><head><meta charset="utf-8"></head><body>
+
+<div id="playStop" style="border: 1px solid #333; width: 3em; text-align: center;">play</div>
+Hertz
+<input type="range" id="hertz" min="1" max="200" value="55"><span>55</span>
+<br>
+Gain
+<input type="range" id="gain" min="0" max="4" value="1.01" step="0.01"><span>1.01</span>
+
+<script>
+var playStop = document.querySelector('#playStop'),
+    hert = document.querySelector('#hertz'),
+    gain = document.querySelector('#gain');
+
+var sampIdx = 0;
+onProcess = function(evt) {
+    var buffer = evt.outputBuffer.getChannelData(0),
+        blockSampIdx = 0;
+    while (blockSampIdx < evt.outputBuffer.length) {
+        buffer[blockSampIdx++] = gain.value * Math.sin( 
+            sampIdx++ * hertz.value * 2 * Math.PI / ctx.sampleRate
+        );
+    }
+};
+
+var ctx = new (window.AudioContext || window.webkitAudioContext)(),
+    procNode = ctx.createJavaScriptNode(2048, 1, 1);
+procNode.onaudioprocess = onProcess;
+
+playStop.onclick = function(evt) {
+    if (this.innerHTML == 'play') {
+        procNode.connect(ctx.destination);
+        this.innerHTML = 'stop';
+    } else {
+        procNode.disconnect();
+        this.innerHTML = 'play';
+    }
+}
+hertz.onchange = gain.onchange = function(evt) {
+    this.nextSibling.innerHTML = this.value; 
+}
+
+// TODO: 
+
+</script>
+
+<!-- FROM: https://groups.google.com/a/chromium.org/forum/?fromgroups#!topic/chromium-extensions/41Hdim9k9EE -->
+<script type='text/javascript'> 
+        function handleFiles(files){ 
+                var file = window.URL.createObjectURL(files[0]); 
+                document.getElementById('audioPlayer').src = file; 
+        } 
+</script> 
+<audio id='audioPlayer' controls ></audio> 
+<input type='file' id='selectedFile' 
+onchange='handleFiles(this.files)' /> 
+
+<!-- FROM: http://stackoverflow.com/questions/15012500/passing-createobjecturl -->
+<!--
+<script>
+$(document).ready(function() {
+    var dancer = new Dancer(),
+        fileURL;
+
+    $("#submit").click(function(){
+            var audioElement,
+                file = document.getElementById("file").files[0];
+
+            fileURL = window.URL.createObjectURL(file);
+
+            // remove any preexisting instances of the audio tag
+            $('#audio').remove();
+
+            // Revoke any previously used file URL so it doesn't
+            // take up memory anymore.
+            window.URL.revokeObjectURL(fileURL);
+
+            $('body').append('<audio id="audio" controls="controls"></audio>');
+            $('#audio').append('<source src='+ fileURL +' type=audio/mpeg />')
+            $('body').append('<a href=' + fileURL +'>link</a>')
+
+            // get a reference to the audio element we created
+            audioElement = $('#audio')[0];
+
+            dancer.load(audioElement);
+    })
+});
+</script>
+-->
+
+<!-- FROM: http://ericbidelman.tumblr.com/post/13471195250/web-audio-api-how-to-playing-audio-based-on-user -->
+  <input type="file" accept="audio/*">
+  <button onclick="playSound()" disabled>Start</button>
+  <button onclick="stopSound()" disabled>Stop</button>
+<script>
+var context = ctx; //new window.webkitAudioContext();
+var source = null;
+var audioBuffer = null;
+
+function stopSound() {
+  if (source) {
+    source.noteOff(0);
+  }
+}
+
+function playSound() {
+  // source is global so we can call .noteOff() later.
+  source = context.createBufferSource();
+  source.buffer = audioBuffer;
+  source.loop = false;
+  source.connect(context.destination);
+  source.noteOn(0); // Play immediately.
+}
+
+function initSound(arrayBuffer) {
+  console.log(arrayBuffer);
+  context.decodeAudioData(arrayBuffer, function(buffer) {
+    // audioBuffer is global to reuse the decoded audio later.
+    audioBuffer = buffer;
+    var buttons = document.querySelectorAll('button');
+    buttons[0].disabled = false;
+    buttons[1].disabled = false;
+  }, function(e) {
+    console.log('Error decoding file', e);
+  }); 
+}
+var fileInput = document.querySelector('input[type="file"]');
+console.log(fileInput);
+fileInput.addEventListener('change', function(e) {  
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    initSound(this.result);
+  };
+  console.log(this.files);
+  reader.readAsArrayBuffer(this.files[0]);
+}, false);
+</script>
+
+<script>
+//document.write('<pre>' + document.querySelector('script').innerHTML + '</pre>');
+document.write('<br>');
+var scripts = document.querySelectorAll('script');
+for (var i in scripts) {
+    if (scripts[i].innerHTML) {
+        document.write('<pre style="float: left;">' 
+            + scripts[i].innerHTML 
+            + '</pre>');
+    }
+}
+</script>
+</body></html>

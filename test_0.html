@@ -1,0 +1,83 @@
+<html><head><meta charset="utf-8">
+<script src="src/lib/swfobject.js"></script>
+<script src="src/lib/simple_class.js"></script>
+<script src="src/mozFlashAudioContext_1.js"></script>
+</head><body>
+
+<div id="playStop" style="border: 1px solid #333; width: 3em; text-align: center;">play</div>
+<div id="mfPlayStop" style="border: 1px solid #333; width: 3em; text-align: center;">play</div> (flash)
+
+Hertz
+<input type="text" id="hertz" min="1" max="200" value="55">
+<br>
+Gain
+<!--input type="range" id="gain" min="0" max="4" value="1.5" step="0.01"><span>1.5</span-->
+<input type="text" id="gain" min="0" max="4" value="1.5">
+
+<script>
+var playStop = document.querySelector('#playStop'),
+    mfPlayStop = document.querySelector('#mfPlayStop'),
+    hert = document.querySelector('#hertz'),
+    gain = document.querySelector('#gain');
+
+
+var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+var mfAudioContext = new mozFlashAudioContext('src/lib/flashEngine.swf', true);
+
+var sampIdx = 0;
+onProcess = function(evt) {
+    var buffers = [
+            evt.outputBuffer.getChannelData(0),
+            evt.outputBuffer.getChannelData(1)
+        ],
+        blockSampIdx = 0;
+    while (blockSampIdx < evt.outputBuffer.length) {
+        buffers[0][blockSampIdx] = buffers[1][blockSampIdx++] 
+            = gain.value * Math.sin( 
+                sampIdx++ * hertz.value * 2 * Math.PI / audioContext.sampleRate
+            );
+    }
+};
+
+var procNode = audioContext.createJavaScriptNode(2048, 2, 2);
+procNode.onaudioprocess = onProcess;
+var mfProcNode = mfAudioContext.createJavaScriptNode(2048, 2, 2);
+mfProcNode.onaudioprocess = onProcess; // 
+
+var halt = function() {
+    procNode.disconnect();
+    mfProcNode.disconnect();
+};
+// FIXME: playStop.onclick = mfPlayStop.onclick = f...
+//        breaks because .. ? f context is shared ?
+//        ..onclick = 
+var onClick = function(evt) {
+    if (this.innerHTML == 'play') {
+        //procNode.connect(audioContext.destination);
+        halt();
+        if (this.id.match(/mf/)) {
+            mfProcNode.connect(mfAudioContext.destination);
+        } else {
+            procNode.connect(audioContext.destination);
+        }
+        this.innerHTML = 'stop';
+    } else {
+        //procNode.disconnect();
+        halt();
+        this.innerHTML = 'play';
+    }
+};
+playStop.onclick = onClick;
+//mfPlayStop.onclick = onClick;
+mfPlayStop.onclick = function(evt) { 
+    onClick.call(evt.target, evt); 
+}; 
+hertz.onchange = gain.onchange = function(evt) {
+    this.nextSibling.innerHTML = this.value; 
+};
+</script>
+
+<script>
+document.write('<pre>' + document.querySelector('script').innerHTML + '</pre>');
+</script>
+</body></html>

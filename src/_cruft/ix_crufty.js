@@ -1,42 +1,9 @@
 //"use strict";
 
-// TODO: move to seq.js
-window.setTone = function(toneRow, tone) {
-    if (tone in soundtoyTones) { 
-        toneRow.sampleProc = soundtoyTones._getSampleProc(tone);
-        // FIXME: do this in synth
-        //toneRow.hzGain = toneRow.unity;
-        if (tone == 'spring') {
-            toneRow.hzGain = function(hz) {
-                return toneRow.baseGain * 0.75 * toneRow.crinkle(hz);
-            };
-        } else if (tone == 'organ') {
-            toneRow.hzGain = function(hz) {
-                return toneRow.bleat(hz) * 0.65;
-            };
-        } else if (tone == 'wind') {
-            toneRow.hzGain = function(hz) {
-                return toneRow.crinkle(hz) * 0.65;
-            };
-        }
-    } else {
-        toneRow.sampleProc = toneRow[tone];
-        toneRow.hzGain = toneRow.bleat;
-    }
-    toneRow.setUpdateHook(function() {
-        this.currentTone = tone;
-    });
-    var busyWait = setInterval(function() {
-        if ($('#tone_menu_button').length) {
-            $('#tone_menu_button').html(tone + ' &#x25be;');
-            clearInterval(busyWait);
-        }
-    }, 1);
-};
-
 var Face = Class.extend({
 
-    // Init //
+    // ********* //
+    // ** Init ** //
     init: function($parentElem, pattern) {
         this.$root = $parentElem;
         this.patt = pattern;
@@ -60,10 +27,7 @@ var Face = Class.extend({
             },
             tone: {
                 id: 'tone_menu',
-                label: 'tone',
-                setter: function(tone) {
-                    $('#tone_menu_button').html(tone + ' &#x25be;');
-                }
+                label: 'tone'
             },
             reshuf: {
                 id: 'reshuf',
@@ -91,7 +55,6 @@ var Face = Class.extend({
 
         this.$root.append(this.$frame);
 
-        // TODO: move to css section
         this.$root.css({
             'font-family': 'verdana',
             margin: 0,
@@ -119,21 +82,21 @@ var Face = Class.extend({
             }.bind(this), blinkDelay);
         }.bind(this));
         
+        
         this.initStyles();
+
 
         // TODO: this.keyHandlers
         this.$root.on('keydown', function(evt) {
             if (evt.ctrlKey || evt.metaKey) {
                 return true;
             }
-
-            // TODO: replace with keyCode: callback object
             // TODO: vim hjkl, mmrpg/game layouts
             switch (evt.keyCode) {
                 case 32: // Spacebar
                     // TODO: shift+click or enter key: stop/restart
                     evt.preventDefault();
-                    this.$playButton.triggerHandler('click');
+                    this.$playButton.trigger('click');
                     break;
                 
                 case 80: // 'p'
@@ -193,7 +156,6 @@ var Face = Class.extend({
                         $focusedFader = $(faderSelector + ':focus');
                     // If no fader is focused, start at 0 
                     if (! $focusedFader.length) { 
-                        // FIXME: if (evt.shiftKey) {
                         $(faderSelector)[0].focus();
                         evt.preventDefault();
                     } else {
@@ -215,40 +177,14 @@ var Face = Class.extend({
                     // Otherwise, don't preventDefault - let jqui-slider handle tab
                     break; 
                 default:
-                    var $toneListContainer = $('#tone_menu_list');
-
-                    focused = $('body *:focus');
-                    //console.log('f', focused.length);
-                    if (
-                        $toneListContainer.is(':visible')
-                        && ! focused.length
-                    ) {
-                        //console.log('focused', focused, typeof focused, focused.length);
-                        //evt.stopPropagation();
-                        var $items = $toneListContainer.find('.ctl'),
-                            lastItemIdx = $items.length - 1;
-                        //console.log($items); 
-                        if (evt.keyCode == 13) { 
-                            $toneListContainer.slideUp(120, 'linear');
-                        //        this.$root.off('keydown', this.selectTone);
-                            return false;
-                        } else if (
-                            evt.keyCode > 48 && evt.keyCode < (50 + lastItemIdx)
-                        ) {
-                            $items[parseInt(evt.keyCode - 49)].click();    
-                            return false;
-                        } else {
-                            return true;
-                        }
-                    }
                     break; 
-                }
+            }
         }.bind(this));
 
     }, // init
 
 
-    // CSS //
+    // ** CSS ** //
     initStyles: function() {
         this.$style = this.elem({
             tag: 'style',
@@ -257,9 +193,26 @@ var Face = Class.extend({
 
         // TODO: @font-face here
         this.styleRules = {
+            // TODO: meta-seq controls
+            '#ctl_bar div.meta': {
+                display: 'none',
+                float: 'left',
+                
+                /*
+                'background-color': '#555',
+                color: '#ddd',
+                border: '1px solid #999',
+                'border-radius': '2px',
+                cursor: 'pointer',
+
+                padding: '3px'
+                */
+            },
             '#ctl_bar div.ctl': {
                 'background-color': '#555',
+                //color: '#ddd',
                 color: '#eee',
+                //border: '1px solid #999',
                 padding: '2px',
                 'border-radius': '2px',
                 'line-height': '1.5em',
@@ -278,12 +231,6 @@ var Face = Class.extend({
                 'background-color': '#fff',
                 color: '#555',
                 'box-shadow': '0 0 1px 1px #999'
-            },
-            '#ctl_bar .ctl.blocked': {
-                'background-color': '#f89'
-            },
-            '#ctl_bar #tone_menu div.ctl.active': {
-                'padding-right': '3px'
             },
             '#ctl_bar input[type="text"]': {
                 'background-color': '#f9f9f9',
@@ -386,7 +333,7 @@ var Face = Class.extend({
     },
 
     
-    // Event handlers //
+    // ** Event handlers ** //
     resizeHandler: function() {
         // FIXME: appears to be 3px off.  why?
         this.$frame.css(
@@ -451,9 +398,28 @@ var Face = Class.extend({
         });
 
     },
+    selectTone: function(evt) {
+        console.log('selectTone', this, evt);
+        evt.stopPropagation();
+        var containerSelector = '#tone_menu_list',
+            $items = $(containerSelector + ' .ctl'),
+            lastItemIdx = $items.length - 1;
+        
+        var keyCode = evt.keyCode;
+        if (keyCode == 13) { 
+            $(containerSelector).slideUp(120, 'linear');
+    //        this.$root.off('keydown', this.selectTone);
+        } else if (
+            keyCode > 48 && keyCode < (50 + lastItemIdx)
+        ) {
+            $items[parseInt(keyCode - 49)].click();    
+        }
+        console.log(evt.keyCode);
+    },
 
-    // Control actions //
-    updatePace: function(evt) {
+
+    // ** Control actions ** //
+    updateRate: function(evt) {
         this.patt.update({
             bpm: evt.target.value
         });
@@ -484,21 +450,12 @@ var Face = Class.extend({
         });
         //this.updateSequenceDisplay(newSeq);
     },
-    updateTone: function(evt) {
-        // STUB
-    },
 
 
-    // Display updates //
+    // ** Display updates ** //
     updateControlDisplay: function(data) {
         for (var key in data) {
-            var controlSpec = this.dataControlMap[key];
-            var value = data[key];
-            if (controlSpec.setter && (typeof controlSpec.setter) == 'function') { //!= undefined) { 
-                controlSpec.setter(value);
-            } else {
-                $('#' + controlSpec['id']).val(value);
-            }
+            $('#' + this.dataControlMap[key]['id']).val(data[key]);
         }
     },
     updateSequenceDisplay: function(sequence) {
@@ -520,7 +477,7 @@ var Face = Class.extend({
     },
 
 
-    // Construction //
+    // ** Construction ** //
     
     // Controls
     buildControls: function() {
@@ -542,7 +499,6 @@ var Face = Class.extend({
                 'box-shadow': '0 1px 10px -4px #444'
             }
         });
-
         var $innerControls = this.elem({
             tag: 'div',
             css: {
@@ -560,7 +516,7 @@ var Face = Class.extend({
                 title: 'play/pause\n(spacebar)'
             },
             css: {
-                'z-indez': '1000',
+                'z-indez': '10',
                 float: 'left',
                 width: '1em',
                 height: '18px',
@@ -568,7 +524,6 @@ var Face = Class.extend({
                 'font-family': 'fontello',
                 'line-height': '1.5em',
                 'font-size': '12px',
-                'letter-spacing': '0.1em',
                 'padding-left': '5px',
                 'padding-right': '5px',
                 margin: '0 28px 0 8px'
@@ -586,7 +541,6 @@ var Face = Class.extend({
                         $(evt.target).html('&#xe800;');
                     }
                 }.bind(this),
-                // FIXME: necessary?
                 mouseover: function(evt) {
                     $(this).addClass('hover');
                 },
@@ -594,7 +548,8 @@ var Face = Class.extend({
                     $(this).removeClass('hover');
                 }
             }
-        }); // $playButton
+        //}); // $playButton
+        })//.html('&#x27f3;'); // $playButton
 
         //
         $innerControls
@@ -605,9 +560,8 @@ var Face = Class.extend({
                 tag: 'label',
                 css: {
                     'font-size': '12px',
-                    'letter-spacing': '0.1em',
                     float: 'left',
-                    margin: '-8px 1px 0 0'
+                    margin: '-7px 4px 0 0'
                 }
             }).text('pace:')
         ).append(
@@ -618,33 +572,27 @@ var Face = Class.extend({
                     id: 'bpm',
                     'class': 'ctl',
                     title: 'bpm\n(P key)',
-                    maxlength: 3,
                     value: this.patt.options.bpm
                 },
                 css: {
                     'text-align': 'right',
                     float: 'left',
-                    width: '1.95em',
+                    width: '2.5em',
                     'padding-left': '3px',
                     'padding-right': '3px',
-                    //margin: '7px 6px 4px -37px'
-                    margin: '7px 0 4px -34px'
+                    margin: '7px 6px 4px -37px'
                 },
                 on: {
-                    focusout: self.updatePace.bind(self), 
+                    focusout: self.updateRate.bind(self), 
                     keydown: function(evt) {
-                        if (evt.ctrlKey || evt.metaKey) {
-                            return true;
-                        }
                         if (evt.keyCode == 13) {
-                            $(this).triggerHandler('focusout');
-                            return false;
+                            $(this).trigger('focusout');
                         } else if (
                             (evt.keyCode < 47 || evt.keyCode > 57)
                             && (evt.keyCode !== 8) // backspace 
                             && (evt.keyCode !== 46) // delete
                         ) {
-                            return true;
+                            return false;
                         }
                     },
                     click: function() {
@@ -660,9 +608,8 @@ var Face = Class.extend({
                 tag: 'label',
                 css: {
                     'font-size': '12px',
-                    'letter-spacing': '0.1em',
                     float: 'left',
-                    margin: '-8px 1px 0 13px'
+                    margin: '-7px 4px 0 13px'
                 }
             }).text('len:')
         ).append(
@@ -673,33 +620,27 @@ var Face = Class.extend({
                     id: 'step_count',
                     'class': 'ctl',
                     title: 'steps\n(L key)',
-                    maxlength: 2,
                     value: this.patt.options.stepCount
                 },
                 css: {
                     'text-align': 'right',
                     float: 'left',
-                    width: '1.3em',
+                    width: '2.2em',
                     'padding-left': '3px',
                     'padding-right': '3px',
-                    //margin: '7px 28px 4px -30px'
-                    margin: '7px 28px 4px -25px'
+                    margin: '7px 28px 4px -30px'
                 },
                 on: {
                     focusout: self.updateLength.bind(self),
                     keydown: function(evt) {
-                        if (evt.ctrlKey || evt.metaKey) {
-                            return true;
-                        }
                         if (evt.keyCode == 13) {
-                            $(this).triggerHandler('focusout');
-                            return false;
+                            $(this).trigger('focusout');
                         } else if ( // Ignore most non-digits
                             (evt.keyCode < 47 || evt.keyCode > 57)
                             && (evt.keyCode !== 8) // backspace 
                             && (evt.keyCode !== 46) // delete
                         ) {
-                            return true;
+                            return false;
                         }
                     },
                     click: function(evt) {
@@ -722,7 +663,6 @@ var Face = Class.extend({
                     float: 'left',
                     'font-family': 'verdana',
                     'font-size': '12px',
-                    'letter-spacing': '0.1em',
                     'padding-left': '5px',
                     'padding-right': '5px',
                     'padding-top': '1px',
@@ -742,10 +682,35 @@ var Face = Class.extend({
                     'font-size': '12px',
                     float: 'left',
                     //margin: '-4px 4px 0 2px'
-                    margin: '-7px 0px 0px 13px'
+                    margin: '-7px 6px 0 13px'
                 }
             }).text('ea:')
-        ).append(
+        )
+        /*.append(
+            this.elem({
+                tag: 'input',
+                attr: {
+                    type: 'checkbox',
+                    id: 'reshuf',
+                    'class': 'ctl',
+                    title: 'reshuf',
+                    // FIXME: read from url
+                    value: 'off'
+                },
+                css: {
+                    float: 'left',
+                    height: '15px',
+                    'background-url': 'none',
+                    background: 'white',
+                    margin: '9px 9px 3px -19px'
+                },
+                on: {
+                    click: function(evt) {
+                    }
+                }
+            })
+        )*/
+        .append(
             this.elem({
                 tag: 'input',
                 attr: {
@@ -753,18 +718,17 @@ var Face = Class.extend({
                     id: 'reshuf',
                     'class': 'ctl',
                     title: 'reshuffle each\nn cycles\n(E key)',
-                    maxlength: 2,
                     value: this.patt.options.reshuf
                 },
                 css: {
                     'text-align': 'right',
                     float: 'left',
-                    width: '1.3em',
+                    width: '1.5em',
                     border: '1px solid #999',
                     'border-radius': '2px',
                     'padding-left': '3px',
                     'padding-right': '3px',
-                    margin: '7px 28px 0 -23px'
+                    margin: '7px 28px 4px -27px'
                 },
                 on: {
                     focusout: function(evt) {
@@ -774,27 +738,20 @@ var Face = Class.extend({
                         $(evt.target).blur();
                     }.bind(this),
                     keydown: function(evt) {
-                        if (
-                            evt.ctrlKey || evt.metaKey
-                            
-                        ) {
-                            return true;
-                        }
-                        // TODO: handle delete+enter - empty input
+                        // TODO: limit entry length for inputs
+                        // TODO: handle delete+enter 
                         if (evt.keyCode == 13) {
-                            $(this).triggerHandler('focusout');
-                            return false;
+                            $(this).trigger('focusout');
                         } else if ( // Ignore most non-digits
                             (evt.keyCode < 47 || evt.keyCode > 57)
                             && (evt.keyCode !== 8) // backspace 
                             && (evt.keyCode !== 46) // delete
                         ) {
-                            return true;
+                            return false;
                         }
                     },
                     click: function(evt) {
                         $(this).select();
-                        $(this).focus();
                     },
                     blur: function(evt) {
                         evt.stopPropagation();
@@ -817,7 +774,7 @@ var Face = Class.extend({
                     'padding-right': '5px',
                     'padding-top': '1px',
                     'margin-top': '0px',
-                    'margin-right': '17px',
+                    'margin-right': '12px',
                     height: '17px'
                 },
                 text: 'clear',
@@ -850,36 +807,12 @@ var Face = Class.extend({
                 }
 
             })
-        ); // $innerControls
+        ) // $controls
 
-        $controls.append(
-            $('<div>&#x27f2;</div>').attr({
-                id: 'start_over',
-                'class': 'meta ctl',
-                title: 're-start (randomize all)'
-            }).css({
-                float: 'left',
-                height: '18px',
-                'text-align': 'center',
-                'font-family': 'fontello',
-                'line-height': '1.5em',
-                'font-size': '12px',
-                'padding-left': '5px',
-                'padding-right': '5px',
-                margin: '9px 0 0 9px'
-            }).on({
-                click: function() {
-                    // FIXME: refresh clobbers history - generate 
-                    //        in seq.js on blank hash
-                    //document.location.href = '#'
-                    document.location.href = ''
-                }
-            })
-        );
 
         $controls.append($innerControls);
 
-        var currentTone = this.patt.toneRow.currentTone;
+        var currentTone = 'sine';
         var $toneMenu = this.elem({
             tag: 'div',
             attr: {
@@ -890,20 +823,6 @@ var Face = Class.extend({
                 position: 'relative',
                 float: 'left',
                 'margin-left': '0px'
-            },
-            on: {
-                mouseover: function(evt) {
-                    //console.log('over');
-                    $('#tone_menu_button').html(
-                        'tone &#x25be;'
-                    ); 
-                },
-                mouseout: function(evt) {
-                    //console.log('out');
-                    $('#tone_menu_button').html(
-                        this.patt.toneRow.currentTone + ' &#x25be;'
-                    );
-                }.bind(this)
             }
         }).append(
             this.elem({
@@ -923,15 +842,57 @@ var Face = Class.extend({
                     'margin-right': '4px',
                     height: '17px'
                 },
-                html: '....' + ' &#x25be;',
+                //html: this.patt.toneRow.sampleProc + '&#x25be;',
+                html: currentTone + ' &#x25be;',
                 on: {
                     click: function(evt) {
-                        $('#tone_menu_list').slideToggle(120, 'linear');
+                        evt.stopPropagation();
+
+                        var containerSelector = '#tone_menu_list',
+                            $items = $(containerSelector + ' .ctl'),
+                            lastItemIdx = $items.length - 1;
+                            
+                        var self = this;
+                        /*
+                        selectTone = function(evt) {
+                            evt.stopPropagation();
+                            var keyCode = evt.keyCode;
+                            if (keyCode == 13) { // || self.unSelectTone) {
+                                console.log('!!!!!!!');
+                                $(containerSelector).slideUp(120, 'linear');
+                                self.$root.off('keydown', selectTone);
+                            } else if (
+                                keyCode > 48 && keyCode < (50 + lastItemIdx)
+                            ) {
+                                $items[parseInt(keyCode - 49)].click();    
+                            }
+                            console.log(evt.keyCode);
+                        }.bind(this);
+                        */
+
+                        if (! $(containerSelector).is(':visible')) {
+                            // Transition from hidden to shown
+                            //this.$root.on('keydown', this.selectTone);
+                        } else {
+                            /*
+                            this.$root.trigger({
+                                type: 'keydown', 
+                                keyCode: 13,
+                            });
+                            */
+                            // FIXME: this doesn't work, why?
+                            //this.$root.off('keydown', this.selectTone);
+                            //console.log(this.$root.data('events').keydown);
+                        }
+                        
+                        $(containerSelector).slideToggle(120, 'linear');
+
+                        //$('#tone_menu_list').focus();
+                        return false;
                     }.bind(this)
                 }
             })
         ); // $toneMenu
-
         var $toneMenuList = this.elem({
             tag: 'div',
             attr: {
@@ -949,28 +910,60 @@ var Face = Class.extend({
                 'padding-left': '5px',
                 'padding-right': '5px',
                 'padding-top': '5px',
-                padding: '5px',
                 'margin-top': '-1px',
                 'border-radius': '0 0 2px 2px',
                 'line-height': '1.5em',
-                cursor: 'pointer',
-                opacity: '0.92'
+                cursor: 'pointer'
             },
             on: {
+                // TODO: keys and slideUp
+                click: function(evt) {
+                    //evt.stopPropagation();
+                    //$('#tone_menu_list').slideUp(120, 'linear');
+                },
+                keydown: function(evt) {
+                    /*
+                    console.log('tone key');
+                    //evt.stopPropagation();
+                    evt.preventDefault();
+                    var itemSelector = '#tone_menu_list .ctl',
+                        $activeItem = $(itemSelector + '.active');
+                        lastItemIdx = $(itemSelector).length - 1,
+                        // FIXME: this.. vs active.. ?
+                        thisItemIdx = $activeItem.data('key');
+                    // TODO: handle active tone not in list
+                    if (evt.keyCode == 13) {
+
+                    }
+                    switch (evt.keyCode) {
+                        case 38: // Up
+                            if (thisItemIdx == 0) {
+                                $(itemSelector)[lastItemIdx].click();
+                            } else {
+                                $(itemSelector)[thisItemIdx - 1].click();
+                            }
+                            break;
+                        case 40: // Down;
+                            if (thisItemIdx == lastItemIdx) {
+                                $(itemSelector)[0].click();
+                            } else {
+                                $(itemSelector)[thisItemIdx + 1].click();
+                            }
+                            break;
+                        case 13: // Enter
+                            $('#tone_menu_list').slideUp(120, 'linear');
+                            break;
+                        default:
+                            break;
+                    }
+                    */
+                }
             }
         });
         
         // Max of nine tones are handled by the widget key commands
         //var toneList = ['sine', 'square', 'sawtooth', 'triangle', 'bell', 'piano1'];
-        //var toneList = ['sine', 'square', 'bell', 'piano1'];
-        var toneList = ['sine', 'square', 'spring', 'organ', 'wind'];
-        /*
-        var toneList = [
-            'sine', 'square', 'spring', 'organ',
-            'drum1', 'drum2', 'drum3', 'flute1', 'guitar', 'organ1', 'organ2',
-            'organ3', 'organ4', 'piano1', 'piano2', 'rhyeg', 'spacePiano' 
-        ];
-        */
+        var toneList = ['sine', 'square', 'bell', 'piano1'];
 
         for (var key in toneList) {
             var active = (toneList[key] == currentTone) ? 'active' : '';
@@ -983,7 +976,7 @@ var Face = Class.extend({
                         css: {
                             float: 'left',
                             'font-size': '0.8em',
-                            'margin-left': '1px'
+                            'margin-right': '3px'
                         },
                         text: parseInt(key) + 1
                     })
@@ -995,24 +988,26 @@ var Face = Class.extend({
                             'data-key': key
                         },
                         css: {
-                            'text-align': 'right',
-                            margin: '2px 2px 2px 14px',
-                            'letter-spacing': '0.1em'
+                            'margin-left': '1.2em',
+                            'text-align': 'right'
                         },
                         text: toneList[key],
                         on: {
                             click: function(evt) {
                                 var tone = $(evt.target).text();
-                                
-                                window.setTone(this.patt.toneRow, tone);
-                                this.patt.update({
-                                    tone: tone
-                                })
-                                // FIXME: integrate
+                                //this.patt.toneRow.setSampleProc(tone);
+                                if (tone in soundToyTones) { 
+                                    this.patt.toneRow.sampleProc =
+                                        soundToyTones._getSampleProc(tone);
+                                } else {
+                                    this.patt.toneRow.sampleProc =
+                                        this.patt.toneRow[tone];
+                                }
                                 $('#tone_menu_button').html(
                                    tone + ' &#x25be;'
-                                );
-                                $('#tone_menu_list div').removeClass('active');
+                                )
+                                $('#tone_menu_list div')
+                                    .removeClass('active');
                                 $(evt.target).addClass('active');
                             }.bind(this)
                         }
@@ -1020,12 +1015,12 @@ var Face = Class.extend({
                 )
             );
         }
+        
 
         $toneMenu.append($toneMenuList);
 
         $controls.append($toneMenu);
 
-        // STUB:
         var $numEg = this.elem({
             tag: 'div',
             attr: {
@@ -1033,15 +1028,82 @@ var Face = Class.extend({
             css: {
             }
         });
+
         $controls.append($numEg);
+
+        $controls.prepend(
+            // Start Over
+            $('<div>&#x27f2;</div>').attr({
+                href: '',
+                'class': 'meta',
+                id: 'start_over'
+            }).css({
+                float: 'left'   
+            })//.text('start over')
+        );
+        /*
+        // STUB
+        this.subSeqs = [
+            '1', '2', '3' 
+        ];
+        this.subSeqs.forEach(function(el, idx) {
+            $controls.append(
+                $('<div/>').attr({
+                    href: '#',
+                    'class': 'ctl meta',
+                    id: 'sub_seq_' + idx
+                }).css({
+                }).on('click', function(evt) {
+                    document.location = '';
+                }).text(el)
+            );
+            //$controls.append($el);
+            //console.log(this.patt.uri);
+        }.bind(self));
+        
+
+        //
+        var addBtnColor = this.subSeqs.length < this.maxSubSeqs ? '#949' : '#449'
+        $controls.append(
+            $('<div/>').attr({
+                'class': 'ctl meta',
+                id: 'write_sub_seq'
+            }).css({
+                background: addBtnColor
+            }).on('click', function(evt) {
+
+            }).text('+')
+        );
+
+
+        // TODO: this is a separate deal - $controls must be in DOM before
+        //        we can find its height -- else rethink css
+        // NOTE: a favorite thing about this questoinable css-generated-in-js
+        //       strategy: it's quite fluid to mind ixmes, which get way out
+        //       of hand in css
+        var $controlsHint = this.elem({
+            tag: 'div',
+            attr: {
+                id: 'ctl_bar_hint'
+            },
+            css: {
+                'font-size': '0.7em',
+                position: 'absolute',
+                'margin-top': '31px',//$controls.height(),
+                'margin-left': '-9px', // ???
+                height: '20px',
+                width: 'auto', // sum(controls.children.widths)
+                border: '1px solid #999'
+            }
+        }).text('[explanatory, as hover-text per control above: fade out after 10, 5, 3 secs, per user\'s visit count; then don\'t show, (but also add help button at control edge-right.)]');
+        //$controls.append($controlsHint);
+        */
 
         return $controls;
     }, // buildControls
 
 
-    //
-    // Fader / Slider Frame
-    //
+    // Frame
     rebuildFrame: function() {
         this.$frame.remove();
         this.$frame = this.buildFrame(this.elemHeight(this.$controls));
@@ -1058,7 +1120,6 @@ var Face = Class.extend({
                 'margin-top': topMargin + 'px',
                 'padding-top': '5px',
                 'overflow-y': 'scroll',
-                // FIXME:
                 height: $(window).height() - topMargin //- 5 + 'px'//'100%'
             }
         });
@@ -1148,15 +1209,15 @@ var Face = Class.extend({
     },
 
 
-    // **** //
-    // Util //
+    // ********* //
+    // ** Util ** //
     intValFromCSS: function($el, property) {
         if (! $el.css(property)) return;
         return + $el.css(property).slice(0, -2);
     },
     elemHeight: function($el) { // Returns int
         // FIXME: inconsistent results - should wait for pending reflows
-        //        should likely use Deferred, or just a waitloop
+        //        should likely use Deferred
         var cssInt = function(property) {
             return this.intValFromCSS($el, property);
         }.bind(this);

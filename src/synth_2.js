@@ -1,5 +1,6 @@
 "use strict";
 
+//var ClangBlock = Object.create({
 var ClangBlock = Class.extend({
 
     init: function(sampleRate, baseGain) {    
@@ -59,7 +60,6 @@ var Clang = ClangBlock.extend({
         this.processorNode = createProcessor.call(
             this.context, this.bufferLength, 2, 2//, 0, 2
         );
-        window.pn = this.processorNode;
         this.processorNode.onaudioprocess = this.onProcess.bind(this); 
 
     },
@@ -95,7 +95,6 @@ var Clang = ClangBlock.extend({
         if (this.sequence.length && this.processorNode.onaudioprocess) {
             this.processorNode.connect(this.context.destination);
             this.running = true;
-        console.log('run', this.sequence.length, this.processorNode.onaudioprocess, this.context.destination);
             if (durationLimit !== undefined) {
                 setTimeout(function() {
                     this.stop();
@@ -209,7 +208,6 @@ var Clang = ClangBlock.extend({
     },
     
     onProcess: function(evt) {
-        console.log(this.running);
         if (! this.running) {
             return;
         }

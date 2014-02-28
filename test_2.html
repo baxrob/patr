@@ -1,0 +1,66 @@
+<html><head><meta charset="utf-8">
+<script src="src/lib/swfobject.js"></script>
+<script src="src/lib/simple_class.js"></script>
+<script src="src/mozFlashAudioContext_1.js"></script>
+</head><body>
+<!-- TODO: sine / sqr / etc ; key ctl ; styling -->
+<div id="playStop" style="border: 1px solid #333; width: 3em; text-align: center;">play</div>
+Hertz
+<input type="text" id="hertz" min="1" max="200" value="55">
+<br>
+Gain
+<!--input type="range" id="gain" min="0" max="4" value="1.5" step="0.01"><span>1.5</span-->
+<input type="text" id="gain" min="0" max="4" value="1.5">
+
+<script>
+var playStop = document.querySelector('#playStop'),
+    hert = document.querySelector('#hertz'),
+    gain = document.querySelector('#gain');
+
+/*
+*/
+var contextClass;
+if (
+    false//contextClass = (window.AudioContext || window.webkitAudioContext)
+) {
+    console.log('webkit adio api');
+    var audioContext = new contextClass();
+    audioContext.backend = 'webkit';
+} else {
+    var audioContext = new mozFlashAudioContext('src/lib/flashEngine.swf');
+}     
+
+var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+var sampIdx = 0;
+onProcess = function(evt) {
+    var buffer = evt.outputBuffer.getChannelData(0),
+        blockSampIdx = 0;
+    while (blockSampIdx < evt.outputBuffer.length) {
+        buffer[blockSampIdx++] = gain.value * Math.sin( 
+            sampIdx++ * hertz.value * 2 * Math.PI / audioContext.sampleRate
+        );
+    }
+};
+
+var procNode = audioContext.createJavaScriptNode(2048, 1, 1);
+procNode.onaudioprocess = onProcess;
+
+playStop.onclick = function(evt) {
+    if (this.innerHTML == 'play') {
+        procNode.connect(audioContext.destination);
+        this.innerHTML = 'stop';
+    } else {
+        procNode.disconnect();
+        this.innerHTML = 'play';
+    }
+}
+hertz.onchange = gain.onchange = function(evt) {
+    this.nextSibling.innerHTML = this.value; 
+}
+</script>
+
+<script>
+document.write('<pre>' + document.querySelector('script').innerHTML + '</pre>');
+</script>
+</body></html>
