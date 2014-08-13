@@ -1,26 +1,28 @@
 ## Patr - a step sequencer
 
-Simple monophonic note sequencer.
+Simple monophonic note sequencer, built on web-audio.
 
+<!--
 This is alpha iteration 0.02.
+-->
 
 ### Live
 
 <http://proto.blandhand.net/patr/>
 
+<!--
 [Audio sample](http://proto.blandhand.net/static/js/patr/media/aucap.html)
 
-<!--
 <audio controls>
     <source src="http://proto.blandhand.net/static/js/patr/media/aucap.wav">
     <source src="http://proto.blandhand.net/static/js/patr/media/aucap.ogg">
     <source src="http://proto.blandhand.net/static/js/patr/media/aucap.mp3">
 </audio>
--->
 
 Screenshot:
 
 ![screenshot](http://proto.blandhand.net/static/js/patr.2/media/screencap.png)
+-->
 
 #### How
 
@@ -53,6 +55,7 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 ### Issues
 *
 
+<!--
 ### Roadmap
 * 
 * How-to: An automated walk-through.
@@ -66,7 +69,6 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 Released under [GPL v.3](http://www.gnu.org/licenses/gpl-3.0.txt).
 Other licenses may be available in future.
 
-<!--
 ### Attribs
 1. [dynamicaudio.js]
 2. [soundtoy]
