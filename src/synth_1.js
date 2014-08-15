@@ -52,10 +52,14 @@ var Clang = ClangBlock.extend({
 
         this._super(sampleRate, baseGain);
 
-        //this.processorNode = this.context.createSriptProcessorNode(
-        this.processorNode = this.context.createJavaScriptNode(
-            this.bufferLength, 2, 2//, 0, 2
+        var createProcessor = this.context.createScriptProcessor 
+            || this.context.createJavaScriptNode;
+        //this.processorNode = this.context.createSriptProcessor(
+        //this.processorNode = this.context.createJavaScriptNode(
+        this.processorNode = createProcessor.call(
+            this.context, this.bufferLength, 2, 2//, 0, 2
         );
+        window.pn = this.processorNode;
         this.processorNode.onaudioprocess = this.onProcess.bind(this); 
 
     },
