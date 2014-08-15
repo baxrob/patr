@@ -70,6 +70,7 @@ var Clang = ClangBlock.extend({
     setUpdateHook: function(newHook) {
         // FIXME: is this safe if updateHook is changed during execution?
         this.updateHook = function() {
+            //console.log('newHook', newHook);
             newHook();
             this.updateHook = null;
         };
@@ -91,6 +92,7 @@ var Clang = ClangBlock.extend({
         if (this.sequence.length && this.processorNode.onaudioprocess) {
             this.processorNode.connect(this.context.destination);
             this.running = true;
+            //console.log('run', this.sequence.length, this.processorNode.onaudioprocess, this.context.destination);
             if (durationLimit !== undefined) {
                 setTimeout(function() {
                     this.stop();
@@ -134,9 +136,10 @@ var Clang = ClangBlock.extend({
             // FIXME: just do a timeout longer than bufferDuration
             //        or busyLoop            
             /*
+            */
             var timeout = this.bufferLength / this.sampleRate * 1000 + 75;
             setTimeout(function() {
-                console.log('atpause', (this.context.currentTime - startCtxTime) * 1000, (Date.now() - startDateTime));
+                //console.log('atpause', (this.context.currentTime - startCtxTime) * 1000, (Date.now() - startDateTime));
                 this.processorNode.disconnect();
                 this.running = false;
                 // Reset to next note
@@ -147,15 +150,15 @@ var Clang = ClangBlock.extend({
 
                 onComplete && onComplete.bind(this)();
             }.bind(this), timeout);
-            */
 
+            /*
             timeout = this.stepSec;
             timeout += 100;
 
             var doPause = function(t) {
                 var progress = t - start;
 
-                //console.log('inc', t - lastT);
+                console.log('inc', t - lastT);
                 // TODO: timing tests
                 lastT = t;
 
@@ -175,7 +178,9 @@ var Clang = ClangBlock.extend({
                 }
             }.bind(this);
 
-            var requestAnimationFrame = window.mozRequestAnimationFrame 
+            var requestAnimationFrame =  window.mozRequestAnimationFrame 
+            //var requestAnimationFrame = window.requestAnimationFrame
+            //    || window.mozRequestAnimationFrame 
                 || window.webkitRequestAnimationFrame;
             var start = window.mozAnimationStartTime || Date.now();
             
@@ -184,9 +189,11 @@ var Clang = ClangBlock.extend({
 
             // FIXME: 
             if (this.pauseRequestId !== undefined) {
+                console.log('yo');
                 window.cancelAnimationFrame(this.pauseRequestId);
             }
             this.pauseRequestId = requestAnimationFrame(doPause); 
+            */
 
         }.bind(this)); // setUpdateHook call
     
@@ -204,6 +211,9 @@ var Clang = ClangBlock.extend({
     },
     
     onProcess: function(evt) {
+        if (! this.running) {
+            return;
+        }
         // KLUDGE: double safety against sequence shrink race condition 
         // FIXME: necessary?
         if (this.seqIdx >= this.sequence.length) {

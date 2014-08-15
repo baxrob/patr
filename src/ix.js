@@ -23,11 +23,16 @@ window.setTone = function(toneRow, tone) {
         toneRow.sampleProc = toneRow[tone];
         toneRow.hzGain = toneRow.bleat;
     }
+    /*
     toneRow.setUpdateHook(function() {
+        console.log('trupix', tone);
         this.currentTone = tone;
     });
+    */
+    toneRow.currentTone = tone;
     var busyWait = setInterval(function() {
         if ($('#tone_menu_button').length) {
+            //console.log('tone', tone);
             $('#tone_menu_button').html(tone + ' &#x25be;');
             clearInterval(busyWait);
         }
@@ -214,7 +219,7 @@ var Face = Class.extend({
                     }
                     // Otherwise, don't preventDefault - let jqui-slider handle tab
                     break; 
-                default:
+                default: // Number keys updtate tone_menu selection
                     var $toneListContainer = $('#tone_menu_list');
 
                     focused = $('body *:focus');

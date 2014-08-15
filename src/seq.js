@@ -150,6 +150,10 @@ var Patter = Class.extend({
         var stepOverflow = this.toneRow.seqIdx > this.options.stepCount - 1;
         var mustPause = this.isRunning() && (bpmChanged || stepCountChanged);
 
+        // FIXME: coupling
+        this.changed = bpmChanged || stepCountChanged || seqChanged
+            || reshufChanged || toneChanged;
+
         var updateCallback = function() {
             // Actual update occurs in buildSequence
             this.buildSequence();
@@ -164,9 +168,6 @@ var Patter = Class.extend({
             mustPause && this.unpause();
         }.bind(this);
 
-        // FIXME: coupling
-        this.changed = bpmChanged || stepCountChanged || seqChanged
-            || reshufChanged || toneChanged;
         if (this.isRunning()) {
             if (mustPause) {
                 this.toneRow.pause(updateCallback);
@@ -192,6 +193,7 @@ var Patter = Class.extend({
         });
     },
 
+    /*
     updateTone: function(tone) {
         // TODO: use; update to ix.js.window.setTone
         if (tone in soundtoyTones) { 
@@ -201,8 +203,9 @@ var Patter = Class.extend({
             toneRow.sampleProc = toneRow[tone];
             toneRow.hzGain = toneRow.bleat;
         }
+        console.log('um');
         toneRow.setUpdateHook(function() {
-            console.log('', this);
+            console.log('trup', this);
             this.currentTone = tone;
         });
         var busyWait = setInterval(function() {
@@ -212,6 +215,7 @@ var Patter = Class.extend({
             }
         }, 1);
     },
+    */
 
     // Sequence data generation
     randomBPM: function() {
