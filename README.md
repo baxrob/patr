@@ -1,38 +1,28 @@
 ## Patr - a step sequencer
 
-<!--
-This is early stage, pre-alpha version software.  It's not recommended for use, in any case.  See below.
--->
-
-Simple monophonic note sequencer.
+Simple monophonic note sequencer, built on web-audio.
 
 <!--
-One-page client-driven application using [web-audio api], query-fragment data model, and anti-HTML/CSS UI.
-see here  happily accepting bug reports [issues]
-### Features
-### Status
-
-Currently considered v0.02 alpha version.
-
+This is alpha iteration 0.02.
 -->
 
 ### Live
 
 <http://proto.blandhand.net/patr/>
 
+<!--
 [Audio sample](http://proto.blandhand.net/static/js/patr/media/aucap.html)
 
-<!--
 <audio controls>
     <source src="http://proto.blandhand.net/static/js/patr/media/aucap.wav">
     <source src="http://proto.blandhand.net/static/js/patr/media/aucap.ogg">
     <source src="http://proto.blandhand.net/static/js/patr/media/aucap.mp3">
 </audio>
--->
 
 Screenshot:
 
 ![screenshot](http://proto.blandhand.net/static/js/patr.2/media/screencap.png)
+-->
 
 #### How
 
@@ -61,12 +51,13 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 * Firefox / Gecko: Firefox nightly builds now support AudioContext.  With version 4 and above, you should get audio playback via mozFlashAudioContext.js which wraps the deprecated [Audio Data API](https://wiki.mozilla.org/Audio_Data_API), but audio synchronizes with UI state /very/ poorly.
 * Other: The mozFlashAudioContext.js wrapper falls back to a flash audio engine, based on [dynamicaudio.js] - audio/UI sync is even worse than Firefox.
 
-<!--
+
 ### Issues
 *
--->
 
+<!--
 ### Roadmap
+* 
 * How-to: An automated walk-through.
 * Improve Mozilla / Flash fallbacks (timing is currently borken - see above).
 * Meta-sequences: Arrangement add/delete buttons top left, in control bar.
@@ -78,7 +69,6 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 Released under [GPL v.3](http://www.gnu.org/licenses/gpl-3.0.txt).
 Other licenses may be available in future.
 
-<!--
 ### Attribs
 1. [dynamicaudio.js]
 2. [soundtoy]
