@@ -52,10 +52,14 @@ var Clang = ClangBlock.extend({
 
         this._super(sampleRate, baseGain);
 
-        //this.processorNode = this.context.createSriptProcessorNode(
-        this.processorNode = this.context.createJavaScriptNode(
-            this.bufferLength, 2, 2//, 0, 2
+        var createProcessor = this.context.createScriptProcessor 
+            || this.context.createJavaScriptNode;
+        //this.processorNode = this.context.createSriptProcessor(
+        //this.processorNode = this.context.createJavaScriptNode(
+        this.processorNode = createProcessor.call(
+            this.context, this.bufferLength, 2, 2//, 0, 2
         );
+        window.pn = this.processorNode;
         this.processorNode.onaudioprocess = this.onProcess.bind(this); 
 
     },
@@ -91,6 +95,7 @@ var Clang = ClangBlock.extend({
         if (this.sequence.length && this.processorNode.onaudioprocess) {
             this.processorNode.connect(this.context.destination);
             this.running = true;
+        console.log('run', this.sequence.length, this.processorNode.onaudioprocess, this.context.destination);
             if (durationLimit !== undefined) {
                 setTimeout(function() {
                     this.stop();
@@ -204,6 +209,10 @@ var Clang = ClangBlock.extend({
     },
     
     onProcess: function(evt) {
+        console.log(this.running);
+        if (! this.running) {
+            return;
+        }
         // KLUDGE: double safety against sequence shrink race condition 
         // FIXME: necessary?
         if (this.seqIdx >= this.sequence.length) {
