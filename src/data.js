@@ -18,6 +18,7 @@ var URI = Class.extend({
             
             // FIXME: Kludge to detect history movement
             //        Breaks randomly, see below. 
+            /*
             if (
                 this.historyPointer != 0
                 && evt.newURL == this.history[this.historyPointer - 1]
@@ -34,6 +35,7 @@ var URI = Class.extend({
                 this.history.push(evt.newURL);
                 this.historyPointer += 1; 
             }
+            */
             //console.log(this.history, this.historyPointer, this.history.length);
             // Disabled due to bug: random(?) blocking of reshuffle.
             //      See seq.js/Patter.init
