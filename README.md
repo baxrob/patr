@@ -1,6 +1,6 @@
 ## Patr - a step sequencer
 
-Simple monophonic note sequencer, built on web-audio. With some experimental js approaches that are probably not recommended.
+Simple monophonic note sequencer, built on the [Web Audio API]. With some experimental js approaches that are probably not recommended.
 
 This is considered alpha version 0.02. The code isn't likely to be something you'd want to fork or adapt in it's present state. The application can be a bit fun to play with, though.
 
@@ -43,7 +43,7 @@ The controls should be self-evident. All controls besides re-start are keyboard-
 * browser back/fwd buttons (Alt/AppleKey + left or right): cycle through history of changes
 
 ### Compatability
-My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html).  I've added a wrapper for Mozilla's Audio Data API (now abandonded), and a Flash fallback, but, while these render the audio well enough, it is utterly out-of-sync with the UI display [I'm working on this].
+My focus has been with the [Web Audio API].  I've added a wrapper for Mozilla's Audio Data API (now abandonded), and a Flash fallback, but, while these render the audio well enough, it is utterly out-of-sync with the UI display [I'm working on this].
 
 * WebKit broswers: 
     * Google Chrome, version 16 and above
@@ -83,5 +83,6 @@ Other licenses may be available in future.
 3. [chipmusix]
 -->
 
+[Web Audio API]: https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html
 [dynamicaudio.js]: https://github.com/bfirsh/dynamicaudio.js/
 [soundtoy]: http://www.iquilezles.org/apps/soundtoy/index.html
