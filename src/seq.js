@@ -278,6 +278,10 @@ var Patter = Class.extend({
         this.toneRow.stop();
     },
     unpause: function() {
+        // FIXME: Kludge for iOS playback - should go in synth ?
+        var o = this.toneRow.context.createOscillator();
+        o.noteOn(0);
+        o.noteOff(0);
         this.toneRow.run();
     },
     pause: function(after) {

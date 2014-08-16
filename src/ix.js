@@ -599,7 +599,8 @@ var Face = Class.extend({
                     $(this).removeClass('hover');
                 }
             }
-        }); // $playButton
+        }); // this.$playButton
+        //console.log(this.$playButton.onclick);
 
         //
         $innerControls

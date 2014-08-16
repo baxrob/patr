@@ -3,8 +3,17 @@
  */
 "use strict";
 
-$script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
+$script([
+    'lib/jquery-1.7.2.min', 
+    'lib/simple_class'
+], function() {
+
+    //window.debugMode = 1024;
+
     $script([
+
+        //'lib/rlb_dbg',
+
         'lib/jquery-ui-1.8.21.slider.min',
         'lib/swfobject',
 
@@ -29,6 +38,8 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
         } else {
             var audioContext = new mozFlashAudioContext();
         }     
+
+        window.ctx = audioContext;
 
         // Init data model
         var uri = new URI(':', ';', ['rate', 'len', 'reshuf', 'tone', 'seq']);
@@ -60,6 +71,7 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
         $(document).ready(function() {
 
             var face = window.face = new Face($('body'), patt);
+            //console.log('fc', face.$playButton.data('events').click[0].handler);
 
             face.welcomeDialog();
             
@@ -69,6 +81,9 @@ $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
             $(parent.document).find('body iframe').height($(parent).height() - 50);
             
             $(window).blur();
+
+            //console.log(patt);
+            //console.log(pn.onaudioprocess);
         });
     })
 });

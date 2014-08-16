@@ -93,10 +93,11 @@ var Clang = ClangBlock.extend({
     },
     
     run: function(durationLimit) {
+        //console.log('run', this.sequence.length, this.processorNode.onaudioprocess, this.context.destination);
         if (this.sequence.length && this.processorNode.onaudioprocess) {
             this.processorNode.connect(this.context.destination);
             this.running = true;
-            //console.log('run', this.sequence.length, this.processorNode.onaudioprocess, this.context.destination);
+            //console.log('run', this.sequence.length, this.context.destination);
             if (durationLimit !== undefined) {
                 setTimeout(function() {
                     this.stop();
