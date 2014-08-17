@@ -5,10 +5,12 @@ var ToneRow = Class.extend({
         this.sampleRate = this.context.sampleRate;
         this.bufferLength = bufferLength;
 
-        this.jsNode = this.context.createJavaScriptNode(
-            this.bufferLength, 2, 2//, 0, 2
+        var createProcessor = this.context.createScriptProcessor 
+            || this.context.createJavaScriptNode;
+        this.processorNode = createProcessor.call(
+            this.context, this.bufferLength, 2, 2//, 0, 2
         );
-        this.jsNode.onaudioprocess = this.onProcess.bind(this); 
+        this.processorNode.onaudioprocess = this.onProcess.bind(this); 
 
         var baseGain = 0.8;
         this.block = new ToneBlock(this.sampleRate, baseGain);
@@ -34,8 +36,8 @@ var ToneRow = Class.extend({
         }
     },
     run: function(durationLimit) {
-        if (this.sequence.length && this.jsNode.onaudioprocess) {
-            this.jsNode.connect(this.context.destination);
+        if (this.sequence.length && this.processorNode.onaudioprocess) {
+            this.processorNode.connect(this.context.destination);
             this.running = true;
             if (durationLimit !== undefined) {
                 setTimeout(function() {
@@ -64,10 +66,9 @@ var ToneRow = Class.extend({
             // FIXME: is this understanding accurate?
             // Wait until current buffer has been written - buffer duration
             //      plus arbitrary 65 ms timeout latency
-            // TODO: use requestAnimationFrame?
             var timeout = this.bufferLength / this.sampleRate * 1000 + 65;
             setTimeout(function() {
-                this.jsNode.disconnect();
+                this.processorNode.disconnect();
                 this.running = false;
                 // Reset to next note
                 this.sequence = restoreSequence;
@@ -87,7 +88,6 @@ var ToneRow = Class.extend({
         this.block.writeSample = 0;
     },
     stageBeatEvent: function(idx, length, onsetDelay) {
-        // TODO: use requestAnimationFrame
         setTimeout(function() {
             var evt = document.createEvent('Event');
             evt.initEvent('beat', false, false);

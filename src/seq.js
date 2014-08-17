@@ -3,7 +3,10 @@ var Patter = Class.extend({
     init: function(options, uri, toneRow) {
         this.options = options;
         this.uri = uri;
-        this.toneRow = window.tr = toneRow;
+        this.toneRow = toneRow;
+        
+        // Available for setting of custom toneRow.block.sampleVal
+        window.toneRow = this.toneRow;
 
         this.silentNoteVal = 0;
         this.buildFreqTable();
@@ -170,13 +173,23 @@ var Patter = Class.extend({
     },
 
     // Controls
+    /*
     playSequence: function() {
         this.toneRow.run();
     },
+    */
     stop: function() {
         this.toneRow.stop();
     },
     unpause: function() {
+        // iOS initialization kludge, for Steve
+        if (! this.initialized) {
+            var o = this.toneRow.context.createOscillator();
+            o.noteOn(0);
+            o.noteOff(0);
+            delete o;
+            this.initialized = true;
+        }
         this.toneRow.run();
     },
     pause: function(after) {

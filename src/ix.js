@@ -9,7 +9,6 @@ var Face = Class.extend({
             this.updateSequenceDisplay(data.sequence);
         }.bind(this);
 
-        // FIXME: check this is accurate
         // Mapping of URI params to el id/labels 
         this.dataControlMap = {
             bpm: {
@@ -39,7 +38,6 @@ var Face = Class.extend({
         });
 
         $(window).on('resize', this.resizeHandler.bind(this));
-        //$(document).on('beat', this.beatHandler.bind(this));
         $(document).on('beat', function(evt) {
             var blinkDelay = {
                 webkit: 0,
@@ -47,7 +45,6 @@ var Face = Class.extend({
                 flash: 500
             }[this.patt.toneRow.context.backend];
 
-            // TODO: use requestAnimationFrame 
             setTimeout(function() {
                 this.beatHandler(evt);
             }.bind(this), blinkDelay);
@@ -98,6 +95,9 @@ var Face = Class.extend({
                     }, 150);
                     break;
                 case 82: // 'r'
+                    if (evt.ctrlKey || evt.metaKey) {
+                        break;
+                    }
                     var $el = $('#regen');
                     $el.triggerHandler('click');
                     $el.addClass('active');
@@ -244,17 +244,6 @@ var Face = Class.extend({
 
     }, // initStyles
 
-    // TODO: fb meta tags, SEO - belongs in .html
-    /*
-<meta property="og:title" content="" />
-<meta property="og:type" content="app" />
-<meta property="og:url" content="" />
-<meta property="og:image" content="seq_prev.png" />
-<meta property="og:site_name" content="" />
-<meta property="og:description" content="" />
-<meta name="medium" content="audio" />
-     */
-
 
     welcomeDialog: function() {
         // TODO: welome dialog: automation/hwto, compat note, fadeout, thrice
@@ -277,7 +266,6 @@ var Face = Class.extend({
         // Handle beat: step UI: indicate and scroll
         var step = evt.originalEvent.beat % this.patt.stepSeq.length;
 
-        // FIXME: ? $('.fdr .ui-slider ...').removeClass(...) ?
         ['fdr', 'ui-slider-handle', 'blinker'].map(function(className) {
             $('.' + className).removeClass('blinking');
         });
@@ -566,66 +554,7 @@ var Face = Class.extend({
                     }
                 }
             })
-        )/*.append(
-            this.elem({
-                tag: 'input',
-                attr: {
-                    type: 'checkbox',
-                    id: 'reshuf',
-                    'class': 'ctl',
-                    title: 'reshuf',
-                    // FIXME: read from url
-                    value: 'off'
-                },
-                css: {
-                    float: 'left',
-                    margin: '3px 0 3px 12px'
-                },
-                on: {
-                    click: function(evt) {
-                    }
-                }
-            })
         ).append(
-            this.elem({
-                tag: 'input',
-                attr: {
-                    type: 'text',
-                    id: 'repeats',
-                    'class': 'ctl',
-                    title: 'reshuf each',
-                    value: 1 //this.patt.toneRow.repeats
-                },
-                css: {
-                    'text-align': 'right',
-                    float: 'left',
-                    width: '1.5em',
-                    border: '1px solid #999',
-                    'border-radius': '2px',
-                    'padding-left': '3px',
-                    'padding-right': '3px',
-                    margin: 0,
-                    'margin-right': '10px',
-                    'margin-bottom': '10px'
-                },
-                on: {
-                    focusout: function() {
-                        self.patt.toneRow.repeats = this.value;
-                    },
-                    keydown: function(evt) {
-                        if (evt.keyCode == 13) {
-                            $(this).trigger('focusout');
-                        }
-                    },
-                    click: function() {
-                        $(this).select();
-                    },
-                    blur: function(evt) {
-                        evt.stopPropagation();
-                    }
-                }
-            })
-        )*/.append(
             this.elem({
                 tag: 'div',
                 attr: {
@@ -699,28 +628,6 @@ var Face = Class.extend({
 
             })
         ) // $controls
-
-        // TODO: this is a separate deal - $controls must be in DOM before
-        //        we can find its height -- else rethink css
-        // NOTE: a favorite thing about this questoinable css-generated-in-js
-        //       strategy: it's quite fluid to mind fixmes, which get way out
-        //       of hand in css
-        var $controlsHint = this.elem({
-            tag: 'div',
-            attr: {
-                id: 'ctl_bar_hint'
-            },
-            css: {
-                'font-size': '0.7em',
-                position: 'absolute',
-                'margin-top': '31px',//$controls.height(),
-                'margin-left': '-9px', // ???
-                height: '20px',
-                width: 'auto', // sum(controls.children.widths)
-                border: '1px solid #999'
-            }
-        }).text('[explanatory, as hover-text per control above: fade out after 10, 5, 3 secs, per user\'s visit count; then don\'t show, (but also add help button at control edge-right.)]');
-        //$controls.append($controlsHint);
 
         return $controls;
     }, // buildControls
@@ -853,7 +760,6 @@ var Face = Class.extend({
             + cssInt('border-top-width') + cssInt('border-bottom-width');
     },
 
-    // TODO: merge attr/css args - and reflect above
     elem: function(options) {
         var strOpts = ['tag', 'text'];
         var objOpts = ['attr', 'css', 'on'];
