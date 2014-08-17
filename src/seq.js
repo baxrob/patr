@@ -184,9 +184,12 @@ var Patter = Class.extend({
     unpause: function() {
         // iOS initialization kludge, for Steve
         if (! this.initialized) {
-            var o = this.toneRow.context.createOscillator();
-            o.noteOn(0);
-            o.noteOff(0);
+            window.o = this.toneRow.context.createOscillator();
+            // Ignore Firefox
+            if (! o.start) {
+                o.noteOn(0);
+                o.noteOff(0);
+            }
             delete o;
             this.initialized = true;
         }
