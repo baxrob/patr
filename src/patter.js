@@ -1,5 +1,9 @@
 $script(['lib/jquery-1.7.2.min', 'lib/simple_class'], function() {
+    //window.debugMode = 1024;
     $script([
+
+        //'../../patr/src/lib/rlb_dbg',
+
         'lib/jquery-ui-1.8.21.slider.min',
         'lib/swfobject',
         'mozFlashAudioContext',
