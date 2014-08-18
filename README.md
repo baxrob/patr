@@ -4,7 +4,7 @@ This is early stage, pre-alpha version software.  It's not recommended for use, 
 
 ### Live
 
-<http://proto.blandhand.net/patr/>
+<http://proto.blandhand.net/patr/v/0.01>
 
 [Audio sample](http://proto.blandhand.net/static/js/patr/media/aucap.html)
 
