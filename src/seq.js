@@ -185,13 +185,9 @@ var Patter = Class.extend({
         // iOS initialization kludge, for Steve
         if (! this.initialized) {
             window.o = this.toneRow.context.createOscillator();
-            if (! o.start) {
-                o.noteOn(0);
-                o.noteOff(0);
-            }
-            (o.noteOn || o.start)(0);
-            (o.noteOff || o.stop)(0);
-            //delete o;
+            (o.noteOn || o.start).call(o, 0);
+            (o.noteOff || o.stop).call(o, 0);
+            delete o;
             this.initialized = true;
         }
         this.toneRow.run();
