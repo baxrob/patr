@@ -36,9 +36,11 @@ My focus has been with the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file
 * WebKit broswers: 
     * Google Chrome, version 16 and above
     * Chromium, and probably some of [these other WebKit browsers](http://en.wikipedia.org/wiki/List_of_web_browsers#WebKit-based)
-    * Safari 6
-* Firefox: With version 4 and above, you should get audio playback, via mozFlashAudioContext.js which wraps the [Audio Data API](https://wiki.mozilla.org/Audio_Data_API), but audio synchronizes with UI state /very/ poorly. 
-* Other: The mozFlashAudioContext.js wrapper falls back to a flash audio engine, based on [dynamicaudio.js] - audio/UI sync is even worse than Firefox.
+    * Safari 6 and above
+* <s>Firefox: With version 4 and above, you should get audio playback, via mozFlashAudioContext.js which wraps the [Audio Data API](https://wiki.mozilla.org/Audio_Data_API), but audio synchronizes with UI state /very/ poorly.</s>
+* Firefox: version 25 and above
+* iOS Safari and Chrome
+* Other: The mozFlashAudioContext.js wrapper falls back to a flash audio engine, based on [dynamicaudio.js] - audio/UI sync is even worse than Mozilla's retired api.
 
 
 ### Roadmap
