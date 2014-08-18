@@ -1041,6 +1041,28 @@ var Face = Class.extend({
         });
         $controls.append($numEg);
 
+        // TODO: this is a separate deal - $controls must be in DOM before
+        //        we can find its height -- else rethink css
+        // NOTE: a favorite thing about this questoinable css-generated-in-js
+        //       strategy: it's quite fluid to mind fixmes, which get way out
+        //       of hand in css
+        var $controlsHint = this.elem({
+            tag: 'div',
+            attr: {
+                id: 'ctl_bar_hint'
+            },
+            css: {
+                'font-size': '0.7em',
+                position: 'absolute',
+                'margin-top': '31px',//$controls.height(),
+                'margin-left': '-9px', // ???
+                height: '20px',
+                width: 'auto', // sum(controls.children.widths)
+                border: '1px solid #999'
+            }
+        }).text('[explanatory, as hover-text per control above: fade out after 10, 5, 3 secs, per user\'s visit count; then don\'t show, (but also add help button at control edge-right.)]');
+        //$controls.append($controlsHint);
+
         return $controls;
     }, // buildControls
 

@@ -50,7 +50,7 @@ My focus has been with the [Web Audio API].  I've added a wrapper for Mozilla's 
     * Chromium, and probably some of [these other WebKit browsers](http://en.wikipedia.org/wiki/List_of_web_browsers#WebKit-based)
     * Safari, version 6 and above
 * Firefox, version 25 and above
-* [Barely, brokenly] iOS Safari and Chrom
+* [Barely, brokenly] iOS Safari and Chrome
 * Other: The mozFlashAudioContext.js wrapper falls back to a flash audio engine, based on [dynamicaudio.js] - though the audio and UI do not sync.
 
 <!--
