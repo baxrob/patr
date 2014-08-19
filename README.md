@@ -38,9 +38,11 @@ The controls should be self-evident. All controls besides re-start are keyboard-
 * ea (E key): re-shuffle each n cycles
 * clear (C key): set all notes to zero (ie. off)
 * regen (R key): generate a new random set of notes (weighted to produce a "significant" ratio of zero/off notes)
-* tone (T key, then 0-5 keys): select synth tone - 'spring', 'organ' and 'wind' tones are from [soundtoy] (Note: the dropdown remains open until you click 'tone' or press 'T' by design)
+* tone (T key, then 0-5 keys): select synth tone - 'spring', 'organ' and 'wind' tones are from [soundtoy] [soundtoy] (Note: the dropdown remains open until you click 'tone' or press 'T' by design)
 * note sliders: select and drag or press up/down to change; tab / shift+tab to move left to right between sliders
 * browser back/fwd buttons (Alt/AppleKey + left or right): cycle through history of changes
+
+[soundtoy]
 
 ### Compatability
 My focus has been with the [Web Audio API].  I've added a wrapper for Mozilla's Audio Data API (now abandonded), and a Flash fallback, but, while these render the audio well enough, it is utterly out-of-sync with the UI display [I'm working on this].
