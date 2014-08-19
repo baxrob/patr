@@ -84,6 +84,6 @@ Other licenses may be available in future.
 3. [chipmusix]
 -->
 
-[Web Audio API]: https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html
 [dynamicaudio.js]: https://github.com/bfirsh/dynamicaudio.js/
 [soundtoy]: http://www.iquilezles.org/apps/soundtoy/index.html
+[Web Audio API]: https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html
