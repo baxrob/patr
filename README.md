@@ -64,25 +64,6 @@ My focus has been with the [Web Audio API].  I've added a wrapper for Mozilla's 
 * The 'tone' control has some questionable, janky hover-interaction.
 * Three of the four main code modules are due for heavy refactoring. So there is significant unnecessary complexity, and a handful of ugly/crufty spots. 
 
-<!--
-### Roadmap
-* 
-* How-to: An automated walk-through.
-* Improve Mozilla / Flash fallbacks (timing is currently borken - see above).
-* Meta-sequences: Arrangement add/delete buttons top left, in control bar.
-* Render and download PCM data - per sequence, maybe (later) per session.
-* Shuffle and sort pattern by sub-sequence.
-* Sequence generation alternatives: eg: "true" random; silence density; random "walk", etc.
-
-### License
-Released under [GPL v.3](http://www.gnu.org/licenses/gpl-3.0.txt).
-Other licenses may be available in future.
-
-### Attribs
-1. [dynamicaudio.js]
-2. [soundtoy]
-3. [chipmusix]
--->
 
 [dynamicaudio.js]: https://github.com/bfirsh/dynamicaudio.js/
 [soundtoy]: http://www.iquilezles.org/apps/soundtoy/index.html
