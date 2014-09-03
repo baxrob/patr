@@ -38,9 +38,10 @@ The controls should be self-evident. All controls besides re-start are keyboard-
 * ea (E key): re-shuffle each n cycles
 * clear (C key): set all notes to zero (ie. off)
 * regen (R key): generate a new random set of notes (weighted to produce a "significant" ratio of zero/off notes)
-* tone (T key, then 0-5 keys): select synth tone - 'spring', 'organ' and 'wind' tones are from [soundtoy] (Note: the dropdown remains open until you click 'tone' or press 'T' by design)
+* tone (T key, then 0-5 keys): select synth tone - 'spring', 'organ' and 'wind' tones are from [soundtoy]. (Note: the dropdown remains open until you click 'tone' or press 'T' by design)
 * note sliders: select and drag or press up/down to change; tab / shift+tab to move left to right between sliders
 * browser back/fwd buttons (Alt/AppleKey + left or right): cycle through history of changes
+
 
 ### Compatability
 My focus has been with the [Web Audio API].  I've added a wrapper for Mozilla's Audio Data API (now abandonded), and a Flash fallback, but, while these render the audio well enough, it is utterly out-of-sync with the UI display [I'm working on this].
@@ -64,26 +65,7 @@ My focus has been with the [Web Audio API].  I've added a wrapper for Mozilla's 
 * The 'tone' control has some questionable, janky hover-interaction.
 * Three of the four main code modules are due for heavy refactoring. So there is significant unnecessary complexity, and a handful of ugly/crufty spots. 
 
-<!--
-### Roadmap
-* 
-* How-to: An automated walk-through.
-* Improve Mozilla / Flash fallbacks (timing is currently borken - see above).
-* Meta-sequences: Arrangement add/delete buttons top left, in control bar.
-* Render and download PCM data - per sequence, maybe (later) per session.
-* Shuffle and sort pattern by sub-sequence.
-* Sequence generation alternatives: eg: "true" random; silence density; random "walk", etc.
 
-### License
-Released under [GPL v.3](http://www.gnu.org/licenses/gpl-3.0.txt).
-Other licenses may be available in future.
-
-### Attribs
-1. [dynamicaudio.js]
-2. [soundtoy]
-3. [chipmusix]
--->
-
-[Web Audio API]: https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html
 [dynamicaudio.js]: https://github.com/bfirsh/dynamicaudio.js/
 [soundtoy]: http://www.iquilezles.org/apps/soundtoy/index.html
+[Web Audio API]: https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html
