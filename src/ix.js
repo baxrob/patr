@@ -1,44 +1,5 @@
 //"use strict";
 
-// TODO: move to seq.js
-window.setTone = function(toneRow, tone) {
-    if (tone in soundtoyTones) { 
-        toneRow.sampleProc = soundtoyTones._getSampleProc(tone);
-        // FIXME: do this in synth
-        //toneRow.hzGain = toneRow.unity;
-        if (tone == 'spring') {
-            toneRow.hzGain = function(hz) {
-                return toneRow.baseGain * 0.75 * toneRow.crinkle(hz);
-            };
-        } else if (tone == 'organ') {
-            toneRow.hzGain = function(hz) {
-                return toneRow.bleat(hz) * 0.65;
-            };
-        } else if (tone == 'wind') {
-            toneRow.hzGain = function(hz) {
-                return toneRow.crinkle(hz) * 0.65;
-            };
-        }
-    } else {
-        toneRow.sampleProc = toneRow[tone];
-        toneRow.hzGain = toneRow.bleat;
-    }
-    /*
-    toneRow.setUpdateHook(function() {
-        console.log('trupix', tone);
-        this.currentTone = tone;
-    });
-    */
-    toneRow.currentTone = tone;
-    var busyWait = setInterval(function() {
-        if ($('#tone_menu_button').length) {
-            //console.log('tone', tone);
-            $('#tone_menu_button').html(tone + ' &#x25be;');
-            clearInterval(busyWait);
-        }
-    }, 1);
-};
-
 var Face = Class.extend({
 
     // Init //
