@@ -539,7 +539,7 @@ var Face = Class.extend({
                 'padding-right': '5px',
                 margin: '0 28px 0 8px'
             },
-            html: '&#x27f3;',
+            html: '&#xe760;',//'&#x27f3;',
             on: {
                 click: function(evt) {
                     if (this.patt.isRunning()) {
