@@ -1,51 +1,52 @@
 "use strict";
 
-
- function ClangForms(clang) {
+var util = {
+    type: function(obj) {
+        return Object.prototype.toString.call(obj).match(/(\w+)\]/)[1];
+    }
+}
+function ClangForms(sampleRate) {
     var clangForms = {
-        tone: {
-            sine: function(idx, hz) {
-                var val = this.sampleGen.sine(idx, hz)
-                    * this.nGain.bleat(hz); 
-                return val;
-            },
-            square: function(idx, hz) {
-                return this.sampleGen.square(idx, hz)
-                    * this.nGain.bleat(hz);
-            },
-            spring: function(idx, hz) {
-                return soundtoyTones._getSampleProc('spring')(idx, hz)
-                    * 0.6 * this.nGain.crinkle(hz);
-            },
-            organ: function(idx, hz) {
-                return soundtoyTones._getSampleProc('piano1')(idx, hz)
-                    * 0.65 * this.nGain.bleat(hz);
-            },
-            wind: function(idx, hz) {
-                return soundtoyTones._getSampleProc('flute1')(idx, hz)
-                    * 0.65 * this.nGain.crinkle(hz);
-            }
+
+        getTone: function(tone) {
+            var toneSpec = this.tone[tone].slice();
+            var synthHook = toneSpec.shift();
+            var gainHook = toneSpec.shift();
+            //console.log(tone, this.tone, synthHook, gainHook, toneSpec);
+            var toneProcs = [
+                util.type(synthHook) == 'Function' ? synthHook
+                    : this.sampleGen[synthHook].bind(this.sampleGen),
+                util.type(gainHook) == 'Function' ? gainHook
+                    : this.nGain[gainHook]
+            ];
+            console.log(toneProcs);
+            return toneProcs.concat(toneSpec);  // Concat multipliers.
         },
 
         sampleGen: {
             noise: function() {
                 return 1 - (Math.random() * 2);
             },
-            sine: function(idx, hz) {
+            sine: function(idx, hz, sampleRate) {
                 var sampleVal = Math.sin(
-                    hz * (2 * Math.PI) * idx / clang.sampleRate 
+                    hz * (2 * Math.PI) * idx / sampleRate 
                 );
                 return sampleVal;
             },
-            square: function(idx, hz) {
-                //console.log(this);
+            square: function(idx, hz, sampleRate) {
+                function sine(idx, hz, sampleRate) {
+                    var sampleVal = Math.sin(
+                        hz * (2 * Math.PI) * idx / sampleRate 
+                    );
+                    return sampleVal;
+                };
                 // XXX: add all partials  < nyquist
-                var partials = 5;
-                var sampleVal = this.sine(hz, idx);
+                var partials = 20;
+                var sampleVal = sine(hz, idx, sampleRate);
                 for (var part = 1; part <= partials; part++) {
                     var partGain = 1 / (2 * part - 1);
                     var partHz = (2 * part - 1) * hz;
-                    sampleVal += partGain * this.sine(partHz, idx);
+                    sampleVal += partGain * sine(partHz, idx, sampleRate);
                 }
                 return 0.14 * sampleVal;
             },
@@ -58,8 +59,7 @@
                 var cosh = function(n) {
                     return (Math.exp(n) + Math.exp(-n)) / 2;
                 };
-                var gainVal = 1 / cosh(hz / divisor) * multiplier 
-                    * clang.baseGain;
+                var gainVal = 1 / cosh(hz / divisor) * multiplier;
                 
                 return gainVal;
             },
@@ -72,10 +72,33 @@
                 return gainVal;
             },
             unity: function(hz) {
-                return clang.baseGain * 0.65;
+                return 0.65;
             }
 
         }
+    };
+    clangForms.tone = {
+        sine: [clangForms.sampleGen.sine, clangForms.nGain.bleat],
+        square: [
+            clangForms.sampleGen.square, 
+            clangForms.nGain.bleat
+        ],
+        spring: [
+            soundtoyTones._getSampleProc('bell', sampleRate),
+            clangForms.nGain.crinkle, 
+            //0.2
+            0.65
+        ],
+        organ: [
+            soundtoyTones._getSampleProc('piano1', sampleRate),
+            clangForms.nGain.bleat,
+            0.65
+        ],
+        wind: [
+            soundtoyTones._getSampleProc('flute1', sampleRate),
+            clangForms.nGain.crinkle, 
+            0.8125
+        ]
     };
     return clangForms;
 }
@@ -85,26 +108,25 @@
 // context, reader, relay, config/options 
 // [XXX: config for base settings, options for reconfigurables? - but, overlap]
 function Clang(
-    context, 
-    bufferLength, 
-    baseGain, 
-    clangForm, 
-    reader, // reader
-    relay
+    context,        // swappable? 
+    bufferLength,   // not swappable 
+    baseGain,       // s
+    clangForm,      // s 
+    reader,         // s
+    relay           // not?
 ) {
 
     // Prototype
     var clang = {
 
-        // XXX: hmm, context and manbe bufferLength should be referenced directly,
-        //      not linked to this
+        // XXX: hmm, context and maybe bufferLength should be referenced directly,
+        //      not linked to this - as relay currently is [ would this mean 
+        //      problems for possible extensions of this obj-instantiation form? ]
         context: context,
         sampleRate: context.sampleRate,
         bufferLength: bufferLength,
         baseGain: baseGain,
-        // XXX: ? getter / readNext / grabNext / reader / nextGetter ?
         reader: reader || function() { return null; },
-        //synthProc: synthProc || 'sine',
 
         running: false,
         rampLen: 240,
@@ -122,7 +144,11 @@ function Clang(
         //  buffers, synthParams, offsetSamps, fillSamps, phase, duckIn, duckOut
         populateBuffers: function(
             buffers, synthParams, offsetSamps, fillSamps, duckOut
+            //synthParams, fillSamps, buffers, offsetSamps, duckOut
         ) {
+            //this.synthProc = bell;
+            //this.gainProc = function() { return 1; };
+            var gain = this.gainProc(synthParams[0]) * this.baseGain;
             var bufferIdx = offsetSamps;
             var bufferEndIdx = offsetSamps + fillSamps;
             var fadeStart = bufferEndIdx - (duckOut ? this.rampLen : 0);
@@ -130,8 +156,8 @@ function Clang(
 
             while (bufferIdx < fadeStart) {
                 sampleVal = this.synthProc(
-                    this.sampleIdx, synthParams
-                );
+                    this.sampleIdx, synthParams[0], this.sampleRate
+                ) * gain + 0;
                 buffers[0][bufferIdx] = buffers[1][bufferIdx] = sampleVal;
                 bufferIdx++;
                 this.sampleIdx++;
@@ -140,10 +166,10 @@ function Clang(
             if (duckOut) {
                 var fadePos = this.rampLen;
                 while (bufferIdx < bufferEndIdx) {
-                    sampleVal = (fadePos-- / this.rampLen) 
+                    sampleVal = (fadePos-- / this.rampLen)
                         * this.synthProc(
-                            this.sampleIdx, synthParams
-                        ); 
+                            this.sampleIdx, synthParams[0], this.sampleRate
+                        ) * gain + 0; 
                     buffers[0][bufferIdx] = buffers[1][bufferIdx] = sampleVal;
                     bufferIdx++;
                     this.sampleIdx++;
@@ -151,20 +177,24 @@ function Clang(
             }
         },
         
-        // XXX: clagforms lib ref or proc - hook
-        setClangForm: function(hook) {
-
-            // XXX: util.type
-            var argType = Object.prototype.toString.call(
-                hook
-            ).match(/(\w+)\]/)[1];
-
-            if (argType == 'Function') {
+        setForm: function(hook) {
+            if (util.type(hook) == 'Function') {
                 this.synthProc = hook;
             } else {
                 // Later synthProc call will throw error if no such method.
-                // XXX: .. = clangForms...
-                this.synthProc = this.clangForms.tone[hook].bind(this.clangForms);
+                var clangFactors = this.forms.tone[hook].slice();
+                var synthProc = clangFactors.shift();
+                var gainProc = clangFactors.shift() || function() { return 1; };
+                var multiplier = 1;
+                while (clangFactors.length) {
+                    multiplier *= clangFactors.shift();
+                }
+                this.synthProc = function(idx, hz) {
+                    return synthProc(idx, hz, this.sampleRate);
+                };
+                this.gainProc = function(hz) {
+                    return gainProc(hz) * multiplier;
+                }
             }
 
         },
@@ -174,7 +204,8 @@ function Clang(
         },
 
         stop: function() {
-            // schedule: null clang then disconnect
+            // XXX: schedule null clang and disconnect
+            this.processorNode.disconnect();
         },        
 
         readNext: function() {
@@ -195,7 +226,7 @@ function Clang(
                 this.readNext();
                 if (this.duration) {
                     // XXX: ? called sync, before any buffer manipulation ?
-                    relay.publish('clang_edge', [0, this.duration]);
+                    relay.publish('clang_onset', [0, this.duration]);
                 }
             }
 
@@ -222,9 +253,10 @@ function Clang(
                 // Fill buffer and continue.
                 this.populateBuffers(
                     stereoBuffer, this.params, 0, buffer.length, false
+                    //this.params, buffer.length, stereoBuffer, 0, false
                 );
             } else {
-                
+                //console.log(this.params); 
                 var tailDuration = this.duration - this.elapsed;
 
                 // If ramp-out won't fit in this buffer shorten it, leaving
@@ -239,14 +271,17 @@ function Clang(
 
                 this.populateBuffers(
                     stereoBuffer, this.params, 0, blockLength, true
+                    //this.params, blockLength, stereoBuffer, 0, true
                 );
+
+                relay.publish('clang_end', [tailDuration, this.duration]);
 
                 this.readNext();
                 //console.log(this);
 
-                // Publish clang_edge event if next clang isn't silent.
+                // Publish clang_onset event if next clang isn't silent.
                 if (this.duration) {
-                    relay.publish('clang_edge', [tailDuration, this.duration]);
+                    relay.publish('clang_onset', [tailDuration, this.duration]);
                 }
 
                 var offset = blockLength;
@@ -254,6 +289,7 @@ function Clang(
 
                 this.populateBuffers(
                     stereoBuffer, this.params, offset, blockLength, false 
+                    //this.params, blockLength, stereoBuffer, offset, false
                 );
 
             }
@@ -268,9 +304,8 @@ function Clang(
     clang.processorNode.onaudioprocess = clang.bufferHandler.bind(clang); 
     //clangForms.sampleRate = clang.sampleRate;
     //clangForms.baseGain = clang.baseGain;
-    //clang.setClangForm(clangForm);
-    clang.clangForms = ClangForms(clang);
-    clang.setClangForm(clangForm);
+    clang.forms = ClangForms(clang.sampleRate);
+    clang.setForm(clangForm);
     
     return clang;
 }

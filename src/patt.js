@@ -22,9 +22,17 @@ function Row(clang, config) {
             clangTimes: [],
             update: function(options) {
                 this.steps = options.steps || this.steps;
+                if (options.vals) {
+                    options.vals.forEach(function(pair) {
+                        // Ignore out-of-range assignments.
+                        if (pair[0] < this.steps.length) {
+                            this.steps[pair[0]] = pair[1];
+                        }
+                    }.bind(this));
+                }
                 this.stepTransform = options.transform || this.stepTransform;
                 this.len = options.len || this.len;
-                // Lengthen sequence with blanks if p.len > s.len.
+                // Extend sequence with blanks if lengthening.
                 while (this.len > this.steps.length) {
                     this.steps.push(0);
                 }
@@ -50,11 +58,9 @@ function Row(clang, config) {
 
         read: function() {
             var currentStep = this.seq.clangTimes[this.currentStep];
-            //var currentStep = this.seq.clangTimes[this.currentStep % this.seq.len];
             var nextStep = this.seq.clangTimes[this.nextStep()];
 
-            //console.log(nextStep, currentStep);
-            if (nextStep) {// && nextStep) {
+            if (currentStep && nextStep) {
                 var clangLen = (nextStep[0] > currentStep[0])
                     ? nextStep[0] - currentStep[0]
                     : nextStep[0]; // First step case.
@@ -64,12 +70,10 @@ function Row(clang, config) {
                 var clangTime = null;
             }
 
-            //console.log('read', this.currentStep, clangTime);
             this.currentStep += 1;
             if (this.currentStep == this.seq.len) {
                 this.currentStep = 0;
             }
-            //console.log(clangLen, hz);
             return clangTime;
         },
         nextStep: function() {
@@ -96,6 +100,7 @@ function Row(clang, config) {
         },
 
         update: function(options) {
+            // Update or create attack sequence.
             if (options.pace || options.len || ! this.seq.attacks.length) {
                 this.pace = options.pace || this.pace;
                 options.attacks = this.patt.evenAttackSeq(
@@ -103,12 +108,25 @@ function Row(clang, config) {
                     this.pace 
                 ); 
             }
+            // Wrap single-item step value update for seq.update.
+            if (
+                options.vals 
+                && options.vals.length == 2 
+                && util.type(options.vals[0] == 'Number')
+            ) {
+                options.vals = [options.vals];
+            }
             this.seq.update(options);
+            // Fix overflow - at the latest possible point.
+            if (options.len && this.currentStep >= options.len) {
+                console.log('fix overflow');
+                this.currentStep = options.len - 1;
+            }
             this.seq.assemble();
             if (options.tone) {
-                relay.subscribe('clang_edge', function updateTone(data) {
-                    clang.setClangForm(options.tone);
-                    relay.unsubscribe('clang_edge', updateTone);
+                relay.subscribe('clang_end', function updateTone(data) {
+                    clang.setForm(options.tone);
+                    relay.unsubscribe('clang_end', updateTone);
                 });
             }
         }
@@ -147,16 +165,6 @@ function Row(clang, config) {
 
             return stepSeq;
         },
-        _buildFreqTable: function() {
-            this.freqTable = [0];
-            var min = this.options.minNote,
-                max = this.options.maxNote,
-                base = this.options.baseFreq,
-                div = this.options.octaveDivisions;
-            for (var i = min; i < max; i++) {
-                this.freqTable.push(base * Math.pow(2, (i / div)));
-            }
-        },
         buildFreqTable: function(options) {
             var freqTable = [0];
             var min = options.minNote,
@@ -173,28 +181,12 @@ function Row(clang, config) {
                 return this.freqTable[stepVal];
             }.bind(this));
         },
-        flatAttackSeq: function() {
-            var length = this.options.stepCount;
-            var bpm = this.options.bpm;
-            var seq = [length * (60 / bpm)] // Zeroth == total, for looping
-            for (var i = 1; i < length; i++) {
-                seq.push(i * (60 / bpm));
-            }
-            return seq;
-        },
         evenAttackSeq: function(len, pace) {
             var seq = [len * (60 / pace)] // Zeroth == total, for looping
             for (var i = 1; i < len; i++) {
                 seq.push(i * (60 / pace));
             }
-            console.log('s', seq);
             return seq;
-        },
-        mergeSequences: function() {
-            var self = this;
-            return this.attackSeq.map(function(val, idx) {
-                return [val, self.hzSeq[idx]];
-            });
         }
     };
 
@@ -222,7 +214,6 @@ function Row(clang, config) {
             return freqTable[step]; 
         }
     });
-    //console.log(row.seq.clangTimes);
     clang.reader = row.read.bind(row);
 
     return row;
