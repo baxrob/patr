@@ -1,7 +1,7 @@
 "use strict";
 
 // XXX: clang should be an optional arg ? but it's the clock; or we'd need some other? to go/stop
-function Row(clang, config) {
+function Row(clang, config, relay) {
     var row = {
 
         //
@@ -79,8 +79,12 @@ function Row(clang, config) {
         nextStep: function() {
             // Allow reading first step from final, non-looping step, after which
             // signal sequence end.
-            if (this.currentStep == (this.seq.len - 1) && ! this.loop) {
-                return null;
+            if (this.currentStep == (this.seq.len - 1)) {
+                if (! this.loop) {
+                    return null;
+                } else {
+                    relay.publish('loop_edge', [this.currentStep]);
+                }
             }
             return (this.currentStep + 1) % this.seq.len;
         },
@@ -89,7 +93,6 @@ function Row(clang, config) {
             this.currentStep = step % this.seq.len;
         },
         
-        // XXX: ? to Patt ?
         once: function(seq) {
             this.update({steps: seq});
             clang.getNext = function() {
@@ -103,12 +106,12 @@ function Row(clang, config) {
             // Update or create attack sequence.
             if (options.pace || options.len || ! this.seq.attacks.length) {
                 this.pace = options.pace || this.pace;
-                options.attacks = this.patt.evenAttackSeq(
+                options.attacks = this.patt.transforms.evenAttackSeq(
                     options.len || this.seq.len,
                     this.pace 
                 ); 
             }
-            // Wrap single-item step value update for seq.update.
+            // Wrap single-item step value for seq.update.
             if (
                 options.vals 
                 && options.vals.length == 2 
@@ -124,7 +127,7 @@ function Row(clang, config) {
             }
             this.seq.assemble();
             if (options.tone) {
-                relay.subscribe('clang_end', function updateTone(data) {
+                relay && relay.subscribe('clang_end', function updateTone(data) {
                     clang.setForm(options.tone);
                     relay.unsubscribe('clang_end', updateTone);
                 });
@@ -133,7 +136,24 @@ function Row(clang, config) {
 
     };
 
-    var p = {
+    var transforms = {
+        map: function(seq, proc) {
+            return seq.map(proc); 
+        },
+        sort: function(seq, proc) {
+            return seq.slice().sort(proc);
+        },
+        reorder: function(seq, proc) {
+            proc = proc || function() {
+                return 0.5 - Math.random();
+            };
+            return this.sort(seq, proc);
+        },
+        clear: function(seq) {
+            return seq.map(function() {
+                return 0;
+            });
+        },
         randomBPM: function() {
             return parseInt(Math.random() * 500 + 150);
         },
@@ -141,22 +161,25 @@ function Row(clang, config) {
             var len = Math.random() * 15 + 5;
             return parseInt(len);
         },
-        generateStepSeq: function(length, algorithm) {
-            if (typeof algorithm === 'string') {
-                var generator = patt[algorithm];
-            } else if (typeof algorithm === 'function') {
+        generateSteps: function(len, min, max, density, hook) {
+        },
+        generateStepSeq: function(length, minVal, maxVal, density, algorithm) {
+            if (util.type(algorithm) == 'String') {
+                var generator = this[algorithm];
+            } else if (util.type(algorithm) == 'Function') {
                 var generator = algorithm;
             } else if (! algorithm) { // Default
-                var self = this;
                 var generator = function(idx) {
-                    var density = 4;
-                    var randVal = parseInt(Math.random() * self.options.maxNote);
-                    var note = randVal % density ? randVal : 0;
+                    var randVal = parseInt(
+                        Math.random() * (maxVal - minVal) + minVal
+                    );
+                    var note = (randVal % density) ? randVal : 0;
                     return parseInt(note);
-                }
+                }.bind(this);
             }
             var stepSeq = [];
-            var length = length || this.options.stepCount;
+
+            console.log(arguments, algorithm, generator);
 
             // Apply generator routine to each step
             for (var i = 0; i < length; i++) {
@@ -189,10 +212,101 @@ function Row(clang, config) {
             return seq;
         }
     };
+    var sequencers = {
+        next_id: 0,
+        active: {},
+        lookup_hook: function(hook) {
+            var proc = (hook in transforms) ? row[hook].bind(row) : 
+                (util.type(hook) == 'Function') ? hook : null;
+            return proc
+        },
+        at: function(relay, evt_name, count, hook) {
+            var hook_id = this.next_id++; 
+            var caller = function() {
+                if (! --count) {
+                    this.lookup_hook(hook)();
+                    relay.unsubscribe(evt_name, caller);
+                }
+            }.bind(this);
+            this.active[hook_id] = [evt_name, caller];
+            relay.subscribe(evt_name, caller); 
+            return hook_id;
+        },
+        each: function(relay, evt_name, count, limit, hook) {
+            var hook_id = this.next_id++;
+            var counter = count;
+            var caller = function() {
+                if (! --counter) {
+                    this.lookup_hook(hook)();
+                    if (limit && ! --limit) {
+                        relay.unsubscribe(evt_name, caller);
+                    }
+                    counter = count;
+                }
+            }.bind(this);
+            this.active[hook_id] = [evt_name, caller];
+            relay.subscribe(evt_name, caller);
+            return hook_id;
+        },
+        cancel: function(relay, hook_id) {
+            if (hook_id in this.active) {
+                var pair = this.active[hook_id];
+                delete this.active[hook_id];
+                relay.unsubscribe(pair[0], pair[1]);
+                return pair[1];
+            }
+            return false;
+        }
+    };
 
     // Initialize.
-    row.patt = p;
-    var freqTable = row.patt.buildFreqTable({
+    for (var key in transforms) {
+        row[key] = (function(proc) {
+            return function() {
+                var args = Array.prototype.slice.call(arguments);
+                args.unshift(this.seq.steps);
+                this.seq.update({
+                    steps: proc.apply(transforms, args)
+                    //steps: proc(args)
+                });
+                this.seq.assemble();
+            }.bind(row)
+        })(transforms[key]);
+    }
+    var evt_keys = {
+        beat: 'clang_edge',
+        loop: 'loop_edge'
+    };
+    row.at = function(evt_key, count, hook) {
+        var evt_name = evt_keys[evt_key];
+        return sequencers.at.call(
+            sequencers, relay, evt_name, count, hook
+        );
+    };
+    row.each = function(evt_key, count, limit, hook) {
+        var evt_name = evt_keys[evt_key];
+        return sequencers.each.call(
+            sequencers, relay, evt_name, count, limit, hook
+        );
+    };
+    row.cancel = function(hook_id) {
+        return sequencers.cancel.call(sequencers, relay, hook_id);
+    };
+    /*
+    for (var key in sequencers) {
+        row[key] = (function(proc) {
+            return function(evt_name, hook) {
+                    proc(hook);
+                    //hook.apply(sequencers)
+            }.bind(row)
+        })(sequencers[key]);
+    }
+    */
+    row.patt = {
+        transforms: transforms,
+        sequercers: sequencers
+    };
+    var freqTable = row.patt.transforms.buildFreqTable({
         minNote: 0,
         
         //maxNote: 200,//46,

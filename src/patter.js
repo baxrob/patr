@@ -6,12 +6,7 @@
 //window.debugMode = 1024;
 
 include([
-    //'src/lib/jquery-1.7.2.min', 
-    //'src/lib/simple_class',
 
-    //'src/lib/rlb_dbg',
-
-    //'src/lib/jquery-ui-1.8.21.slider.min',
     'src/lib/swfobject',
 
     //'src/mozFlashAudioContext',
@@ -21,20 +16,12 @@ include([
     'src/lib/rlb_observer',
     'src/lib/rlb_util',
 
-    //'src/synth', 
-    //'src/seq', 
-
-    //'src/data',
     //'src/lib/rlb_data',
-
-    //'src/ix',
 
     'src/clang',
     'src/patt'
 
 ], function() {
-
-
 
     var contextClass;
     if (
@@ -79,12 +66,36 @@ include([
         tone: 'sine',
         loop: true,
         'goto': 0
-    });
+    }, relay);
     //row.buildSeq()
     relay.subscribe('clang_edge', function(data) {
         //console.log('clang_edge', data);
     });
     
+
+    function test(options) {
+        function inasec(proc, args, n) {
+            n = n || 1;
+            return setTimeout(function() {
+                if (util.type(proc) == 'Array') {
+                    proc.forEach(function(p, idx) {
+                        p.apply(null, args[idx]);
+                    });
+                } else {
+                    proc.apply(null, args);
+                }
+            }, n * 1000);
+        }
+        function every(proc, args, n) {
+        }
+        function sequence(steps) {
+        }
+        row.run();
+
+        //inasec([row.update], [{
+            
+    }
+
     /*
     window.ctx = audioContext;
 
