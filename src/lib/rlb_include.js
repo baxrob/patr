@@ -67,6 +67,7 @@
             function loadScript(filePath, onComplete) {
                 //console.log('loadScript', busyLoading, filePath);
                 busyLoading = true;
+                filePath = filePath.match(/\.js$/) ? filePath : filePath + '.js';
                 var scriptTag = document.createElement('script');
                 var basePath = filePath.match(/^\./)
                     ? ''
@@ -80,6 +81,7 @@
                         loadScript.apply(null, waitingQueue.shift());
                     }
                 }
+                console.log(scriptTag, basePath, filePath);
                 // TODO: onreadystatechange = f() readyState == loaded|complete
                 //       for IE
                 document.scripts[document.scripts.length - 1].parentElement
