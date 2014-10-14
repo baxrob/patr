@@ -3,20 +3,12 @@
 var soundtoyTones = {
 
     _getSampleProc: function(name, sampleRate) {
-        // Renamings.
-        name == 'spring' && (name = 'bell');
-        name == 'organ' && (name = 'piano1');
-        name == 'wind' && (name = 'flute1');
-        return function(idx, hz) {
+        return function(idx, params) {
             var idx2PI_SR = idx * (2 * Math.PI) / sampleRate;
-            var sampleVal = this[name](hz, idx2PI_SR);
+            var sampleVal = this[name](params.value, idx2PI_SR);
             return sampleVal;  
         }.bind(this);
     },
-    //  Temp hack
-    spring: '',
-    organ: '',
-    wind: '',
 
     _tri: function(a, x) {
         x = x / (2.0 * Math.PI);

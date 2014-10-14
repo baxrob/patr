@@ -81,8 +81,10 @@
                         loadScript.apply(null, waitingQueue.shift());
                     }
                 }
-                console.log(scriptTag, basePath, filePath);
-                // TODO: onreadystatechange = f() readyState == loaded|complete
+                scriptTag.onerror = function() {
+                    console.log('script error', arguments);
+                };
+                // XXX: onreadystatechange = f() readyState == loaded|complete
                 //       for IE
                 document.scripts[document.scripts.length - 1].parentElement
                     .appendChild(scriptTag);
@@ -93,7 +95,6 @@
             fileDataType == 'Object' && loadWalkObject(fileData);
             fileDataType == 'Array' && loadWalkArray(fileData);
             fileDataType == 'String' && enqueueOrLoadScript(fileData);
-            //console.log(fileData, fileDataType); 
         }
 
         // Dispatch inclusion of query string argument if not empty
@@ -111,15 +112,13 @@
         linkTag.setAttribute('media', targetMedia || 'all');
         linkTag.setAttribute('href', filePath);
         linkTag.onload = function() {
-            // TODO: consider using callback - is it sane in the css case ?
+            // XXX: consider using callback - is it sane in the css case ?
             //console.log('link.onload', arguments);
         };
         linkTag.onerror = function() {
-            console.log('link.error', arguments);
+            console.log('link error', arguments);
         };
         document.head.appendChild(linkTag);
     };
-
-    // TODO: consider exclude and removeStyle functions ?
 
 })(this);

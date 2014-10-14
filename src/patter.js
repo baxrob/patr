@@ -13,6 +13,8 @@ include([
     
     'src/lib/soundtoyTones',
 
+    'src/lib/coffee-script.js',
+
     'src/lib/rlb_observer',
     'src/lib/rlb_util',
 
@@ -23,11 +25,14 @@ include([
 
 ], function() {
 
+    //var cfs = require('coffescript');
+    //console.log(cfs);
+
     var contextClass;
     if (
         contextClass = (window.AudioContext || window.webkitAudioContext)
     ) {
-        console.log('webkit adio api');
+        //console.log('adio api');
         var audioContext = new contextClass();
         audioContext.backend = 'webkit';
     } else {
@@ -36,13 +41,9 @@ include([
 
     var audioProcessBlockSize = 2048;//1024;//512;//1024;//2048;
 
-    window.relay = {
-        publish: function(evtKey, data) {
-            console.log(evtKey, data);
-        },
-        subscribe: function() {}
-    };
-    window.relay = Publisher();
+    window.relay = Publisher(null, function() { console.log(arguments); });
+    // XXX: this is some funny cross-typing, but will work
+    relay.dbg = null;
 
     window.clang = Clang(
         audioContext, 
@@ -59,8 +60,10 @@ include([
     window.row = Row(clang, {
         //steps: [2,45,32,29,14,0,5,0,9,27,0,0,29],
         //steps: [0,0,0,34,0,38,27,6],
-        steps: [22,23,24,25,26,27,28,29,30,23,25,27,29,22,24,26,28],
-        len: 14,
+        //steps: [22,23,24,25,26,27,28,29,30,23,25,27,29,22,24,26,28],
+        steps: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46],
+        // XXX: shouldn't be required for steps with length
+        len: 46,
         //pace: 257,
         pace: 300,
         tone: 'sine',
@@ -68,12 +71,15 @@ include([
         'goto': 0
     }, relay);
     //row.buildSeq()
+ 
     relay.subscribe('clang_edge', function(data) {
         //console.log('clang_edge', data);
     });
     
+    console.log('Row Initialized:', row);
 
     function test(options) {
+        // XXX: 
         function inasec(proc, args, n) {
             n = n || 1;
             return setTimeout(function() {
@@ -86,46 +92,40 @@ include([
                 }
             }, n * 1000);
         }
-        function every(proc, args, n) {
+        function everysec(proc, args, n) {
+            n = n || 1;
+            return setInterval(function() {
+                if (util.type(proc) == 'Array') {
+                    proc.forEach(function(p, idx) {
+                        p.apply(null, args[idx]);
+                    });
+                } else {
+                    proc.apply(null, args);
+                }
+            }, n * 1000);
+        }
+        function cancel(op, id) {
+            ({
+                'in': function() {
+                    clearTimeout(id);
+                },
+                every: function() {
+                    clearInterval(id);
+                }
+            })[op]();
         }
         function sequence(steps) {
+            // step: [command, args]
+            steps.forEach(function(step, idx) {
+                var command = step.unshift();
+                this[command].apply(step);
+            });
         }
-        row.run();
+        row.go();
 
         //inasec([row.update], [{
             
     }
-
-    /*
-    window.ctx = audioContext;
-
-    // Init data model
-    var uri = new URI(':', ';', ['rate', 'len', 'reshuf', 'tone', 'seq']);
-
-    // Init audio engine
-    var audioProcessBlockSize = 2048,
-        toneRow = new ToneRow(audioContext, audioProcessBlockSize);
-
-    // FIXME: ? face.dataControlMap here ?
-    // FIXME: ? include uri/synth param defaults here ?
-    var patt = window.patt = new Patter({
-        minNote: 0,
-        
-        //maxNote: 200,//46,
-        maxNote: 46,
-        //maxNote: 26,
-        //maxNote: 16,
-
-        baseFreq: 55,
-
-        //octaveDivisions: 42//512//96//48//9//7//12 
-        octaveDivisions: 12 
-        //octaveDivisions: 7//12 
-        //octaveDivisions: 5//12 
-        //octaveDivisions: 3//12 
-    
-    }, uri, toneRow);
-    */
     
     //$(document).ready(function() {
 
