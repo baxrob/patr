@@ -13,7 +13,7 @@ include([
     
     'src/lib/soundtoyTones',
 
-    'src/lib/coffee-script.js',
+    //'src/lib/coffee-script.js',
 
     'src/lib/rlb_observer',
     'src/lib/rlb_util',
@@ -41,15 +41,22 @@ include([
 
     var audioProcessBlockSize = 2048;//1024;//512;//1024;//2048;
 
-    window.relay = Publisher(null, function() { console.log(arguments); });
+    window.relay = Publisher(null, {
+        mode: 2, 
+        proc: function() {
+            console.log(arguments);
+        }
+    });
+
     // XXX: this is some funny cross-typing, but will work
-    relay.dbg = null;
+    //relay.dbg = null;
 
     window.clang = Clang(
         audioContext, 
         audioProcessBlockSize, 
         0.8, 
         'sine', 
+        // XXX:
         function() {
             this.reader = function() { return null; };
             return [4.0, [440]];
@@ -70,14 +77,11 @@ include([
         loop: true,
         'goto': 0
     }, relay);
-    //row.buildSeq()
- 
-    relay.subscribe('clang_edge', function(data) {
-        //console.log('clang_edge', data);
-    });
     
     console.log('Row Initialized:', row);
 
+
+    //
     function test(options) {
         // XXX: 
         function inasec(proc, args, n) {
