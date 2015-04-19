@@ -8,6 +8,10 @@ This is considered alpha version 0.02. The code isn't likely to be something you
 This is alpha iteration 0.02.
 -->
 
+### Demo
+
+<http://sleepdirt.com/patr_demo/>
+
 ### Live
 
 <http://proto.blandhand.net/patr/>
