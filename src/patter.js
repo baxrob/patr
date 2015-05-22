@@ -21,7 +21,9 @@ include([
     //'src/lib/rlb_data',
 
     'src/clang',
-    'src/patt'
+    'src/patt',
+
+    'src/tests.js'
 
 ], function() {
 
@@ -42,11 +44,17 @@ include([
     var audioProcessBlockSize = 2048;//1024;//512;//1024;//2048;
 
     window.relay = Publisher(null, {
-        mode: 2, 
+        mode: 0, 
         proc: function() {
             console.log(arguments);
         }
     });
+    
+    window.log = [];
+    relay.subscribe('clang_edge', function(data) {
+        log.push([Date.now(), data]);
+    });
+    window.kSamps = 0;
 
     // XXX: this is some funny cross-typing, but will work
     //relay.dbg = null;
@@ -77,6 +85,8 @@ include([
         loop: true,
         'goto': 0
     }, relay);
+
+    row.update({steps: [15,5,33,33,42,1,0,35,1,0,42,19,0,37,27,15,0,0], len: 18, pace: 600});
     
     console.log('Row Initialized:', row);
 
@@ -125,11 +135,14 @@ include([
                 this[command].apply(step);
             });
         }
-        row.go();
+
+        //row.go();
 
         //inasec([row.update], [{
             
     }
+
+    //include('tests.js', function() { console.log(arguments); });
     
     //$(document).ready(function() {
 

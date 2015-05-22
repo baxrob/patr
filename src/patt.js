@@ -79,6 +79,7 @@ function Row(clang, config, relay) {
             //
             var currentStep = this.seq.clangTimes[this.currentStepIdx];
             var nextStep = this.seq.clangTimes[this.getNextStepIdx()];
+            //console.log(currentStep, nextStep);
 
             if (currentStep && nextStep) {
                 var clangLen = (nextStep[0] > currentStep[0])
@@ -89,7 +90,7 @@ function Row(clang, config, relay) {
                 var clangTime = null;
             }
 
-            // XXX: note loop_edge can't report processorNode playbackTime
+            // XXX: note loop_edge can't report processorNode playbackTime from here
             this.currentStepIdx += 1;
             if (this.currentStepIdx == this.seq.len) {
                 relay.publish('loop_edge', {
@@ -117,6 +118,7 @@ function Row(clang, config, relay) {
             this.currentStepIdx = step % this.seq.len;
         },
         
+        // ??
         once: function(seq) {
             this.update({steps: seq});
             clang.getNext = function() {
@@ -127,6 +129,12 @@ function Row(clang, config, relay) {
         },
 
         update: function(options) {
+
+            if (util.type(options) == 'String') {
+                console.log(options, arguments);
+                //options = {arguments[0]: arguments[1]};
+                console.log(options);
+            }
 
             // XXX: if options.attackRatios
             // Update or create attack sequence.
@@ -275,7 +283,7 @@ function Row(clang, config, relay) {
                         evt_name: evt_name,
                         count: count
                     });
-                    completion.call(null);  // To clarify: expectedly unbound.
+                    completion && completion.call(null);
                 }
             }.bind(this);
             this.active[hook_id] = [evt_name, caller];
@@ -287,6 +295,7 @@ function Row(clang, config, relay) {
             var counter = count;
             var caller = function() {
                 if (! --counter) {  // On the last ... .
+                    //console.log(hook, this.lookup_hook(hook));
                     this.lookup_hook(hook)();   // Procedure or proc-reference.
                     if (limit && ! --limit) {   // If ... is next-to-last.
                         // Finish.
@@ -297,7 +306,7 @@ function Row(clang, config, relay) {
                             count: count,
                             limit: limit
                         });
-                        completion.call(null);  // To clarify: expectedly unbound.
+                        completion && completion.call(null);
                     }
                     counter = count;    // Reset. 
                 }
@@ -352,6 +361,11 @@ function Row(clang, config, relay) {
         );
     };
     row.every = function(evt_key, count, limit, hook) {
+        // Optional limit argument.
+        if (typeof limit == 'function' || typeof limit == 'string' && hook == undefined) {
+            hook = limit;
+            limit = 0;
+        }
         var evt_name = evt_keys[evt_key];
         return schedulers.every.call(
             schedulers, relay, evt_name, count, limit, hook
@@ -400,7 +414,9 @@ function Row(clang, config, relay) {
 }
 
 function Patt(config, data, source) {
+
     var transforms = {
+    
         map: function(seq, proc) {
             return seq.map(proc); 
         },
@@ -413,11 +429,16 @@ function Patt(config, data, source) {
             };
             return this.sort(seq, proc);
         },
+    
+        // XXX: inverse, retrograde, ..., permute(f), ...
+
+        //
         clear: function(seq) {
             return seq.map(function() {
                 return 0;
             });
         },
+    
         randomBPM: function() {
             return parseInt(Math.random() * 500 + 150);
         },
@@ -425,6 +446,19 @@ function Patt(config, data, source) {
             var len = Math.random() * 15 + 5;
             return parseInt(len);
         },
+
+        buildEvenFreqTable: function(options) {
+            var freqTable = [0];
+            var min = options.minNote,
+                max = options.maxNote,
+                base = options.baseFreq,
+                div = options.octaveDivisions;
+            for (var i = min; i < max; i++) {
+                freqTable.push(base * Math.pow(2, (i / div)));
+            }
+            return freqTable;
+        },
+
         //
         generateSteps: function(len, min, max, density, hook) {
         },
@@ -453,17 +487,7 @@ function Patt(config, data, source) {
 
             return stepSeq;
         },
-        buildEvenFreqTable: function(options) {
-            var freqTable = [0];
-            var min = options.minNote,
-                max = options.maxNote,
-                base = options.baseFreq,
-                div = options.octaveDivisions;
-            for (var i = min; i < max; i++) {
-                freqTable.push(base * Math.pow(2, (i / div)));
-            }
-            return freqTable;
-        },
+
         // XXX: cull
         hzFromStepSeq: function() {
             return this.stepSeq.map(function(stepVal, idx) {
@@ -477,15 +501,20 @@ function Patt(config, data, source) {
             }
             return seq;
         }
+
     };
+
     var schedulers = {
+
         next_id: 0,
         active: {},
+        
         lookup_hook: function(hook) {
             var proc = (hook in transforms) ? row[hook].bind(row) : 
                 (util.type(hook) == 'Function') ? hook : null;
             return proc
         },
+        
         // XXX: at(relay, evt_name, count, proc, done_proc)
         // XXX: at(relay, evt_name, count, expedient, when_done)
         // XXX: at(relay, evt_name, count, expedient, completion)
@@ -508,6 +537,7 @@ function Patt(config, data, source) {
             relay.subscribe(evt_name, caller); 
             return hook_id;
         },
+        
         every: function(relay, evt_name, count, limit, hook, completion) {
             var hook_id = this.next_id++;
             var counter = count;
@@ -532,11 +562,13 @@ function Patt(config, data, source) {
             relay.subscribe(evt_name, caller);
             return hook_id;
         },
+        
         sequence: function(steps) {
             steps.forEach(function(step, idx) {
                 this[step[0]].apply
             }.bind(this));
         },
+        
         cancel: function(relay, hook_id) {
             if (hook_id in this.active) {
                 var pair = this.active[hook_id];
@@ -546,8 +578,12 @@ function Patt(config, data, source) {
             }
             return false;
         }
+
     };
+
     var patt = {
+        schedulers: schedulers,
+        transforms: transforms
     };
-    return patt
+    return patt;
 }

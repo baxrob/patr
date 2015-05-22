@@ -1,5 +1,8 @@
 "use strict";
 
+//In [1]: [(44100. / x, x/44100.) for x in (21*2048, 22*2048)]
+//Out[1]: [(1.025390625, 0.9752380952380952), (0.9787819602272727, 1.0216780045351475)]
+
 var util = {
     type: function(obj) {
         return Object.prototype.toString.call(obj).match(/(\w+)\]/)[1];
@@ -94,7 +97,7 @@ function ClangForms(sampleRate) {
     // }
     var tone = {
         sine: {
-            duckIn: true,
+            duckIn: false,
             // XXX: sampleProc: sampleGen.sine, 
             synthProc: sampleGen.sine, 
             // XXX: blockFactor: nGain.bleatHz
@@ -171,6 +174,7 @@ function ClangForms(sampleRate) {
 }
 
 
+
 // XXX: ? use options arg - for buflen, gain, clangform/tone, inputs, outputs, etc .. implying defaults ?
 // context, reader, relay, config/options 
 // [XXX: config for base settings, options for reconfigurables? - but, overlap]
@@ -207,7 +211,7 @@ function Clang(
         // XXX: ms rampLen ? or ratio/hz
         //      params.rampLen
         //rampLen: options.rampLen || 240,
-        rampLen: 480,//300,//240,
+        rampLen: 240,//120, //480,//300,//240,
         sampleIdx: 0,
         elapsed: 0,
 
@@ -229,8 +233,11 @@ function Clang(
             var bufferEndIdx = offsetSamps + fillSamps;
             var fadeOutStart = bufferEndIdx - (duckOut ? this.rampLen : 0);
             var sampleVal;
+            
+            kSamps += fillSamps;
+            //log && log.push('k,s,o' + kSamps + ' ' + fillSamps + ' ' + offsetSamps);
 
-            if (duckIn) {
+            if (false && duckIn) {
                 var fadePos = 0;
                 while (bufferIdx < offsetSamps + this.rampLen) {
                     sampleVal = (fadePos++ / this.rampLen)
@@ -347,9 +354,11 @@ function Clang(
         readNext: function() {
             var spec = this.reader();
             this.duration = spec ? spec[0] : 0;
+            //console.log(this.duration);
             this.params = spec ? spec[1] : {};
-            this.elapsed = 0; // Reset step-length elapsed counter.
-            this.sampleIdx = this.noReset ? this.sampleIdx : 0;
+            // XXX: !! this is sequence length ??
+            //this.elapsed = 0; // Reset step-length elapsed counter.
+            this.sampleIdx = this.noReset ? this.sampleIdx : 0; // Reset phase.
         },
 
         bump: function() {
@@ -360,8 +369,7 @@ function Clang(
 
             if (! this.running) {
                 this.readNext();
-                // XXX: there's never 0 duration - why is this here ?
-                //      -> initial case after halt, bump ?
+                // XXX: ? initial case after halt, bump ?
                 if (this.duration) {
                     // XXX: ? called sync, before any buffer manipulation ?
                     var msg = {
@@ -373,9 +381,10 @@ function Clang(
                     relay && relay.publish('clang_edge', msg);
                     relay && relay.publish('clang_onset', msg);
                 }
+                this.running = true;
             }
 
-            this.running || (this.running = true);
+            //this.running || (this.running = true);
 
             var buffer = evt.outputBuffer;
             var stereoBuffer = [
@@ -386,6 +395,7 @@ function Clang(
             // XXX: there's never 0 duration - why is this here ?
             //      -> readNext sets duration zero when reader returns null
             //         which signals sequence halted .. [ ?? ]
+
             // Silence buffer and bail out.
             if (! this.duration) { 
                 // XXX: should inc elapsed and fire clang edge in here
@@ -409,6 +419,7 @@ function Clang(
 
             var rampOnset = this.duration - (this.rampLen / this.sampleRate);
             var bufferEndTime = this.elapsed + buffer.duration;
+            //log && log.push(bufferEndTime + ' ' + this.elapsed + ' ' + buffer.duration);
             var clangEnding = rampOnset <= bufferEndTime;
 
             if (! clangEnding) {
@@ -416,16 +427,19 @@ function Clang(
                 this.populateBuffers(
                     stereoBuffer, this.params, 0, buffer.length, false, false
                 );
+                this.elapsed += buffer.duration;
             } else {
                 var tailDuration = this.duration - this.elapsed;
+                //console.log(bufferEndTime, tailDuration, this.duration, this.elapsed, this.rampLen, rampOnset);
+                //log && log.push(tailDuration, this.duration);
 
                 // If ramp-out won't fit in this buffer shorten it, leaving
                 // (n < rampLen) samples of inserted silence for next buffer.
                 var rampCrossesBuffer = bufferEndTime < this.duration; 
                 if (rampCrossesBuffer) {
-                    console.log('ramp crossing buffer');
                     var blockLength = buffer.length;
                 } else { 
+                    //log && log.push('ramp crossing buffer');
                     var blockLength = parseInt(tailDuration * this.sampleRate);
                 }
 
@@ -440,7 +454,11 @@ function Clang(
                     contextTime: this.context.currentTime,
                     playbackTime: evt.playbackTime
                 });
+                
+                //log && log.push('reset ' + kSamps);
+                kSamps = 0;
 
+                //
                 this.readNext();
 
 
@@ -469,14 +487,18 @@ function Clang(
                 var offset = blockLength;
                 blockLength = buffer.length - offset;
 
-                var duckIn = this.duckIn || false;
+                //var duckIn = this.duckIn || false;
+                var duckIn = false;// this.duckIn || false;
                 this.populateBuffers(
                     stereoBuffer, this.params, offset, blockLength, duckIn, false
                 );
+                console.log(offset, blockLength, this.elapsed, buffer.duration);
+
+                this.elapsed = buffer.duration - tailDuration;
 
             }
             
-            this.elapsed += buffer.duration;
+            //this.elapsed += buffer.duration;
             
         } // bufferHandler: function(evt) {
 

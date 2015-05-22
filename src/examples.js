@@ -31,3 +31,7 @@ var e4 = row.every('beat', 18, null, function() { row.update({tone: 'square'}) }
 var e5 = row.every('beat', 34, null, function() { row.update({vals: [[0,0], [2,0], [5,0], [9,0], [15,0], [17,0]]}) });
 var end = setTimeout(row.halt, 80000);
 row.go();
+
+var examples = {
+
+};

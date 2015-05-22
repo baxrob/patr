@@ -32,13 +32,15 @@
             queue[evtKey] || (queue[evtKey] = []);
             queue[evtKey].push(callback);
             // XXX: or assume, eg, dbg=console.log.bind(console)
-            (this.dbg.mode & this.dbgModes.DBG_SUB) && this.dbg.proc.call(this.dbg,
+            (this.dbg.mode & this.dbgModes.DBG_SUB) && this.dbg.proc.call(
+                this.dbg,
                 'subscribe: key, idx, name, callback:', 
                 evtKey, (queue[evtKey].length - 1), callback.name, callback,
                 '| sub.this:', this
             );
         };
         
+        // XXX: ? this can't unsub anonymous f() ? see js f == f
         pub.unsubscribe = pub.unsubscribe || function(evtKey, callback) {
             if (! callback) {
                 // Unsubscribe /everything/ from evtKey if no callback specified.
@@ -50,7 +52,8 @@
                     //if (queue[evtKey][idx].toString() == callback.toString()) {
                     if (queue[evtKey][idx] == callback) {
                         delete queue[evtKey][idx];
-                        (this.dbg.mode & this.dbgModes.DBG_UNSUB) && this.dbg.call(this.dbg,
+                        (this.dbg.mode & this.dbgModes.DBG_UNSUB) && this.dbg.proc.call(
+                            this.dbg,
                             'unsubscribe: key, idx, name, callback:', 
                             evtKey, idx, callback.name, callback
                             //,
@@ -65,10 +68,19 @@
         };
         
         pub.publish = pub.publish || function(evtKey, data) {
+            //return;
             // XXX: ? s/proc/callback | s/callback/proc ?
             queue[evtKey] && queue[evtKey].forEach(function(proc, idx) {
-                proc(data);
-                (this.dbg.mode & this.dgbModes.DBG_PUB) && this.dbg.call(this.dbg,
+                //proc(data);
+                //console.log(proc, this.dbg.mode, this.dbgModes.DBG_PUB);
+                try {
+                    //console.log(proc, typeof proc, data);
+                    proc(data);
+                } catch(e) {
+                    console.log(e.stack);
+                }
+                (this.dbg.mode & this.dbgModes.DBG_PUB) && this.dbg.proc.call(
+                    this.dbg,
                     'publish: key, name, proc, data:', 
                     evtKey, proc.name, proc.toString(), data
                 );
