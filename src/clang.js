@@ -492,7 +492,7 @@ function Clang(
                 this.populateBuffers(
                     stereoBuffer, this.params, offset, blockLength, duckIn, false
                 );
-                console.log(offset, blockLength, this.elapsed, buffer.duration);
+                //console.log(offset, blockLength, this.elapsed, buffer.duration);
 
                 this.elapsed = buffer.duration - tailDuration;
 

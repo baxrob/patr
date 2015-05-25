@@ -41,7 +41,7 @@ include([
         var audioContext = new mozFlashAudioContext();
     }     
 
-    var audioProcessBlockSize = 2048;//1024;//512;//1024;//2048;
+    var audioProcessBlockSize = 1024;//512;//256;//512;//1024;//2048;//1024;//512;//1024;//2048;
 
     window.relay = Publisher(null, {
         mode: 0, 
@@ -83,7 +83,13 @@ include([
         pace: 300,
         tone: 'sine',
         loop: true,
-        'goto': 0
+        'goto': 0,
+
+        stepMin: 0,
+        stepMax: 46,
+        octaveDivs: 12,
+        minFreq: 55
+        
     }, relay);
 
     row.update({steps: [15,5,33,33,42,1,0,35,1,0,42,19,0,37,27,15,0,0], len: 18, pace: 600});
