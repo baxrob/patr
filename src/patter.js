@@ -85,6 +85,7 @@ include([
         loop: true,
         'goto': 0,
 
+        // XXX: kill min, rename
         stepMin: 0,
         stepMax: 46,
         octaveDivs: 12,

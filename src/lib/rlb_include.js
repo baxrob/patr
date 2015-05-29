@@ -1,4 +1,6 @@
 
+// XXX: breaks permanently on bad path
+
 (function(global) {
 
     "use strict";
@@ -72,7 +74,6 @@
                 var basePath = filePath.match(/^\./)
                     ? ''
                     : assetRoot; 
-                console.log(scriptTag);
                 scriptTag.setAttribute('src', basePath + filePath);
                 scriptTag.onload = function(evt) {
                     //console.log('script.onload', filePath, waitingQueue);
