@@ -23,7 +23,9 @@ include([
     'src/clang',
     'src/patt',
 
-    'src/tests.js'
+    'src/tests.js',
+
+    'src/examples.js'
 
 ], function() {
 
@@ -44,16 +46,16 @@ include([
     var audioProcessBlockSize = 1024;//512;//256;//512;//1024;//2048;//1024;//512;//1024;//2048;
 
     window.relay = Publisher(null, {
-        mode: 0, 
+        mode: 0,//2 | 4 | 8, 
         proc: function() {
             console.log(arguments);
         }
     });
     
     window.log = [];
-    relay.subscribe('clang_edge', function(data) {
-        log.push([Date.now(), data]);
-    });
+    //relay.subscribe('clang_edge', function(data) {
+        //log.push([Date.now(), data]);
+    //});
     window.kSamps = 0;
 
     // XXX: this is some funny cross-typing, but will work

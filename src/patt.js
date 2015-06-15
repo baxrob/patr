@@ -1,5 +1,9 @@
 "use strict";
 
+// XXX: no patt.sched/seq can be deterministic without re-setting seq idx
+//      should reset seqIdx on ??? by flag?
+//      -- row.update('step', n)
+
 /* 
 */
 function Row(clang, config, relay) {
@@ -7,8 +11,8 @@ function Row(clang, config, relay) {
 
         // Clock and output: 
         //      expected to supply go, halt, bump and setForm methods
-        //      assigned with reader procedure, expected to produce output based on
-        //          [dur, params] specification built from sequence aspects
+        //      assigned with reader procedure, expected to produce output 
+        //      based on [dur, params] specification built from sequence aspects
         clang: clang,
         
         // XXX: ? when pace == 0 ?
@@ -29,7 +33,9 @@ function Row(clang, config, relay) {
             clangTimes: [],
             
             update: function(options) {
+                options.steps && (this.steps = options.steps.slice());
                 this.steps = options.steps || this.steps;
+                //console.log(this.steps, this.steps.length);
                 if (options.vals) {
                     options.vals.forEach(function(pair) {
                         // Ignore out-of-range assignments.
@@ -40,7 +46,9 @@ function Row(clang, config, relay) {
                 }
                 this.stepTransforms = options.transforms || this.stepTransforms;
                 // XXX: options.len || this.steps.length || this.len;
-                this.len = options.len || this.len;
+                // ??
+                this.len = options.len || this.steps.length || this.len;
+                //console.log(options.len, this.len);
                 // Extend sequence with blanks if lengthening.
                 while (this.len > this.steps.length) {
                     this.steps.push(0);
@@ -50,9 +58,18 @@ function Row(clang, config, relay) {
                 while (this.len < this.steps.length) {
                     this.steps.pop();
                 }
+                // XXX: 
                 this.attacks = options.attacks || this.attacks;
+
+                // XXX:
+                //this.attacks.splice(this.len);
+                relay.publish('seq_updated', {
+                    options: options,
+                    row: row
+                });
             },
             assemble: function() {
+                this.clangParams = [];
                 this.steps.forEach(function(step, idx) {
                     this.clangParams[idx] = {
                         idx: idx,
@@ -129,6 +146,18 @@ function Row(clang, config, relay) {
             clang.bump();
         },
 
+        // XXX:
+        broadcast: function(evtName, inputData) {
+            var evtData = {
+                //stage_done
+            }; 
+            var data = evtName in evtData ? evtData[evtName] : {};
+            for (var key in inputData) {
+                data[key] = inputData[key];
+            }
+            return data; 
+        },
+
         update: function(options) {
 
             if (util.type(options) == 'String' && arguments.length == 2) {
@@ -136,16 +165,6 @@ function Row(clang, config, relay) {
                 options[arguments[0]] = arguments[1];
             }
 
-            // XXX: if options.attackRatios
-            // Update or create attack sequence.
-            if (options.pace || options.len || ! this.seq.attacks.length) {
-                this.pace = options.pace || this.pace;
-                // XXX: stepTransforms.attacks
-                options.attacks = this.patt.transforms.evenAttackSeq(
-                    options.len || this.seq.len,
-                    this.pace 
-                ); 
-            }
             // Wrap single-item step value for seq update.
             if (
                 options.vals 
@@ -154,13 +173,35 @@ function Row(clang, config, relay) {
             ) {
                 options.vals = [options.vals];
             }
+
+            // XXX: if options.attackRatios
+            // Update or create attack sequence.
+            if (
+                options.pace
+                || options.len
+                //|| this.seq.attacks.length != this.seq.steps.length
+                || options.steps
+            ) {
+                //console.log('updy att', options.len, options.steps.length, this.seq.len, this.seq.steps.length);
+                this.pace = options.pace || this.pace;
+                // XXX: stepTransforms.attacks
+                //console.log(options.len, this.seq.len, this.seq.steps.length);
+                // XXX: 
+                options.attacks = this.patt.transforms.evenAttackSeq(
+                    options.len || (options.steps && options.steps.length)
+                        || this.seq.len,
+                    this.pace 
+                ); 
+            }
+
             // Dispatch seq update.
             this.seq.update(options);
 
             // Fix overflow - at the latest possible point.
             if (options.len && this.currentStepIdx >= options.len) {
                 console.log('fix overflow');
-                this.currentStepIdx = options.len - 1;
+                //this.currentStepIdx = options.len - 1;
+                this.currentStepIdx = 0;//options.len - 1;
             }
             // Dispatch seq assembly.
             this.seq.assemble();
@@ -183,6 +224,8 @@ function Row(clang, config, relay) {
 
     // XXX: to Patt()
     var transforms = {
+
+        // Morphings.
         map: function(seq, proc) {
             return seq.map(proc); 
         },
@@ -200,15 +243,32 @@ function Row(clang, config, relay) {
         },
         invert: function(seq, min, max) {
             // XXX: 0 should invert to 0, not 46
-            min++;
-            return this.map(seq, function(step) {
-                var minDiff = step - min;
-                var maxDiff = max - step;
-                var range = max - min;
-                //console.log(minDiff, maxDiff, range);
+            min = window.min || 1;
+            max = window.max || max;
+            //console.log(min, max, max - min);
+            return this.map(seq, function(step, idx) {
+                //
+                //if (step == 0) return step;
+                //var minDiff = step - min;
+                //var maxDiff = max - step;
+                //
+                var minDiff = step < min ? step : step - min;
+                var maxDiff = step < min ? step : max - step;
+                //console.log(step, idx, minDiff, maxDiff, max, min, max - min);
                 return minDiff < maxDiff ? max - minDiff
                     : minDiff > maxDiff ? min + maxDiff : step;    
             });
+        },
+        rotate: function(seq, n) {
+            n = n || 1;
+            return this.map(seq, function(step, idx, seq) {
+                // Note: negative modulus bug
+                var len = seq.length;
+                var rotIdx = (((idx + n) % len) + len) % len;
+                //console.log(idx, n, rotIdx);
+                return seq[rotIdx];
+            });
+
         },
 
         clear: function(seq) {
@@ -217,7 +277,7 @@ function Row(clang, config, relay) {
             });
         },
 
-        // Generative 
+        // Generators.
         randomBPM: function() {
             return parseInt(Math.random() * 500 + 150);
         },
@@ -270,6 +330,7 @@ function Row(clang, config, relay) {
             }.bind(this));
         },
         evenAttackSeq: function(len, pace) {
+            //console.log('gen attacks: len, pace:', len, pace);
             var seq = [len * (60 / pace)] // Zeroth == total, for looping
             for (var i = 1; i < len; i++) {
                 seq.push(i * (60 / pace));
@@ -278,6 +339,10 @@ function Row(clang, config, relay) {
         }
     };
     var schedulers = {
+        
+        // (proper) Schefulers.
+
+        // XXX: next/active mechanism should re-use ids
         next_id: 0,
         active: {},
         lookup_hook: function(hook) {
@@ -292,9 +357,11 @@ function Row(clang, config, relay) {
             var hook_id = this.next_id++; 
             var counter = count;
             var caller = function() {
-                if (! --counter) {  // On the target [evt_name] repetition.
+                if (! --counter) {  // On the target [evt_name] occurrence.
                     this.lookup_hook(hook)();   // Procedure or proc-reference call.
-                    relay.unsubscribe(evt_name, caller);
+                    //console.log('cancel in at', hook_id, this);
+                    //relay.unsubscribe(evt_name, caller);
+                    this.cancel(relay, hook_id);
                     relay.publish('stage_done', {
                         hook_id: hook_id,
                         evt_name: evt_name,
@@ -308,14 +375,27 @@ function Row(clang, config, relay) {
             return hook_id;
         },
         every: function(relay, evt_name, count, limit, hook, completion) {
+            // XXX: 
+            /*
+            var data = {
+                stage_step: [hook_id, evt_name, count, limit, @counter],
+                stage_done: [hook_id, evt_name, count, limit],
+                hook_id: this.next_id++,
+                evt_name: evt_name,
+                count: count,
+                limit: limit
+            };
+            */
             var hook_id = this.next_id++;
             var counter = count;
             var caller = function() {
                 if (! --counter) {
+                    // XXX: ? relay/broadcast these ?
                     //console.log(hook);
                     this.lookup_hook(hook)();
                     if (limit && ! --limit) {   // Final repitition.
                         relay.unsubscribe(evt_name, caller);
+                        this.cancel(hook_id);
                         relay.publish('stage_done', {
                             hook_id: hook_id,
                             evt_name: evt_name,
@@ -328,24 +408,83 @@ function Row(clang, config, relay) {
                     counter = count;    // Reset. 
                 }
             }.bind(this);
+            //this.active[data.hook_id] = [evt_name, caller];
             this.active[hook_id] = [evt_name, caller];
             relay.subscribe(evt_name, caller);
             return hook_id;
         },
-        chain: function(steps) {
-            steps.forEach(function(step, idx) {
-                console.log(step, idx);
-            }.bind(this));
+
+        // Sequencers.
+        cycle: function(stages) {
         },
+        chainHookId: null,
+        chain: function(stages, once) {
+            // Assumes no non-ending stages.
+            // XXX: enforce this - reject, throw, or force single 'every'
+            var hook_id = null;
+            var counter = 0;
+            function runStage() {
+                var stage = stages[counter % stages.length];
+                var cmd = stage[0];
+                var args = stage[1];
+                args = args.map(function(arg) {
+                    //console.log(util.type(arg));
+                    if (util.type(arg) == 'Array') {
+                        return function() {
+                            //console.log(row[arg[0]], arg[1]);
+                            row[arg[0]].apply(row, arg[1]);
+                        }.bind(this);
+                    } else {
+                        return arg;
+                    }
+                });
+                //console.log(row[cmd], args);
+                //console.log('runStage', hook_id);
+                //this.chainHookId = hook_id = row[cmd].apply(row, args);
+                row.patt.schedulers.chainHookId = hook_id 
+                    = row[cmd].apply(row, args);
+                counter += 1;
+            };
+            relay.subscribe('stage_done', function(data) {
+                //console.log(data.hook_id, hook_id, this);
+                if (data.hook_id == hook_id) {
+                    if (counter == stages.length && once) {
+                        relay.publish('chain_done');
+                    } else {
+                        runStage();
+                    }
+                }
+            });
+            runStage();
+            //return hook_id;
+            /*
+            return (function runStages(stages) {
+                return (function runStage(stage, idx) {
+                    var cmd = stage[0];
+                    var args = stage[1];
+                    // transform args:
+                    // args.forEach(function(arg, idx) {
+                    // });
+                    this[cmd].apply(this, args);
+                }.bind(this))(stages[0], 0);
+            }.bind(this))(stages);
+            */
+        },
+
         ordering: function(steps) {
         },
         timeline: function(data) {
         },
+
         cancel: function(relay, hook_id) {
+            //console.log('row.cancel', hook_id, this.active[hook_id]);
             if (hook_id in this.active) {
                 var pair = this.active[hook_id];
-                delete this.active[hook_id];
                 relay.unsubscribe(pair[0], pair[1]);
+                delete this.active[hook_id];
+                //console.log('deleted?', this.active[hook_id]);
+                // XXX: ?
+                // return true;
                 return pair[1];
             }
             return false;
@@ -401,12 +540,14 @@ function Row(clang, config, relay) {
     };
     row.at = function(evt_key, count, hook, completion) {
         var evt_name = evt_keys[evt_key];
+        //console.log('row.at', evt_name, evt_key, count, hook, completion);
         return schedulers.at.call(
             schedulers, relay, evt_name, count, hook, completion
         );
     };
     //row.every = function(evt_key, count, limit, hook, completion) {
     row.every = function(evt_key, count, limit, hook, completion) {
+        //console.log(evt_key, count, limit);
         // Optional limit argument.
         if (typeof limit == 'function' || typeof limit == 'string' && hook == undefined) {
             hook = limit;
@@ -452,7 +593,7 @@ function Row(clang, config, relay) {
         //octaveDivisions: 3//12 
     
     });
-    console.log(freqTable);
+    //console.log(freqTable);
     row.update({
         transforms: {
             hz: function(step) {

@@ -29,6 +29,7 @@
         };
 
         pub.subscribe = pub.subscribe || function(evtKey, callback) {
+            // XXX: ? use/check hasOwnProperty ?
             queue[evtKey] || (queue[evtKey] = []);
             queue[evtKey].push(callback);
             // XXX: or assume, eg, dbg=console.log.bind(console)
@@ -41,7 +42,11 @@
         };
         
         // XXX: ? this can't unsub anonymous f() ? see js f == f
+        // - return unsub from sub
+        // - use queue[evtKey].push([f.toString, f])
+        // - return idx from sub
         pub.unsubscribe = pub.unsubscribe || function(evtKey, callback) {
+            // XXX: should expect bool true or string command to clear all
             if (! callback) {
                 // Unsubscribe /everything/ from evtKey if no callback specified.
                 delete queue[evtKey];
@@ -51,6 +56,7 @@
                     //if (queue[evtKey][idx] == callback) {
                     //if (queue[evtKey][idx].toString() == callback.toString()) {
                     if (queue[evtKey][idx] == callback) {
+                        // XXX: use [].splice
                         delete queue[evtKey][idx];
                         (this.dbg.mode & this.dbgModes.DBG_UNSUB) && this.dbg.proc.call(
                             this.dbg,
