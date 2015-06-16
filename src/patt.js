@@ -417,8 +417,9 @@ function Row(clang, config, relay) {
         // Sequencers.
         cycle: function(stages) {
         },
+
         chainHookId: null,
-        chain: function(stages, once) {
+        chain: function(stages, once, completion) {
             // Assumes no non-ending stages.
             // XXX: enforce this - reject, throw, or force single 'every'
             var hook_id = null;

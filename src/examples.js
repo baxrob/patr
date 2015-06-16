@@ -55,6 +55,10 @@ var examples = {
 
     // 2x each: prime, inv, retro, invret
     a: function(seed, repeat) {
+        // Serial ops.
+
+        console.log('eg a');
+
         seed && row.update('steps', seed);
         var stages = ['invert', 'reverse', 'invert', 'reverse'];
         var stages = ['reverse', 'invert', 'reverse', 'invert'];
@@ -103,6 +107,10 @@ var examples = {
         row.go();
     },
     b: function(seed, repeat) {
+        // Re-orderings.
+
+        console.log('eg b');
+
         seed && row.update('steps', seed);
         this.cancel('b', true);
         function reOrderStage() {
@@ -129,6 +137,10 @@ var examples = {
         row.go();
     },
     c: function(seed, repeat) {
+        // Re-tone-ings
+
+        console.log('eg c');
+
         seed && row.update('steps', seed);
 
         //row.update('pace', 250);
@@ -178,6 +190,10 @@ var examples = {
         row.go();
     },
     d: function(seed, repeat) {
+        // Re-length-enings.
+
+        console.log('eg d');
+
         seed && row.update('steps', seed);
         seed || (seed = row.seq.steps);
         //var baseSeed = seed;
@@ -189,10 +205,11 @@ var examples = {
         /*
         */
         relay.subscribe('seq_updated', function(data) {
-            console.log('seq_updy', data, data.options.my_key);
             if (! data.options.my_key && data.options.steps) {
                 //seed = row.seq.steps
                 seed = data.options.steps
+            } else if (data.options.my_key) {
+                console.log('seq_updy', data, data.options.my_key);
             };
         });
         function reLen(data) {
@@ -240,8 +257,14 @@ var examples = {
         row.go();
     },
     e: function(seed, repeat) {
+        // Re-pacings.
+
+        console.log('eg e');
+
         seed && row.update('steps', seed);
+
         var pk1 = row.pace;
+
         //console.log(row.seq.steps.length, row.seq.len);
         var tk1 = row.seq.len; 
         var pk2 = pk1 / 3,
@@ -268,6 +291,8 @@ var examples = {
             ['at', ['beat', tk6, ['update', ['pace', pk3]]]],
         ];
         row.chain(stages, ! repeat);
+
+        // XXX: 
         relay.subscribe('chain_done', function() {
             this.cancel('e');
         }.bind(this));
@@ -303,6 +328,17 @@ var examples = {
     },
 
     all: function(seed, repeat) {
+
+        console.log('all', seed, repeat);
+        row.update('steps', seed || seeds[6]);
+        row.at('loop', 2, examples.a.bind(this));
+        row.at('loop', 8, examples.c.bind(this));
+        row.at('loop', 12, examples.b.bind(this));
+        row.at('loop', 22, examples.e.bind(this));
+        row.at('loop', 24, examples.d.bind(this));
+
+        row.go();
+        
     },
     
     // XXX:
@@ -332,7 +368,7 @@ var examples = {
             if (! activeCount && ! forceContinue) {
                 row.halt();
             } else {
-                console.log('no halt for', this.active);
+                console.log('no halt for', this.active, forceContinue);
             }
         }
     },
