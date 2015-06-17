@@ -209,7 +209,7 @@ var examples = {
                 //seed = row.seq.steps
                 seed = data.options.steps
             } else if (data.options.my_key) {
-                console.log('seq_updy', data, data.options.my_key);
+                //console.log('seq_updy', data, data.options.my_key);
             };
         });
         function reLen(data) {
@@ -331,11 +331,23 @@ var examples = {
 
         console.log('all', seed, repeat);
         row.update('steps', seed || seeds[6]);
+
+        /*
         row.at('loop', 2, examples.a.bind(this));
         row.at('loop', 8, examples.c.bind(this));
         row.at('loop', 12, examples.b.bind(this));
         row.at('loop', 22, examples.e.bind(this));
         row.at('loop', 24, examples.d.bind(this));
+        */
+
+        row.at('loop', 1, function() {
+            //examples.a(null, true);
+            examples.a();
+        });
+        row.at('loop', 5, function() { examples.c(null, repeat); });
+        row.at('loop', 9, function() { examples.b(null, repeat); });
+        row.at('loop', 15, function() { examples.d(null, repeat); });
+        row.at('loop', 18, function() { examples.e(null, repeat); });
 
         row.go();
         
@@ -354,7 +366,7 @@ var examples = {
         }
         //row.halt();
         if (this.active[item] !== undefined) {
-            console.log('this.active', item);
+            //console.log('this.active', item);
             if (util.type(this.active[item]) == 'Function') {
                 row.cancel(this.active[item]());
             } else {
