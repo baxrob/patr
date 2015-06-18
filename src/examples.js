@@ -167,7 +167,7 @@ var examples = {
         
         relay.subscribe('my_stage_done', function(data) {
             var stage = my_stages[my_stage_idx];
-            console.log('my_stage_done', stage[1]);
+            //console.log('my_stage_done', stage[1]);
             // End if no more stages
             stage && (this.cId = row[stage[0]].apply(row, stage[1])); 
             my_stage_idx += 1;
@@ -329,7 +329,7 @@ var examples = {
 
     all: function(seed, repeat) {
 
-        console.log('all', seed, repeat);
+        console.log('eg all', seed, repeat);
         row.update('steps', seed || seeds[6]);
 
         /*
@@ -344,10 +344,10 @@ var examples = {
             //examples.a(null, true);
             examples.a();
         });
-        row.at('loop', 5, function() { examples.c(null, repeat); });
+        row.at('loop', 3, function() { examples.c(null, repeat); });
         row.at('loop', 9, function() { examples.b(null, repeat); });
-        row.at('loop', 15, function() { examples.d(null, repeat); });
-        row.at('loop', 18, function() { examples.e(null, repeat); });
+        row.at('loop', 13, function() { examples.d(null, repeat); });
+        row.at('loop', 21, function() { examples.e(null, repeat); });
 
         row.go();
         
