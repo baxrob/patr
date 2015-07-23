@@ -3,6 +3,7 @@
 //In [1]: [(44100. / x, x/44100.) for x in (21*2048, 22*2048)]
 //Out[1]: [(1.025390625, 0.9752380952380952), (0.9787819602272727, 1.0216780045351475)]
 
+// XXX: move to lib/rlb_util !
 var util = {
     type: function(obj) {
         return Object.prototype.toString.call(obj).match(/(\w+)\]/)[1];
@@ -323,6 +324,10 @@ function Clang(
             this.processorNode.connect(
                 this.destination || this.context.destination
             );
+            //this.processorNode.onaudioprocess = this.bufferHandler.bind(this);
+            console.log(this.processorNode.onaudioprocess);
+            this.halt();
+            //console.log(this.running, this.reader, this.haltedReader);
         },
 
 
@@ -331,10 +336,13 @@ function Clang(
         go: function() {
             // XXX: add iOS start kludge
 
+            //
+            console.log('go', this.haltedReader && this.processorNode.onaudioprocess);
             if (this.haltedReader && this.processorNode.onaudioprocess) {
                 this.reader = this.haltedReader.bind(this);
                 this.bump();
             } else {
+                // XXX: killme : moved to connect()
                 // Initial case: go and halt have not yet been called 
                 this.processorNode.onaudioprocess = this.bufferHandler.bind(this);
             }
@@ -342,14 +350,28 @@ function Clang(
         },
 
         halt: function() {
+            console.log('halt', this.haltedReader, this.reader);
             this.haltedReader = this.reader;
             // If go has never been called, don't null reader [why].
             if (this.processorNode.onaudioprocess) {
+                console.log('nulling', this)
                 this.reader = function() {
                     return null;
                 };
             }
         },        
+
+        // XXX: 
+        ring: function() {
+        },
+
+        //
+        abort: function() {
+        },
+
+        reset: function() {
+            // fix runningFlag vs haltedReader vs ?sampleIdx? 
+        },
 
         readNext: function() {
             var spec = this.reader();

@@ -35,6 +35,22 @@ var end = setTimeout(row.halt, 80000);
 row.go();
 */
 
+function enqueueSeeds(seeds) { 
+    window.seeds = window.seeds.concat(seeds); 
+    nextSeed = function() { 
+        nextIdx || (nextIdx = 0); 
+        var returnVal = window.seeds[nextIdx] || []; 
+        console.log(nextIdx);
+        nextIdx += 1; 
+        return returnVal; 
+    }; 
+}; 
+
+//n = parseInt(Math.random() * seeds.length); console.log(n); s = seeds[n]
+//s = seeds[parseInt(Math.random() * seeds.length)]
+
+//console.log(importSeeds);
+
 var baseSeed = [22,23,24,25,26,27,28,29,30,23,25,27,29,22,24,26,28];
 
 var seeds = [
@@ -204,14 +220,18 @@ var examples = {
         var runnerId = null;
         /*
         */
-        relay.subscribe('seq_updated', function(data) {
+
+        // XXX
+        function refreshSeed(data) {
             if (! data.options.my_key && data.options.steps) {
                 //seed = row.seq.steps
                 seed = data.options.steps
             } else if (data.options.my_key) {
                 //console.log('seq_updy', data, data.options.my_key);
             };
-        });
+        }
+        relay.subscribe('seq_updated', refreshSeed);
+
         function reLen(data) {
             /*
             console.log(
@@ -225,6 +245,9 @@ var examples = {
             if (nextLenIdx == lens.length) {
                 if (! repeat) {
                     //row.halt();
+                    // XXX:
+                    relay.unsubscribe('seq_updated', refreshSeed);
+                    relay.unsubscribe('stage_done', safeRelen);
                     this.cancel('d');
                     return; // Note: early return.
                 } else {
@@ -248,11 +271,12 @@ var examples = {
             //console.log(runnerId);
         }
         // XXX: unsub ?
-        relay.subscribe('stage_done', function(data) {
+        var safeRelen = function(data) {
             if (data.hook_id == this.active.d) {
                 reLen.bind(this)(data);
             }
-        }.bind(this));
+        }.bind(this);
+        relay.subscribe('stage_done', safeRelen);
         relay.publish('stage_done', {});
         row.go();
     },
@@ -293,9 +317,11 @@ var examples = {
         row.chain(stages, ! repeat);
 
         // XXX: 
-        relay.subscribe('chain_done', function() {
-            this.cancel('e');
-        }.bind(this));
+        relay.subscribe('chain_done', function done() {
+            relay.unsubscribe('chain_done', done);
+            examples.cancel('e');
+        });
+
         this.active.e = function() {
             return row.patt.schedulers.chainHookId;
         };
@@ -310,21 +336,31 @@ var examples = {
         // Subtractive seq.
         seed && row.update('steps', seed);
     },
+
     h: function(seed, repeat) {
         // Custom tones.
         seed && row.update('steps', seed);
     },
     i: function(seed, repeat) {
-        // Custom step transforms.
+        // Custom step transforms (am, rm, fm tones, ..).
         seed && row.update('steps', seed);
     },
+    
     j: function(seed, repeat) {
         // Custom tuning tables.
         seed && row.update('steps', seed);
     },
+
     k: function(seed, repeat) {
         // Custom step and param generators.
         seed && row.update('steps', seed);
+    },
+    
+    l: function(seed, repeat) {
+        // Custom attack-seq (m, n)
+    },
+    m: function(seed, repeat) {
+        // Custom rhythm (attack-seqs)
     },
 
     all: function(seed, repeat) {
@@ -340,16 +376,15 @@ var examples = {
         row.at('loop', 24, examples.d.bind(this));
         */
 
-        row.at('loop', 1, function() {
-            //examples.a(null, true);
-            examples.a();
-        });
         row.at('loop', 3, function() { examples.c(null, repeat); });
-        row.at('loop', 9, function() { examples.b(null, repeat); });
-        row.at('loop', 13, function() { examples.d(null, repeat); });
+        row.at('loop', 7, function() { examples.b(null, repeat); });
+        row.at('loop', 11, function() { examples.d(null, repeat); });
+        row.at('loop', 15, function() { examples.c(null, repeat); });
         row.at('loop', 21, function() { examples.e(null, repeat); });
+        
+        examples.a(null, repeat);
 
-        row.go();
+        //row.go();
         
     },
     

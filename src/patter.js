@@ -21,16 +21,30 @@ include([
     //'src/lib/rlb_data',
 
     'src/clang',
+    'src/row',
     'src/patt',
 
     'src/tests.js',
 
-    'src/examples.js'
+    'src/examples.js',
+
+    'src/lib/mocha.js',
 
 ], function() {
 
     //var cfs = require('coffescript');
     //console.log(cfs);
+    
+    window.importSeeds = null;
+    xhr({
+        url: 'src/seq_seeds.json',
+        success: function(evt) {
+            importSeeds = JSON.parse(evt.target.response);
+            enqueueSeeds && enqueueSeeds(importSeeds);
+        },
+        error: function(evt) {
+        }
+    });
 
     var contextClass;
     if (

@@ -46,6 +46,7 @@
         // - use queue[evtKey].push([f.toString, f])
         // - return idx from sub
         pub.unsubscribe = pub.unsubscribe || function(evtKey, callback) {
+            console.log('unsub', evtKey, callback);
             // XXX: should expect bool true or string command to clear all
             if (! callback) {
                 // Unsubscribe /everything/ from evtKey if no callback specified.
@@ -58,6 +59,7 @@
                     if (queue[evtKey][idx] == callback) {
                         // XXX: use [].splice
                         delete queue[evtKey][idx];
+                        // XXX: no dbg unless ..
                         (this.dbg.mode & this.dbgModes.DBG_UNSUB) && this.dbg.proc.call(
                             this.dbg,
                             'unsubscribe: key, idx, name, callback:', 
