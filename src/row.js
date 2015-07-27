@@ -621,7 +621,9 @@ function Row(clang, config, relay) {
     });
 
     //
-    clang.reader = row.read.bind(row);
+    //clang.reader = row.read.bind(row);
+    clang.setReader(row.read.bind(row));
+    clang.connect();
 
     return row;
 }

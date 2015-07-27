@@ -203,11 +203,12 @@ function Clang(
         sampleRate: context.sampleRate,
         //bufferLength: bufferLength,
         baseGain: baseGain,
-        reader: reader || function() { return null; },
+        reader: reader,// || function() { return null; },
 
         // XXX: ? cleaner go/halt/reset mechanism ? 
         haltedReader: null,
-        running: false,
+        //running: false,
+        starting: true,
 
         // XXX: ms rampLen ? or ratio/hz
         //      params.rampLen
@@ -320,7 +321,7 @@ function Clang(
 
         }, // setForm: function(hook)
 
-        connect: function() {
+        connect_: function() {
             this.processorNode.connect(
                 this.destination || this.context.destination
             );
@@ -329,11 +330,18 @@ function Clang(
             this.halt();
             //console.log(this.running, this.reader, this.haltedReader);
         },
+        connect: function() {
+            // XXX: should not re-connect; should assure nullReader
+            this.processorNode.onaudioprocess = this.bufferHandler.bind(this);
+            this.processorNode.connect(
+                this.destination || this.context.destination
+            );
+        },
 
 
         // XXX: explain go/halt
 
-        go: function() {
+        go_: function() {
             // XXX: add iOS start kludge
 
             //
@@ -348,8 +356,20 @@ function Clang(
             }
 
         },
-
+        go: function() {
+            if (this.reader == this.nullReader) {
+                this.reset();
+                this.reader = this.haltedReader;
+            }
+        },
         halt: function() {
+            if (this.reader != this.nullReader) {
+                this.haltedReader = this.reader;
+                this.reader = this.nullReader;
+            }
+        },
+
+        _halt: function() {
             console.log('halt', this.haltedReader, this.reader);
             this.haltedReader = this.reader;
             // If go has never been called, don't null reader [why].
@@ -361,16 +381,28 @@ function Clang(
             }
         },        
 
-        // XXX: 
-        ring: function() {
-        },
-
-        //
-        abort: function() {
-        },
-
         reset: function() {
             // fix runningFlag vs haltedReader vs ?sampleIdx? 
+            this.starting = true;
+        },
+
+        nullReader: function() {
+            return null;
+        },
+
+        setReader: function(reader) {
+            console.log('setR', reader, this.reader, this.reader == this.nullReader);
+            /*
+            if (! reader) {
+                this.reader = this.nullReader;
+            } else if (this.reader == this.nullReader) {
+                this.reader = reader;
+            } else {
+                this.haltedReader = reader;
+            }
+            */
+            this.reader = this.nullReader;
+            this.haltedReader = reader;
         },
 
         readNext: function() {
@@ -383,13 +415,14 @@ function Clang(
             this.sampleIdx = this.noReset ? this.sampleIdx : 0; // Reset phase.
         },
 
-        bump: function() {
-            this.running = false;
+        // XXX: 
+        ring: function(dur, params) {
         },
 
         bufferHandler: function(evt) {
 
-            if (! this.running) {
+            //if (! this.running) {
+            if (this.starting) {
                 this.readNext();
                 // XXX: ? initial case after halt, bump ?
                 if (this.duration) {
@@ -403,7 +436,8 @@ function Clang(
                     relay && relay.publish('clang_edge', msg);
                     relay && relay.publish('clang_onset', msg);
                 }
-                this.running = true;
+                //this.running = true;
+                this.starting = false;
             }
 
             //this.running || (this.running = true);
@@ -535,7 +569,7 @@ function Clang(
     //
     //clang.processorNode.onaudioprocess = clang.bufferHandler.bind(clang); 
     //clang.processorNode.connect(clang.context.destination);
-    clang.connect.bind(clang)();
+    //clang.connect.bind(clang)();
     
     return clang;
 
