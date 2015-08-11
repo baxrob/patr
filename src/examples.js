@@ -40,7 +40,7 @@ function enqueueSeeds(seeds) {
     nextSeed = function() { 
         nextIdx || (nextIdx = 0); 
         var returnVal = window.seeds[nextIdx] || []; 
-        console.log(nextIdx);
+        //console.log(nextIdx);
         nextIdx += 1; 
         return returnVal; 
     }; 

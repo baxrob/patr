@@ -69,6 +69,7 @@ function Row(clang, config, relay) {
                 });
             },
             assemble: function() {
+                //console.log(this.steps);
                 this.clangParams = [];
                 this.steps.forEach(function(step, idx) {
                     this.clangParams[idx] = {
@@ -129,6 +130,7 @@ function Row(clang, config, relay) {
             }
 
             // XXX: note loop_edge can't report processorNode playbackTime from here
+            //      but there will (always?) be a corresponding clang_edge
             this.currentStepIdx += 1;
             if (this.currentStepIdx == this.seq.len) {
                 // XXX: 'loop_onset'
@@ -220,10 +222,10 @@ function Row(clang, config, relay) {
             // XXX: should do immediately if 'not playing'
             //if (options.tone && clang.playing) {
             if (options.tone) {
-                relay && relay.subscribe('clang_end', function updateTone(data) {
-                    console.log('tone update hook', options.tone);
+                relay && relay.subscribe('clang_edge', function updateTone(data) {
+                    //console.log('tone update hook', options.tone);
                     clang.setForm(options.tone);
-                    relay.unsubscribe('clang_end', updateTone);
+                    relay.unsubscribe('clang_edge', updateTone);
                 });
             }
             //} else if (options.tone) {
@@ -622,7 +624,7 @@ function Row(clang, config, relay) {
 
     //
     //clang.reader = row.read.bind(row);
-    clang.setReader(row.read.bind(row));
+    clang.updateReader(row.read.bind(row));
     clang.connect();
 
     return row;

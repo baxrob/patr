@@ -12,3 +12,16 @@ function xhr(options) {
     req.open('GET', options.url || '', true);
     req.send(null);
 }
+
+var util = {
+    type: function(obj) {
+        return Object.prototype.toString.call(obj).match(/(\w+)\]/)[1];
+    },
+    trace: function(proc) {
+        try {
+            proc();
+        } catch(e) {
+            console.log(e.stack);
+        }
+    }
+}

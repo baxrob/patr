@@ -46,7 +46,7 @@
         // - use queue[evtKey].push([f.toString, f])
         // - return idx from sub
         pub.unsubscribe = pub.unsubscribe || function(evtKey, callback) {
-            console.log('unsub', evtKey, callback);
+            //console.log('unsub', evtKey, callback);
             // XXX: should expect bool true or string command to clear all
             if (! callback) {
                 // Unsubscribe /everything/ from evtKey if no callback specified.

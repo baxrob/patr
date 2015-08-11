@@ -20,7 +20,7 @@ include([
 
     //'src/lib/rlb_data',
 
-    'src/clang',
+    'src/clang.1',
     'src/row',
     'src/patt',
 
@@ -28,7 +28,7 @@ include([
 
     'src/examples.js',
 
-    'src/lib/mocha.js',
+    //'src/lib/mocha.js',
 
 ], function() {
 
@@ -50,7 +50,7 @@ include([
     if (
         contextClass = (window.AudioContext || window.webkitAudioContext)
     ) {
-        //console.log('adio api');
+        //console.log('audio api');
         var audioContext = new contextClass();
         audioContext.backend = 'webkit';
     } else {
@@ -76,7 +76,7 @@ include([
     //relay.dbg = null;
 
     window.clang = Clang(
-        audioContext, 
+        {}, //audioContext, 
         audioProcessBlockSize, 
         0.8, 
         'sine', 
