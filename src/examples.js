@@ -339,6 +339,8 @@ var examples = {
 
     h: function(seed, repeat) {
         // Custom tones.
+        // AM RM FM
+        // bity
         seed && row.update('steps', seed);
     },
     i: function(seed, repeat) {

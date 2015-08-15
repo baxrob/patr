@@ -1,20 +1,29 @@
 
-//include(['clangForms'], function() {
+include(['src/clangForms'], function() {
 //console.log('ff');
-// 
+
+}); 
+
 function Clang(config, options) {
 
     var clang = {
+        
         sampleIdx: 0,
         elapsed: 0,
-        //durationWritten: 0,
         duration: 0,
         length: 0,
         written: 0,
-        params: [],
+        buffer: null,
         haltedReader: null,
+        // XXX: interruptedReader: null,
+
+        // XXX: init w/ starting=true, or params=null
+        params: [],
+        //params: null,
         //starting: false,
         starting: true,
+        
+        //init: function(forms, config, options) {
         init: function(config, options) {
 
             this.context = config.context || this.initContext();
@@ -53,7 +62,6 @@ function Clang(config, options) {
             return audioContext; 
         },
         connect: function() {
-            //this.processorNode.onaudioprocess = this.bufferHandler.bind(this);
             this.processorNode.onaudioprocess = this.bufferWriter.bind(this);
             this.processorNode.connect(this.destination); 
         },
@@ -66,7 +74,6 @@ function Clang(config, options) {
             }
         },
         halt: function() {
-            console.log('halt', this.reader, this.nullReader, this.haltedReader);
             if (this.reader != this.nullReader) {
                 this.haltedReader = this.reader;
                 this.reader = this.nullReader;
@@ -78,7 +85,6 @@ function Clang(config, options) {
         },
 
         nullReader: function() {
-            console.log('null');
             return null;
         },
 
@@ -94,16 +100,22 @@ function Clang(config, options) {
 
         readNext: function() {
             var spec = this.reader();
-            //console.log('rN', spec);
             this.duration = spec ? spec[0] : 0;
-            this.sampleLen = this.duration * this.sampleRate;
             this.params = spec ? spec[1] : {};
             this.sampleIdx = this.noReset ? this.sampleIdx : 0; 
 
+            // XXX:
             this.envelope = this.buildEnvelope();
             this.written = 0;
             this.length = Math.round(this.duration * this.sampleRate);
         },
+
+        // XXX: optimizations 
+        //      - memoize and fetchEnvelope each readNext
+        //      - parcel out extremely long, eg, 20-minute notes
+        //      -- 20min = 1200sec = 52,920,000samps
+        //      -- so an async wrt buffers approach would solve
+        //      - inline math in fillBuffer
         buildEnvelope: function() {
 
             var points = this.params.env || [[0, 1], [0.95, 1]];
@@ -119,14 +131,20 @@ function Clang(config, options) {
                 var height = point[1] - pastPoint[1];
                 var slope = height / len;
                 var offset = pastPoint[1];
-                //console.log(len, height, slope, offset, point, pastPoint);
                 for (var x = 0; x < len; x++) {
                     envelope.push(slope * x + offset);
                 }
                 pastPoint = point;
             });
-            //console.log(envelope);
             return envelope;
+        },
+        buildEdge: function(len, height, offset) {
+            var edge = [];
+            var slope = height / len;
+            for (var x = 0; x < len; x++) {
+                edge.push(slope * x + offset);
+            }
+            return edge;
         },
 
         broadcastEdge: function(data) {
@@ -138,7 +156,7 @@ function Clang(config, options) {
             });
         },
 
-        //
+        // XXX: To Testing
         mockProcessingEvent: {
             outputBuffer: {
                 length: 1024,
@@ -151,14 +169,12 @@ function Clang(config, options) {
                 }
             }
         },
+        // XXX: sender/receiver idiom
         log: [],
         test: function(reset) {
             reset && (this.starting = true);
             this.processorNode.disconnect();
-            //console.log(this.reader);
-            //console.log(this.haltedReader);
             this.reader = this.haltedReader;
-            //this.starting = true;
             this.log = [];
             this.bufferWriter(this.mockProcessingEvent);
             return this.mockProcessingEvent.outputBuffer.buffer[0];
@@ -166,7 +182,7 @@ function Clang(config, options) {
 
         buffer: null,
         bufferWriter: function(evt) {
-            //console.log('bwA', this.starting, this.duration, this.length);
+ 
             // Read initial parameters.
             if (this.starting) {
                 this.readNext();
@@ -175,16 +191,19 @@ function Clang(config, options) {
                 ]);
                 this.starting = false;
             }
+
             //delete this.buffer;
             this.buffer = evt.outputBuffer;
             if (this.duration == 0) {
                 this.fillBuffers(0, this.buffer.length, true); 
                 return; // Early return.
             }
+
             var bufferTail = this.buffer.length;
             var clangTail = this.length - this.written;
             var clangEnding = clangTail <= bufferTail;
-            //console.log('bwB', clangTail, bufferTail, clangEnding);
+            //var clangEnding = clangTail && clangTail <= bufferTail;
+
             while (clangEnding) {
                 this.fillBuffers(this.buffer.length - bufferTail, clangTail);
                 bufferTail -= clangTail;
@@ -197,14 +216,11 @@ function Clang(config, options) {
                 clangTail = this.length;
                 clangEnding = clangTail && clangTail <= bufferTail;
             }
-            //console.log(this.bufferLength - bufferTail, bufferTail)
             this.fillBuffers(
                 this.buffer.length - bufferTail, bufferTail, ! this.length
             );
-            //this.fillBuffers(this.written, bufferTail);
 
             this.written += bufferTail;
-            //console.log('C', clangTail, bufferTail, clangEnding, this.written);
         },
 
         
@@ -226,7 +242,6 @@ function Clang(config, options) {
             //    buffers[chIdx] = this.buffer.getChannelData(chIdx);
             //}
             
-            //console.log('filling', offset, offset + fill);
             for (var idx = offset; idx < offset + fill; idx++) {
                 var sampleIdx = this.written + idx - offset;
                 /*
@@ -244,58 +259,6 @@ function Clang(config, options) {
                 //}
             }
         },
-
-        // XXX: future interface 
-        //  buffers, synthParams, offsetSamps, fillSamps, phase, duckIn, duckOut
-        populateBuffers: function(
-            buffers, synthParams, offsetSamps, fillSamps, duckIn, duckOut, phase
-        ) {
-            phase = phase || 0;
-            var gain = this.gainProc(synthParams) * this.baseGain;
-            var bufferIdx = offsetSamps;
-            var bufferEndIdx = offsetSamps + fillSamps;
-            var fadeOutStart = bufferEndIdx - (duckOut ? this.rampLen : 0);
-            var sampleVal;
-            
-            // XXX: logging
-            kSamps += fillSamps;
-            //log && log.push('k,s,o' + kSamps + ' ' + fillSamps + ' ' + offsetSamps);
-
-            if (false && duckIn) {
-                var fadePos = 0;
-                while (bufferIdx < offsetSamps + this.rampLen) {
-                    sampleVal = (fadePos++ / this.rampLen)
-                        * this.synthProc(
-                            this.sampleIdx + phase, synthParams, this.sampleRate
-                        ) * gain; 
-                    buffers[0][bufferIdx] = buffers[1][bufferIdx] = sampleVal;
-                    bufferIdx++;
-                    this.sampleIdx++;
-                }
-            }
-
-            while (bufferIdx < fadeOutStart) {
-                sampleVal = this.synthProc(
-                    this.sampleIdx + phase, synthParams, this.sampleRate
-                ) * gain;
-                buffers[0][bufferIdx] = buffers[1][bufferIdx] = sampleVal;
-                bufferIdx++;
-                this.sampleIdx++;
-            }
-
-            if (duckOut) {
-                var fadePos = this.rampLen;
-                while (bufferIdx < bufferEndIdx) {
-                    sampleVal = (fadePos-- / this.rampLen)
-                        * this.synthProc(
-                            this.sampleIdx + phase, synthParams, this.sampleRate
-                        ) * gain; 
-                    buffers[0][bufferIdx] = buffers[1][bufferIdx] = sampleVal;
-                    bufferIdx++;
-                    this.sampleIdx++;
-                }
-            }
-        }, // populateBuffers: function(
 
         setForm: function(hook) {
             var hookType = util.type(hook);
@@ -419,6 +382,8 @@ function ClangForms(sampleRate) {
 
     };
 
+/*
+*/
     // Families.
 
     // forms = { 
@@ -438,7 +403,7 @@ function ClangForms(sampleRate) {
             synthProc: sampleGen.square, 
             gainProc: nGain.bleatHz
         },
-        /* */
+        //
         // XXX: dress with phase - in stoytones.js
         spring: {
             // XXX: wrap with params.phase
@@ -502,6 +467,7 @@ function ClangForms(sampleRate) {
         sampleGen: sampleGen,
         nGain: nGain
     };
+
 }
 
 //}); // include

@@ -76,8 +76,12 @@ include([
     //relay.dbg = null;
 
     window.clang = Clang(
-        {}, //audioContext, 
-        audioProcessBlockSize, 
+        {
+        }, //audioContext, 
+        {
+
+        }, //audioProcessBlockSize, 
+        // XXX:
         0.8, 
         'sine', 
         // XXX:

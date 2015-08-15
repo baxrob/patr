@@ -10,13 +10,13 @@ function Row(clang, config, relay) {
     var row = {
 
         // Clock and output: 
-        //      expected to supply go, halt, bump and setForm methods
+        //      expected to supply go, halt, bump [reset?]  and setForm methods
         //      assigned with a reader procedure, and expected to produce output 
         //      based on [dur, params] specification built from sequence aspects
         clang: clang,
         
         // XXX: ? when pace == 0 ?
-        pace: config.pace || 0,
+        pace: config.pace || 1,//0,
         currentStepIdx: config['goto'] || 0,
         loop: config.loop || false,
         tone: config.tone || 'sine',
@@ -182,7 +182,7 @@ function Row(clang, config, relay) {
             if (
                 options.vals 
                 && options.vals.length == 2 
-                && util.type(options.vals[0] == 'Number')
+                && util.type(options.vals[0]) == 'Number'
             ) {
                 options.vals = [options.vals];
             }
@@ -232,7 +232,7 @@ function Row(clang, config, relay) {
             //    clang.setForm(options.tone);
             //}
 
-        }
+        } // update
 
     }; // row
 
@@ -441,22 +441,19 @@ function Row(clang, config, relay) {
             var counter = 0;
             function runStage() {
                 var stage = stages[counter % stages.length];
+                console.log('stage', stage);
                 var cmd = stage[0];
                 var args = stage[1];
-                args = args.map(function(arg) {
-                    //console.log(util.type(arg));
+                var parsedArgs = args.map(function(arg) {
                     if (util.type(arg) == 'Array') {
                         return function() {
-                            //console.log(row[arg[0]], arg[1]);
                             row[arg[0]].apply(row, arg[1]);
                         }.bind(this);
                     } else {
                         return arg;
                     }
                 });
-                //console.log(row[cmd], args);
-                //console.log('runStage', hook_id);
-                //this.chainHookId = hook_id = row[cmd].apply(row, args);
+                console.log(cmd, parsedArgs);
 
                 // XXX:
                 row.patt.schedulers.chainHookId = hook_id 
@@ -464,8 +461,9 @@ function Row(clang, config, relay) {
                 
                 counter += 1;
             };
+
+            // Catch and continue chain on signal from row at/each methods. 
             relay.subscribe('stage_done', function done(data) {
-                //console.log(data.hook_id, hook_id, this);
                 if (data.hook_id == hook_id) {
                     if (counter == stages.length && once) {
                         relay.unsubscribe('stage_done', done);
@@ -475,6 +473,7 @@ function Row(clang, config, relay) {
                     }
                 }
             });
+            // Start the chain.
             runStage();
             //return hook_id;
             /*
