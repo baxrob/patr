@@ -406,7 +406,6 @@ function Row(clang, config, relay) {
             var caller = function() {
                 if (! --counter) {
                     // XXX: ? relay/broadcast these ?
-                    //console.log(hook);
                     this.lookup_hook(hook)();
                     if (limit && ! --limit) {   // Final repitition.
                         relay.unsubscribe(evt_name, caller);
@@ -457,7 +456,7 @@ function Row(clang, config, relay) {
 
                 // XXX:
                 row.patt.schedulers.chainHookId = hook_id 
-                    = row[cmd].apply(row, args);
+                    = row[cmd].apply(row, parsedArgs);
                 
                 counter += 1;
             };
@@ -624,7 +623,7 @@ function Row(clang, config, relay) {
     //
     //clang.reader = row.read.bind(row);
     clang.updateReader(row.read.bind(row));
-    clang.connect();
+    //clang.connect();
 
     return row;
 }

@@ -44,7 +44,7 @@ function Clang(config, options) {
             this.processorNode = this.context.createScriptProcessor(
                 this.bufferLength, 0, 2
             );
-            this.connect();
+            //this.connect();
 
             return this;
         },
@@ -65,6 +65,10 @@ function Clang(config, options) {
             this.processorNode.onaudioprocess = this.bufferWriter.bind(this);
             this.processorNode.connect(this.destination); 
         },
+        disconnect: function() {
+            this.processorNode.onaudioprocess = null;
+            this.processorNode.disconnect();
+        },
         
         go: function() {
             if (this.reader == this.nullReader) {
@@ -80,8 +84,24 @@ function Clang(config, options) {
             }
         },
 
-        ring: function(dur, params) {
+        ring: function(dur, hz, form, tuning) {
             //this.interruptedReader = this.haltedReader || this.reader;
+            this.preempt = true;
+            this.haltedReader = this.reader;
+            var step = 0;
+            this.reader = function() {
+                if (step == 0) {
+                    step = 1;
+                    if (form) {
+                    }
+                    if (tuning) {
+                    }
+                    //return [dur, {hz: hz, idx: 0, ratio: 0, time: dur}];
+                    return [dur, {hz: hz, idx: 0, ratio: 0, time: dur, value: hz}];
+                } else {
+                    return null;
+                }
+            };
         },
 
         nullReader: function() {
@@ -98,16 +118,20 @@ function Clang(config, options) {
             }
         },
 
-        readNext: function() {
+        readNext: function(playbackTime) {
             var spec = this.reader();
             this.duration = spec ? spec[0] : 0;
             this.params = spec ? spec[1] : {};
             this.sampleIdx = this.noReset ? this.sampleIdx : 0; 
 
+            this.length = Math.round(this.duration * this.sampleRate);
+            this.length && this.broadcastEdge([
+                0, this.duration, this.context.currentTime, playbackTime 
+            ]);
+
             // XXX:
             this.envelope = this.buildEnvelope();
             this.written = 0;
-            this.length = Math.round(this.duration * this.sampleRate);
         },
 
         // XXX: optimizations 
@@ -180,37 +204,63 @@ function Clang(config, options) {
             return this.mockProcessingEvent.outputBuffer.buffer[0];
         },
 
+        setupPreempt: function() {
+            // pre: buffer is at 0
+            //      this.written represents samples written of clang/this.length
+            //
+            // XXX: dur/len and env are changing
+
+            // Rewrite tail of envelope to duck out.
+            var tailLen = 256; //this.length * 0.05; // XXX: uh, long notes ?
+            for (var idx in (new Int8Array(tailLen))) {
+                this.envelope[idx + this.written] = (tailLen - idx) / tailLen;
+            }
+            this.fillBuffers(tailLen, 0);
+        },
+        closePreeempt: function() {
+        },
+
         buffer: null,
         bufferWriter: function(evt) {
  
             // Read initial parameters.
+            /*
             if (this.starting) {
-                this.readNext();
-                this.length && this.broadcastEdge([
-                    0, this.duration, this.context.currentTime, evt.playbackTime 
-                ]);
+                this.readNext(evt.playbackTime);
+                //this.length && this.broadcastEdge([
+                //    0, this.duration, this.context.currentTime, evt.playbackTime 
+                //]);
+                this.starting = false;
+            }
+            */
+            if (this.starting || this.preempt) {
+                this.preempt && this.setupPreempt();
+                this.readNext(evt.playbackTime);
+                this.preempt && this.closePreempt();
                 this.starting = false;
             }
 
             //delete this.buffer;
             this.buffer = evt.outputBuffer;
+            /*
             if (this.duration == 0) {
                 this.fillBuffers(0, this.buffer.length, true); 
                 return; // Early return.
             }
+            */
 
             var bufferTail = this.buffer.length;
             var clangTail = this.length - this.written;
-            var clangEnding = clangTail <= bufferTail;
-            //var clangEnding = clangTail && clangTail <= bufferTail;
+            //var clangEnding = clangTail <= bufferTail;
+            var clangEnding = clangTail && clangTail <= bufferTail;
 
             while (clangEnding) {
                 this.fillBuffers(this.buffer.length - bufferTail, clangTail);
                 bufferTail -= clangTail;
-                this.readNext();
-                this.length && this.broadcastEdge([
-                    0, this.duration, this.context.currentTime, evt.playbackTime 
-                ]);
+                this.readNext(evt.playbackTime);
+                //this.length && this.broadcastEdge([
+                //    0, this.duration, this.context.currentTime, evt.playbackTime 
+                //]);
                 //this.written = 0;
                 // XXX: catch null length / halted
                 clangTail = this.length;
@@ -226,13 +276,14 @@ function Clang(config, options) {
         
         //fillBuffers: function(buffer, offset, fill) {
         fillBuffers: function(offset, fill, silence) {
-            // Populate current buffer
-            // from @offset, through @fill
-            //     in sample terms
+            // Populate current buffer from @offset, through @fill
             // with the result of combining 
             //     the output of form.clangProc
-            //     the aplitude factor from form.envelope
+            //     with the aplitude factors from form.envelope
             //     and form.gainFactor
+            // or with zeroes if @silence
+
+            //this.log.push(['fB', offset, fill, silence]);
 
             var buffers = [
                 this.buffer.getChannelData(0),

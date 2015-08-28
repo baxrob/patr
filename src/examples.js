@@ -69,11 +69,33 @@ var examples = {
 
     active: {},
 
+
+    ring: { // clang.ring(duration, params[, clangForm[, tuning]])
+            // params: ...
+        thence: function(notes, times, distance) {
+            // bla
+            row.clang.ring(times[0], notes[0]);
+            setTimeout(function() {
+                row.clang.ring(times[1], notes[1]);
+            }, distance);
+        },
+        atonce: function(notes, times) {
+            notes.forEach(function(note, idx) {
+                row.clang.ring(times[idx], note);
+            });
+        },
+        midrow: function(items, times, distance) {
+        },
+        rowafter: function(items, times, distance) {
+        }
+    },
+
+
     // 2x each: prime, inv, retro, invret
     a: function(seed, repeat) {
         // Serial ops.
 
-        console.log('eg a');
+        console.log('eg a', seed, repeat, this, arguments);
 
         seed && row.update('steps', seed);
         var stages = ['invert', 'reverse', 'invert', 'reverse'];
@@ -81,7 +103,7 @@ var examples = {
         var counter = 0;
         // XXX: un/repeatable
         function nextStage() {
-            var stage = stages[counter++ % stages.length];;
+            var stage = stages[counter++ % stages.length];
             console.log(stage, counter - 1);
             row[stage]();
         }
@@ -89,7 +111,7 @@ var examples = {
         this.active.a = row.every(
             'loop', 
             2, 
-            ! repeat ? stages.length : null, 
+            ! repeat ? stages.length + 1 : null, 
             nextStage,
             function() {
                 repeat || this.cancel('a');
@@ -128,18 +150,18 @@ var examples = {
         console.log('eg b');
 
         seed && row.update('steps', seed);
-        this.cancel('b', true);
+        //this.cancel('b1', true);
         function reOrderStage() {
-            this.active.b = row.every('beat', 26, 3, 'reorder', function() {
+            this.active.b2 = row.every('beat', 26, 3, 'reorder', function() {
                 console.log('done 26 3');
-                this.cancel('b', true);
-                this.active.b = row.every('beat', 16, 4, 'reorder', function() {
+                this.cancel('b2', true);
+                this.active.b3 = row.every('beat', 16, 4, 'reorder', function() {
                     console.log('done 16 4');
-                    this.cancel('b', true);
-                    this.active.b = row.every(
+                    this.cancel('b3', true);
+                    this.active.b4 = row.every(
                         'beat', 5, 11, 'reorder', function() {
                             console.log('done 5 11');
-                            this.cancel('b');
+                            this.cancel('b4');
                             //row.halt();
                             //console.log('repeat', repeat);
                             //once && row.halt();
@@ -368,7 +390,8 @@ var examples = {
     all: function(seed, repeat) {
 
         console.log('eg all', seed, repeat);
-        row.update('steps', seed || seeds[6]);
+        //row.update('steps', seed || seeds[6]);
+        seed && row.update('steps', seed);
 
         /*
         row.at('loop', 2, examples.a.bind(this));
@@ -378,16 +401,46 @@ var examples = {
         row.at('loop', 24, examples.d.bind(this));
         */
 
-        row.at('loop', 3, function() { examples.c(null, repeat); });
+        /*
+        row.at('loop', 3, function() { examples.a(null, repeat); });
         row.at('loop', 7, function() { examples.b(null, repeat); });
         row.at('loop', 11, function() { examples.d(null, repeat); });
         row.at('loop', 15, function() { examples.c(null, repeat); });
         row.at('loop', 21, function() { examples.e(null, repeat); });
+        */
         
+        //row.at('loop', 3, function() { examples.a(null, repeat); });
+        row.at('loop', 3, function() { examples.b(null, repeat); });
+        row.at('loop', 7, function() { examples.d(null, repeat); });
+        row.at('loop', 15, function() { examples.c(null, repeat); });
+        row.at('loop', 11, function() { examples.e(null, repeat); });
+
+        // Begin.
         examples.a(null, repeat);
 
         //row.go();
         
+    },
+    all_safe: function(seed, repeat) {
+        console.log('eg all determ', seed, repeat);
+        //row.update('steps', seed || seeds[6]);
+        seed && row.update('steps', seed);
+
+        /*
+        row.at('loop', 2, examples.a.bind(this));
+        row.at('loop', 8, examples.c.bind(this));
+        row.at('loop', 12, examples.b.bind(this));
+        row.at('loop', 22, examples.e.bind(this));
+        row.at('loop', 24, examples.d.bind(this));
+        */
+
+        //row.at('loop', 3, function() { examples.a(null, repeat); });
+        row.at('loop', 3, function() { examples.b(null, repeat); });
+        //row.at('loop', 11, function() { examples.d(null, repeat); });
+        row.at('loop', 11, function() { examples.c(null, repeat); });
+        row.at('loop', 15, function() { examples.e(null, repeat); });
+        
+        examples.a(null, repeat);
     },
     
     // XXX:
@@ -412,6 +465,7 @@ var examples = {
             delete this.active[item];
             var activeCount = 0;
             for (var key in this.active) {
+                console.log('counting', key, this.active[key]);
                 activeCount += 1;
             }
             if (! activeCount && ! forceContinue) {
