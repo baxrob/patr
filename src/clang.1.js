@@ -44,7 +44,7 @@ function Clang(config, options) {
             this.processorNode = this.context.createScriptProcessor(
                 this.bufferLength, 0, 2
             );
-            //this.connect();
+            this.connect();
 
             return this;
         },
@@ -87,9 +87,11 @@ function Clang(config, options) {
         ring: function(dur, hz, form, tuning) {
             //this.interruptedReader = this.haltedReader || this.reader;
             this.preempt = true;
-            this.haltedReader = this.reader;
+            this.haltedReader == this.nullReader 
+                || (this.haltedReader = this.reader);
             var step = 0;
             this.reader = function() {
+                console.log('ringer', step, dur, hz);
                 if (step == 0) {
                     step = 1;
                     if (form) {
@@ -99,6 +101,8 @@ function Clang(config, options) {
                     //return [dur, {hz: hz, idx: 0, ratio: 0, time: dur}];
                     return [dur, {hz: hz, idx: 0, ratio: 0, time: dur, value: hz}];
                 } else {
+                    console.log(this.reader, this.haltedReader);
+                    this.reader = this.nullReader;
                     return null;
                 }
             };
@@ -120,6 +124,7 @@ function Clang(config, options) {
 
         readNext: function(playbackTime) {
             var spec = this.reader();
+            console.log('rnext', spec);
             this.duration = spec ? spec[0] : 0;
             this.params = spec ? spec[1] : {};
             this.sampleIdx = this.noReset ? this.sampleIdx : 0; 
@@ -162,7 +167,7 @@ function Clang(config, options) {
             });
             return envelope;
         },
-        buildEdge: function(len, height, offset) {
+        buildEnvEdge: function(len, height, offset) {
             var edge = [];
             var slope = height / len;
             for (var x = 0; x < len; x++) {
@@ -217,7 +222,8 @@ function Clang(config, options) {
             }
             this.fillBuffers(tailLen, 0);
         },
-        closePreeempt: function() {
+        closePreempt: function() {
+            this.preempt = false;
         },
 
         buffer: null,
@@ -252,7 +258,7 @@ function Clang(config, options) {
             var bufferTail = this.buffer.length;
             var clangTail = this.length - this.written;
             //var clangEnding = clangTail <= bufferTail;
-            var clangEnding = clangTail && clangTail <= bufferTail;
+            var clangEnding = clangTail > 0 && clangTail <= bufferTail;
 
             while (clangEnding) {
                 this.fillBuffers(this.buffer.length - bufferTail, clangTail);

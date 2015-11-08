@@ -3,7 +3,117 @@
 <head>
 <meta charset="utf-8">
 <script src="src/lib/rlb_include.js?src/patter.js"></script>
+<style>
+html {
+    height: 100%;
+}
+body {
+    margin: 0;
+    height: 100%;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+nav.meta {
+    height: 7%;
+}
+nav > * {
+    font-size: 1.5em;
+    text-align: center;
+    margin: auto;
+}
+
+section.config {
+    height: 33%;
+}
+
+section.control {
+    height: 60%;
+}
+
+section section {
+    float: left;
+    width: 50%;
+    height: 100%;
+    outline: 1px solid #999;
+}
+</style>
 </head>
 <body>
+
+<nav class="meta">
+    <a href="#">x</a>
+    <div>y</div>
+</nav>
+
+<section class="config">
+    <section></section>
+    <section></section>
+</section>
+
+<section class="control">
+    <section></section>
+    <section></section>
+</section>
+
+<script>
+var app = {
+    nav: document.querySelector('nav.meta'),
+    config: document.querySelector('section.config'),
+    control: document.querySelector('section.control'),
+    _content: {
+        nav: [],
+        config: [
+            ['select x -> a'],
+            ['select y -> b']
+        ],
+        control: [
+            ['x : type'],
+            ['y : type']
+        ]
+    },
+    _ixion: {
+        nav: {},
+        config: {},
+        control: {}
+    }
+};
+app._content.nav.push(
+    // REPL
+);
+
+var logOut = app.config.querySelector('section:first-child');
+console.log(logOut);
+function print(msg) {
+    logOut.innerHTML = msg + '<br>' + logOut.innerHTML;     
+}
+var toucherson = app.nav.querySelector('div');
+console.log(toucherson);
+toucherson.addEventListener('touchstart', function(evt) {
+    print(Date.now() + ' ' + evt.type);
+    evt.preventDefault();
+});
+toucherson.addEventListener('touchmove', function(evt) {
+    print(Date.now() + ' ' + evt.type);
+});
+toucherson.addEventListener('touchend', function(evt) {
+    print(Date.now() + ' ' + evt.type);
+});
+toucherson.addEventListener('mouseover', function(evt) {
+    print(Date.now() + ' ' + evt.type);
+});
+toucherson.addEventListener('mousemove', function(evt) {
+    print(Date.now() + ' ' + evt.type);
+});
+toucherson.addEventListener('mousedown', function(evt) {
+    print(Date.now() + ' ' + evt.type);
+});
+toucherson.addEventListener('mouseup', function(evt) {
+    print(Date.now() + ' ' + evt.type);
+});
+toucherson.addEventListener('click', function(evt) {
+    print(Date.now() + ' ' + evt.type);
+});
+</script>
 </body>
 </html>
