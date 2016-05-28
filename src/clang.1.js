@@ -124,7 +124,7 @@ function Clang(config, options) {
 
         readNext: function(playbackTime) {
             var spec = this.reader();
-            console.log('rnext', spec);
+            //console.log('rnext', spec);
             this.duration = spec ? spec[0] : 0;
             this.params = spec ? spec[1] : {};
             this.sampleIdx = this.noReset ? this.sampleIdx : 0; 
@@ -367,6 +367,8 @@ function Clang(config, options) {
     return Object.create(clang).init(config, options); 
 }
 
+
+// XXX:
 function ClangForms(sampleRate) {
 
     // Factors.
@@ -528,3 +530,4 @@ function ClangForms(sampleRate) {
 }
 
 //}); // include
+

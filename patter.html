@@ -2,6 +2,8 @@
 <html>
 <head>
 <meta charset="utf-8">
+<!--
+-->
 <script src="src/lib/rlb_include.js?src/patter.js"></script>
 <style>
 html {
@@ -14,106 +16,157 @@ body {
     -webkit-user-select: none;
 }
 
-nav.meta {
-    height: 7%;
+.trigger {
+    width: 110px;
+    height: 110px;
+    background: #eee;
+    margin: 100px auto;
 }
-nav > * {
-    font-size: 1.5em;
-    text-align: center;
-    margin: auto;
+.fader.horiz {
+    width: 220px;
+    height: 80px;
+    background: #eee;
+    margin: 100px auto;
 }
-
-section.config {
-    height: 33%;
-}
-
-section.control {
-    height: 60%;
-}
-
-section section {
-    float: left;
-    width: 50%;
+.fader.horiz .selection {
+    width: 30px;
     height: 100%;
-    outline: 1px solid #999;
+    background: #bbb;
+}
+
+.toggle {
+    width: 110px;
+    height: 110px;
+    background: #eee;
+    margin: 100px auto;
+    overflow: auto;
+}
+.toggle.stop .icon {
+    width: 50px;
+    height: 50px;
+    background: #bbb;
+    margin: 30px auto;
+}
+.toggle.play .icon {
+    width: 60px;
+    margin: 25px 35px;
+    border-top: 30px solid transparent;
+    border-bottom: 30px solid transparent;
+    border-left: 50px solid #bbb;
 }
 </style>
 </head>
 <body>
 
-<nav class="meta">
-    <a href="#">x</a>
-    <div>y</div>
-</nav>
+<div class="toggle play">
+    <div class="icon"></div>
+</div>
 
-<section class="config">
-    <section></section>
-    <section></section>
-</section>
+<div class="trigger">
+    <div class="selection"></div>
+</div>
 
-<section class="control">
-    <section></section>
-    <section></section>
-</section>
+<div class="fader horiz">
+    <div class="selection"></div>
+</div>
 
-<script>
-var app = {
-    nav: document.querySelector('nav.meta'),
-    config: document.querySelector('section.config'),
-    control: document.querySelector('section.control'),
-    _content: {
-        nav: [],
-        config: [
-            ['select x -> a'],
-            ['select y -> b']
-        ],
-        control: [
-            ['x : type'],
-            ['y : type']
-        ]
-    },
-    _ixion: {
-        nav: {},
-        config: {},
-        control: {}
-    }
-};
-app._content.nav.push(
-    // REPL
-);
+<div class="dbg_out">
+</div>
 
-var logOut = app.config.querySelector('section:first-child');
-console.log(logOut);
-function print(msg) {
-    logOut.innerHTML = msg + '<br>' + logOut.innerHTML;     
-}
-var toucherson = app.nav.querySelector('div');
-console.log(toucherson);
-toucherson.addEventListener('touchstart', function(evt) {
-    print(Date.now() + ' ' + evt.type);
-    evt.preventDefault();
-});
-toucherson.addEventListener('touchmove', function(evt) {
-    print(Date.now() + ' ' + evt.type);
-});
-toucherson.addEventListener('touchend', function(evt) {
-    print(Date.now() + ' ' + evt.type);
-});
-toucherson.addEventListener('mouseover', function(evt) {
-    print(Date.now() + ' ' + evt.type);
-});
-toucherson.addEventListener('mousemove', function(evt) {
-    print(Date.now() + ' ' + evt.type);
-});
-toucherson.addEventListener('mousedown', function(evt) {
-    print(Date.now() + ' ' + evt.type);
-});
-toucherson.addEventListener('mouseup', function(evt) {
-    print(Date.now() + ' ' + evt.type);
-});
-toucherson.addEventListener('click', function(evt) {
-    print(Date.now() + ' ' + evt.type);
-});
-</script>
 </body>
+<script>
+
+// XXX: ???
+//background: linear-gradient(90deg, #bbb {left}px, #eee {right}px, #eee);
+
+// Debug output
+var outputDiv = document.querySelector('.dbg_out');
+console.log(outputDiv);
+function dbg(line) {
+    outputDiv.innerHTML = line + '<br>' + outputDiv.innerHTML;
+}
+
+
+// Toggle
+var playStop = document.querySelector('.toggle');
+
+function togglePlaying(evt) {
+    var target = evt.target.className == 'icon' ? evt.target.parentElement : evt.target;
+    if (target.className.indexOf(' play') != -1) {
+        target.className = target.className.replace(' play', ' stop');
+        row.go();
+    } else {
+        target.className = target.className.replace(' stop', ' play');
+        row.halt();
+    }
+}
+playStop.addEventListener('click', togglePlaying);
+playStop.addEventListener('touchstart', function(evt) {
+    evt.preventDefault();
+    togglePlaying(evt);
+});
+
+// Trigger
+var trigger = document.querySelector('.trigger');
+
+function flashTrigger(evt) {
+    //console.log(row.go);
+    evt.target.style.background = '#aaa';
+    setTimeout(function() {
+        evt.target.style.background = '#eee';
+    }, 140);
+}
+
+trigger.addEventListener('mousedown', flashTrigger);
+trigger.addEventListener('touchstart', function(evt) {
+    evt.preventDefault();
+    flashTrigger(evt);
+});
+
+
+// Fader
+//var faders = document.querySelectorAll('.fader.horiz');
+var fader = document.querySelector('.fader.horiz');
+var faderSelection = fader.querySelector('.selection');
+
+
+function updatePosition(n) {
+    faderSelection.style.width = n + 'px';
+    //dbg(n);
+    //console.log(row.len);
+}
+function updateX(evt) {
+    // XXX:
+    //var offset = evt.offsetX || evt.layerX;
+    //dbg(offset + ' ' + fader.offsetLeft + ' ' + evt.clientX + ' ' + evt.pageX);
+    var offset = (evt.pageX || evt.clientX) - fader.offsetLeft;
+    updatePosition(offset);
+}
+
+
+function watchX(evt) {
+    updateX(evt);
+    fader.addEventListener('mousemove', updateX);
+}
+function ignoreX(evt) {
+    fader.removeEventListener('mousemove', updateX);
+}
+
+fader.addEventListener('mousedown', watchX);
+fader.addEventListener('mouseup', ignoreX);
+
+
+function watchTouchX(evt) {
+    evt.preventDefault()
+    updateX(evt);
+    fader.addEventListener('touchmove', updateX);
+}
+function ignoreTouchX(evt) {
+    ignoreX(evt);
+}
+
+fader.addEventListener('touchstart', watchTouchX);
+fader.addEventListener('touchend', ignoreTouchX);
+
+</script>
 </html>
