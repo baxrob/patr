@@ -20,8 +20,8 @@ include([
 
     //'src/lib/rlb_data',
 
+    'src/clangForms',
     'src/clang.1',
-    //'src/clangForms',
     'src/row',
     'src/patt',
 
