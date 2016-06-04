@@ -75,6 +75,7 @@ function Clang(config, options) {
             this.processorNode.disconnect();
         },
         
+        // XXX: 
         silence: function() {
             var count = 1;
             var nullifyProcess = function() {
@@ -295,7 +296,11 @@ function Clang(config, options) {
 
             //delete this.buffer;
             this.buffer = evt.outputBuffer;
+
             /*
+            if (! this.duration) {
+                return;
+            }
             if (this.duration == 0) {
                 //this.readNext(evt.playBackTime); //
                 console.log('null note', this.buffer.getChannelData(0), this.buffer.length);
@@ -309,7 +314,8 @@ function Clang(config, options) {
             */
 
             var bufferTail = this.buffer.length;
-            var clangTail = this.length - this.written;
+            //var clangTail = this.length - this.written;
+            var clangTail = this.length ? this.length - this.written : 0;
             //var clangEnding = clangTail <= bufferTail;
             //var clangEnding = clangTail > 0 && clangTail <= bufferTail;
             var clangEnding = clangTail && clangTail <= bufferTail;
