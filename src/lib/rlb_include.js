@@ -37,7 +37,7 @@
         var busyLoading = false;
 
         function include(fileData, onComplete) {
-            console.log('include.this', fileData, onComplete);//, this);
+            //console.log('include.this', fileData, onComplete);//, this);
             
             function loadWalkObject(pathFiles) {
                 for (var path in pathFiles) {
@@ -60,7 +60,7 @@
             }
             
             function enqueueOrLoadScript(filePath, onComplete) {
-                console.log('enqOrLoad', busyLoading, filePath, onComplete);
+                //console.log('enqOrLoad', busyLoading, filePath, onComplete);
                 if (busyLoading) {
                     waitingQueue.push([filePath, onComplete]);
                 } else {
@@ -78,7 +78,7 @@
                     : assetRoot; 
                 scriptTag.setAttribute('src', basePath + filePath);
                 scriptTag.onload = function(evt) {
-                    console.log('script.onload', filePath, waitingQueue);
+                    //console.log('script.onload', filePath, waitingQueue);
                     onComplete && onComplete();
                     busyLoading = false;
                     if (waitingQueue && waitingQueue.length) {

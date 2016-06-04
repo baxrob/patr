@@ -46,7 +46,7 @@
         // - use queue[evtKey].push([f.toString, f])
         // - return idx from sub
         pub.unsubscribe = pub.unsubscribe || function(evtKey, callback) {
-            //console.log('unsub', evtKey, callback);
+            console.log('unsub', evtKey, callback);
             // XXX: should expect bool true or string command to clear all
             if (! callback) {
                 // Unsubscribe /everything/ from evtKey if no callback specified.
@@ -78,6 +78,7 @@
         pub.publish = pub.publish || function(evtKey, data) {
             //return;
             // XXX: ? s/proc/callback | s/callback/proc ?
+            //console.log('pub', evtKey, data);
             queue[evtKey] && queue[evtKey].forEach(function(proc, idx) {
                 //proc(data);
                 //console.log(proc, this.dbg.mode, this.dbgModes.DBG_PUB);
