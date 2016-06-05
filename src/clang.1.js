@@ -16,7 +16,6 @@ function Clang(config, options) {
         written: 0,
         buffer: null,
         haltedReader: null,
-        // XXX: interruptedReader: null,
 
         // XXX: init w/ starting=true, or params=null
         params: [],
@@ -24,6 +23,7 @@ function Clang(config, options) {
         //starting: false,
         starting: true,
         
+        // XXX:
         //init: function(forms, config, options) {
         init: function(config, options) {
 
@@ -39,6 +39,7 @@ function Clang(config, options) {
             this.rampLen = options.rampLen || 240;
             this.baseGain = options.baseGain || 0.8;
 
+            // XXX: pass forms in config
             // XXX: ? passing sRate to init, and also wrapping synthPorc ?
             this.forms = ClangForms(this.sampleRate);
             // XXX: coupling
@@ -67,8 +68,8 @@ function Clang(config, options) {
 
         // XXX:
         connect: function() {
-            //this.processorNode.onaudioprocess = this.bufferWriter.bind(this);
-            this.processorNode.onaudioprocess = null;
+            this.processorNode.onaudioprocess = this.bufferWriter.bind(this);
+            //this.processorNode.onaudioprocess = null;
             this.processorNode.connect(this.destination); 
         },
         disconnect: function() {
@@ -76,81 +77,22 @@ function Clang(config, options) {
             this.processorNode.disconnect();
         },
         
-        // XXX: 
-        silence: function() {
-            var count = 1;
-            var nullifyProcess = function() {
-                // XXX: kludge ? for bufferWrite to audio render async ? 
-                if (count == 3) {
-                    this.processorNode.onaudioprocess = null;
-                    this.relay.unsubscribe(nullifyProcess);
-                }
-                count++;
-            }.bind(this);
-            this.relay.subscribe('clang_edge', nullifyProcess);
-        },
-
         go: function() {
             if (this.reader == this.nullReader) {
                 this.silencing && clearTimeout(this.silencing);
                 this.starting = true;
                 this.reader = this.haltedReader;
                 this.haltedReader = null;
-                this.processorNode.onaudioprocess = this.bufferWriter.bind(this);
+                this.processorNode.onaudioprocess = 
+                    this.bufferWriter.bind(this);
             }
         },
         halt: function() {
             if (this.reader != this.nullReader) {
                 this.haltedReader = this.reader;
                 this.reader = this.nullReader;
-
-                //this.silence();
-
-                /*
-                var processorNode = this.processorNode;
-                var relay = this.relay;
-                function silence() {
-                    console.log(processorNode, relay);
-                    processorNode.onaudioprocess = null;
-                    relay.unsubscribe('clang_edge', silence);
-                }
-                var silence = function() {
-                    console.log('sil', this);
-                    this.processorNode.onaudioprocess = null;
-                    this.relay.unsubscribe('clang_edge', silence);
-                }.bind(this);
-                this.relay.subscribe('clang_edge', silence);
-                */
             }
         },
-
-        // XXX: cull
-        /*
-        ring: function(dur, hz, form, tuning) {
-            //this.interruptedReader = this.haltedReader || this.reader;
-            this.preempt = true;
-            this.haltedReader == this.nullReader 
-                || (this.haltedReader = this.reader);
-            var step = 0;
-            this.reader = function() {
-                console.log('ringer', step, dur, hz);
-                if (step == 0) {
-                    step = 1;
-                    if (form) {
-                    }
-                    if (tuning) {
-                    }
-                    //return [dur, {hz: hz, idx: 0, ratio: 0, time: dur}];
-                    return [dur, {hz: hz, idx: 0, ratio: 0, time: dur, value: hz}];
-                } else {
-                    console.log(this.reader, this.haltedReader);
-                    this.reader = this.nullReader;
-                    return null;
-                }
-            };
-        },
-        */
-
         nullReader: function() {
             return null;
         },
@@ -158,6 +100,7 @@ function Clang(config, options) {
         // XXX: ? broken?
         updateReader: function(reader) {
             // Swap active reader if playing, otherwise set to read on play.
+            //if (this.duration) {
             if (this.length) {
                 this.reader = reader;
             } else {
@@ -167,9 +110,7 @@ function Clang(config, options) {
         },
 
         queueSilence: function() {
-            // XXX: should use this.buffer.length for consistency
-            //      or vice versa - note: this.buffer=null concept
-            //      would break
+            // XXX: fairly arbitrary
             var bufferWait = this.bufferLength / this.sampleRate
                 * 1000 * 3; 
             this.silencing = setTimeout(function() {
@@ -180,7 +121,6 @@ function Clang(config, options) {
 
         readNext: function(playbackTime) {
             var spec = this.reader();
-            //console.log('rnext', spec);
             this.duration = spec ? spec[0] : 0;
             this.params = spec ? spec[1] : {};
             this.sampleIdx = this.noReset ? this.sampleIdx : 0; 
@@ -270,26 +210,6 @@ function Clang(config, options) {
             return this.mockProcessingEvent.outputBuffer.buffer[0];
         },
 
-        // XXX: cull
-        /*
-        setupPreempt: function() {
-            // pre: buffer is at 0
-            //      this.written represents samples written of clang/this.length
-            //
-            // XXX: dur/len and env are changing
-
-            // Rewrite tail of envelope to duck out.
-            var tailLen = 256; //this.length * 0.05; // XXX: uh, long notes ?
-            for (var idx in (new Int8Array(tailLen))) {
-                this.envelope[idx + this.written] = (tailLen - idx) / tailLen;
-            }
-            this.fillBuffers(tailLen, 0);
-        },
-        closePreempt: function() {
-            this.preempt = false;
-        },
-        */
-
         buffer: null,
         bufferWriter: function(evt) {
  
@@ -298,61 +218,25 @@ function Clang(config, options) {
                 this.readNext(evt.playbackTime);
                 this.starting = false;
             }
-            /*
-            if (this.starting || this.preempt) {
-                this.preempt && this.setupPreempt();
-                this.readNext(evt.playbackTime);
-                this.preempt && this.closePreempt();
-                this.starting = false;
-            }
-            */
 
-            //delete this.buffer;
+            //XXX: ? delete this.buffer;
             this.buffer = evt.outputBuffer;
 
-            /*
-            if (! this.duration) {
-                return;
-            }
-            if (this.duration == 0) {
-                //this.readNext(evt.playBackTime); //
-                console.log('null note', this.buffer.getChannelData(0), this.buffer.length);
-                this.fillBuffers(0, this.buffer.length, true); 
-                console.log('null note', this.buffer.getChannelData(0));
-                setTimeout(function() {
-                this.processorNode.onaudioprocess = null;
-                }.bind(this), 100);
-                return; // Early return.
-            }
-            */
 
             var bufferTail = this.buffer.length;
-            //var clangTail = this.length - this.written;
             var clangTail = this.length ? this.length - this.written : 0;
-            //var clangEnding = clangTail <= bufferTail;
-            //var clangEnding = clangTail > 0 && clangTail <= bufferTail;
             var clangEnding = clangTail && clangTail <= bufferTail;
 
             while (clangEnding) {
                 this.fillBuffers(this.buffer.length - bufferTail, clangTail);
                 bufferTail -= clangTail;
                 this.readNext(evt.playbackTime);
-                //this.written = 0;
-                // XXX: catch null length / halted
                 clangTail = this.length;
                 clangEnding = clangTail && clangTail <= bufferTail;
             }
             this.fillBuffers(
                 this.buffer.length - bufferTail, bufferTail, ! this.length
             );
-            /*
-            if (this.duration == 0) {
-            this.length && this.broadcastEdge([
-                0, this.duration, this.context.currentTime, playbackTime 
-            ]);
-
-            }
-            */
 
             this.written += bufferTail;
         },
@@ -370,14 +254,17 @@ function Clang(config, options) {
 
             //this.log.push(['fB', offset, fill, silence]);
 
+            // XXX:
+            /*
             var buffers = [
                 this.buffer.getChannelData(0),
                 this.buffer.getChannelData(1)
             ];
-            // XXX:
-            //for (var chIdx = 0; chIdx < buffer.numberOfChannels; chIdx++) {
-            //    buffers[chIdx] = this.buffer.getChannelData(chIdx);
-            //}
+            */
+            var buffers = [];
+            for (var chIdx = 0; chIdx < this.buffer.numberOfChannels; chIdx++) {
+                buffers[chIdx] = this.buffer.getChannelData(chIdx);
+            }
             
             for (var idx = offset; idx < offset + fill; idx++) {
                 var sampleIdx = this.written + idx - offset;
@@ -385,23 +272,19 @@ function Clang(config, options) {
                 this.log.push(sampleIdx,
                     this.synthProc(sampleIdx, this.params, this.sampleRate),
                     this.params, ['filling', offset, offset + fill, idx]);
-                var sampleVal = silence ? 0
-                    : this.synthProc(sampleIdx, this.params, this.sampleRate);
-                //var sampleVal = this.synthProc(
-                //    sampleIdx, this.params, this.sampleRate
-                //);
-                sampleVal *= this.gainProc(this.params) * this.baseGain;
-                sampleVal *= this.envelope[sampleIdx];
                 */
                 var sampleVal = silence ? 0 : 
                     this.synthProc(sampleIdx, this.params, this.sampleRate)
                     * this.gainProc(this.params)
                     * this.baseGain 
                     * this.envelope[sampleIdx];
-                buffers[0][idx] = buffers[1][idx] = sampleVal;
-                //for (var chIdx = 0; chIdx < buffer.numberOfChannels; chIdx++) {
-                //    buffers[chIdx][idx] = sampleVal;
-                //}
+                //buffers[0][idx] = buffers[1][idx] = sampleVal;
+
+                for (var chIdx = 0; chIdx < this.buffer.numberOfChannels; chIdx++) {
+                    buffers[chIdx][idx] = sampleVal;
+                }
+                /*
+                */
             }
         },
 
