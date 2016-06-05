@@ -39,6 +39,7 @@ function Clang(config, options) {
             this.rampLen = options.rampLen || 240;
             this.baseGain = options.baseGain || 0.8;
 
+            // XXX: ? passing sRate to init, and also wrapping synthPorc ?
             this.forms = ClangForms(this.sampleRate);
             // XXX: coupling
             this.setForm(options.clangForm || 'sine');
@@ -66,8 +67,8 @@ function Clang(config, options) {
 
         // XXX:
         connect: function() {
-            this.processorNode.onaudioprocess = this.bufferWriter.bind(this);
-            //this.processorNode.onaudioprocess = null;
+            //this.processorNode.onaudioprocess = this.bufferWriter.bind(this);
+            this.processorNode.onaudioprocess = null;
             this.processorNode.connect(this.destination); 
         },
         disconnect: function() {
@@ -91,10 +92,11 @@ function Clang(config, options) {
 
         go: function() {
             if (this.reader == this.nullReader) {
+                this.silencing && clearTimeout(this.silencing);
                 this.starting = true;
                 this.reader = this.haltedReader;
                 this.haltedReader = null;
-                //this.processorNode.onaudioprocess = this.bufferWriter.bind(this);
+                this.processorNode.onaudioprocess = this.bufferWriter.bind(this);
             }
         },
         halt: function() {
@@ -164,6 +166,18 @@ function Clang(config, options) {
             }
         },
 
+        queueSilence: function() {
+            // XXX: should use this.buffer.length for consistency
+            //      or vice versa - note: this.buffer=null concept
+            //      would break
+            var bufferWait = this.bufferLength / this.sampleRate
+                * 1000 * 3; 
+            this.silencing = setTimeout(function() {
+                console.log('silencing');
+                this.processorNode.onaudioprocess = null;
+            }.bind(this), bufferWait);
+        },
+
         readNext: function(playbackTime) {
             var spec = this.reader();
             //console.log('rnext', spec);
@@ -171,13 +185,13 @@ function Clang(config, options) {
             this.params = spec ? spec[1] : {};
             this.sampleIdx = this.noReset ? this.sampleIdx : 0; 
 
+            this.duration || this.queueSilence();
+
             this.length = Math.round(this.duration * this.sampleRate);
 
-            // XXX: should broadcast final note-end, or call it clang_step
-            //      and/or use clang.silent property
-            this.length && 1;
             this.broadcastEdge([
                 0, this.duration, this.context.currentTime, playbackTime 
+
             ]);
 
             // XXX:
@@ -276,7 +290,6 @@ function Clang(config, options) {
         },
         */
 
-        // XXX: ? here
         buffer: null,
         bufferWriter: function(evt) {
  
@@ -361,6 +374,7 @@ function Clang(config, options) {
                 this.buffer.getChannelData(0),
                 this.buffer.getChannelData(1)
             ];
+            // XXX:
             //for (var chIdx = 0; chIdx < buffer.numberOfChannels; chIdx++) {
             //    buffers[chIdx] = this.buffer.getChannelData(chIdx);
             //}
