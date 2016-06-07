@@ -454,7 +454,7 @@ function Row(clang, config, relay) {
                 });
                 console.log(cmd, parsedArgs);
 
-                // XXX:
+                // XXX: explicit reference
                 row.patt.schedulers.chainHookId = hook_id 
                     = row[cmd].apply(row, parsedArgs);
                 
@@ -513,6 +513,7 @@ function Row(clang, config, relay) {
     // Initialize.
 
     //
+    // XXX: invert, regen, etc are overridden below ?
     for (var key in transforms) {
         row[key] = (function(proc) { // Loop closure.
             return function() {
@@ -530,7 +531,10 @@ function Row(clang, config, relay) {
             }.bind(row)
         })(transforms[key]);
     }
+    console.dir(row);
+
     row.invert = function() {
+        //
         this.seq.update({
             steps: transforms.invert(
                 this.seq.steps, config.stepMin, config.stepMax
@@ -551,6 +555,7 @@ function Row(clang, config, relay) {
         this.seq.assemble();
     }.bind(row);
 
+    //
     var evt_keys = {
         // XXX: no clang_edge when silenced - see [..]
         beat: 'clang_edge',

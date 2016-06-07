@@ -33,9 +33,11 @@ function Clang(config, options) {
             this.bufferLength = config.bufferLength || 1024;
             this.relay = config.relay || window.relay;
 
+            // XXX: confirm and document consistency
             this.reader = this.nullReader;
             this.haltedReader = options.reader || this.nullReader;
             
+            // XXX: kill rampLen - see setTone, row.js
             this.rampLen = options.rampLen || 240;
             this.baseGain = options.baseGain || 0.8;
 
@@ -61,12 +63,13 @@ function Clang(config, options) {
                 var audioContext = new contextClass();
                 audioContext.backend = 'webaudio';
             } else {
+                // XXX: should avoid flash block/confirm
                 var audioContext = new mozFlashAudioContext();
             }
             return audioContext; 
         },
 
-        // XXX:
+        // XXX: how to prevent init click?
         connect: function() {
             this.processorNode.onaudioprocess = this.bufferWriter.bind(this);
             //this.processorNode.onaudioprocess = null;
@@ -84,7 +87,8 @@ function Clang(config, options) {
                 this.reader = this.haltedReader;
                 this.haltedReader = null;
                 this.processorNode.onaudioprocess = 
-                    this.bufferWriter.bind(this);
+                    this.processorNode.onaudioprocess
+                    || this.bufferWriter.bind(this);
             }
         },
         halt: function() {
@@ -110,7 +114,7 @@ function Clang(config, options) {
         },
 
         queueSilence: function() {
-            // XXX: fairly arbitrary
+            // XXX: fairly arbitrary - explain
             var bufferWait = this.bufferLength / this.sampleRate
                 * 1000 * 3; 
             this.silencing = setTimeout(function() {
