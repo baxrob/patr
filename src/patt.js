@@ -194,7 +194,7 @@ function Patt(target, config, relay) {
                     return 0;
                 });
             }
-        },
+        }, // morph
 
         generate: {
 
@@ -209,6 +209,7 @@ function Patt(target, config, relay) {
             //
             // density: 
             generateSteps: function(len, min, max, density, hook) {
+                // XXX: foo
                 if (util.type(hook) == 'String') {
                     var generator = this[hook];
                 } else if (util.type(hook) == 'Function') {
@@ -218,11 +219,13 @@ function Patt(target, config, relay) {
                         var randVal = parseInt(
                             Math.random() * (max - min) + min
                         );
+                        //) + 1;
+
                         // XXX:
                         var note = (idx % density) ? randVal : 0;
                         //var note = (randVal % density) ? randVal : 0;
                         return parseInt(note);
-                    }.bind(this);
+                    }.bind(this); // XXX:
                 }
                 var steps = [];
 
@@ -244,12 +247,6 @@ function Patt(target, config, relay) {
                 }
                 return freqTable;
             },
-            // XXX: cull
-            hzFromStepSeq: function() {
-                return this.stepSeq.map(function(stepVal, idx) {
-                    return this.freqTable[stepVal];
-                }.bind(this));
-            },
             evenAttackSeq: function(len, pace) {
                 //console.log('gen attacks: len, pace:', len, pace);
                 var seq = [len * (60 / pace)] // Zeroth == total, for looping
@@ -258,8 +255,8 @@ function Patt(target, config, relay) {
                 }
                 return seq;
             }
-        }
-    };
+        } // generate
+    }; // transforms
 
     var automations = {
 
@@ -271,6 +268,8 @@ function Patt(target, config, relay) {
             next_id: 0,
             active: {},
             lookup_hook: function(hook) {
+ 
+                // XXX: explicit reference
                 var proc = (hook in transforms) ? row[hook].bind(row) : 
                     (util.type(hook) == 'Function') ? hook : null;
                 return proc
@@ -296,6 +295,8 @@ function Patt(target, config, relay) {
                     }
                 }.bind(this);
                 this.active[hook_id] = [evt_name, caller];
+
+                // XXX: explicit reference
                 relay.subscribe(evt_name, caller); 
                 return hook_id;
             },
@@ -335,6 +336,8 @@ function Patt(target, config, relay) {
                 }.bind(this);
                 //this.active[data.hook_id] = [evt_name, caller];
                 this.active[hook_id] = [evt_name, caller];
+
+                // XXX: explicit reference
                 relay.subscribe(evt_name, caller);
                 return hook_id;
             },
@@ -353,7 +356,7 @@ function Patt(target, config, relay) {
                 return false;
             }
 
-        },
+        }, // schedule
 
         sequence: {
             cycle: function(stages) {
@@ -367,28 +370,29 @@ function Patt(target, config, relay) {
                 var counter = 0;
                 function runStage() {
                     var stage = stages[counter % stages.length];
+                    console.log('stage', stage);
                     var cmd = stage[0];
                     var args = stage[1];
-                    args = args.map(function(arg) {
-                        //console.log(util.type(arg));
+                    var parsedArgs = args.map(function(arg) {
                         if (util.type(arg) == 'Array') {
                             return function() {
-                                //console.log(row[arg[0]], arg[1]);
                                 row[arg[0]].apply(row, arg[1]);
                             }.bind(this);
                         } else {
                             return arg;
                         }
                     });
-                    //console.log(row[cmd], args);
-                    //console.log('runStage', hook_id);
-                    //this.chainHookId = hook_id = row[cmd].apply(row, args);
+                    console.log(cmd, parsedArgs);
+
+                    // XXX: explicit reference
                     row.patt.schedulers.chainHookId = hook_id 
-                        = row[cmd].apply(row, args);
+                        = row[cmd].apply(row, parsedArgs);
+
                     counter += 1;
                 };
+                
+                // Catch and continue chain on signal from row at/each methods. 
                 relay.subscribe('stage_done', function(data) {
-                    //console.log(data.hook_id, hook_id, this);
                     if (data.hook_id == hook_id) {
                         if (counter == stages.length && once) {
                             relay.publish('chain_done');
@@ -416,14 +420,28 @@ function Patt(target, config, relay) {
             ordering: function(steps) {
             },
             timeline: function(data) {
+            },
+
+            cancel: function(relay, hook_id) {
+                //console.log('row.cancel', hook_id, this.active[hook_id]);
+                if (hook_id in this.active) {
+                    var pair = this.active[hook_id];
+                    relay.unsubscribe(pair[0], pair[1]);
+                    delete this.active[hook_id];
+                    //console.log('deleted?', this.active[hook_id]);
+                    // XXX: ?
+                    // return true;
+                    return pair[1];
+                }
+                return false;
             }
-        }
-    };
+        } // sequence
+    }; // automations
 
     var patt = {
         init: init,
         transforms: transforms,
-        automations:automations
+        automations: automations
     };
 
     var instance = Object.create(patt);

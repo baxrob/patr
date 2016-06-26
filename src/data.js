@@ -8,6 +8,7 @@ var URI = Class.extend({
 
         this.target = target ? target : document.location;
 
+        // XXX:
         this.history = [this.target.href];
         this.historyPointer = 0;
         this.volatile = false; // Change will overwrite history

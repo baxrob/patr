@@ -10,14 +10,20 @@ function Row(clang, config, relay) {
     var row = {
 
         // Clock and output: 
-        //      expected to supply go, halt, bump [reset?]  and setForm methods
-        //      assigned with a reader procedure, and expected to produce output 
-        //      based on [dur, params] specification built from sequence aspects
+        //      expected to supply [go, halt, bump [reset?]  and setForm 
+        //      methods assigned with a reader procedure, and expected to
+        //      produce output based on [dur, params] specification built 
+        //      from sequence aspects
+        //
+        //      Acts as intermediary between Patt and Clang/ClangForm 
+        //      interfaces
+        //
         clang: clang,
         
         // XXX: ? when pace == 0 ?
         pace: config.pace || 1,//0,
         currentStepIdx: config['goto'] || 0,
+        // XXX: updateability
         loop: config.loop || false,
         tone: config.tone || 'sine',
 
@@ -199,9 +205,11 @@ function Row(clang, config, relay) {
                 this.pace = options.pace || this.pace;
                 // XXX: stepTransforms.attacks
                 //console.log(options.len, this.seq.len, this.seq.steps.length);
+
                 // XXX: 
                 options.attacks = this.patt.transforms.evenAttackSeq(
-                    options.len || (options.steps && options.steps.length)
+                    options.len 
+                        || (options.steps && options.steps.length)
                         || this.seq.len,
                     this.pace 
                 ); 
